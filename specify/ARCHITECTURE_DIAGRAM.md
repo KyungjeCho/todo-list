@@ -1,0 +1,135 @@
+# Architecture Diagram
+
+---
+
+## Overview
+
+```
+                                          ┌─────────────┐
+                                          │  사용자       │
+                                          │  (Mobile)    │
+                                          └──────┬───────┘
+                                                 │
+                                          Push   │   Request
+                                    ┌────────────┼────────────────┐
+                                    │            │                │
+                              ┌─────▼─────┐     │
+                              │ Firebase   │     │
+                              │ (FCM)      │     │
+                              └─────┬──────┘     │
+                                    │            │
+                                    │     ┌──────▼───────┐
+                                    │     │ React Native │
+                                    │     │ (iOS/Android)│
+                                    │     └──────┬───────┘
+                                    │            │ Request
+                                    │            │
+┌───────────────────────────────────┼────────────┼──────────────────────────┐
+│ AWS                               │            │                          │
+│                                   │     ┌──────▼───────┐                 │
+│                                   │     │ API Gateway  │                 │
+│                                   │     └──────┬───────┘                 │
+│                                   │            │                          │
+│                              ┌────▼────────────▼───────┐                 │
+│                              │ AWS Lambda               │                 │
+│                              │ (Container Image)        │                 │
+│                              │                          │                 │
+│                              │  ┌────────────────────┐  │                │
+│                              │  │ NestJS Application │  │                │
+│                              │  └────────────────────┘  │                │
+│                              └────┬──────────┬──────────┘                │
+│                                   │          │                            │
+│                          Read/Write│          │ Request                   │
+│                                   │          │                            │
+│                              ┌────▼────┐     │                           │
+│                              │Supabase │     │                           │
+│                              │(Postgre)│     │                           │
+│                              └─────────┘     │                           │
+│                                              │                            │
+└──────────────────────────────────────────────┼────────────────────────────┘
+                                               │
+                                ┌──────────────┼──────────────┐
+                                │              │              │
+                          ┌─────▼─────┐  ┌─────▼─────┐ ┌─────▼─────┐
+                          │ OAuth 2.0 │  │ STT API   │ │ LLM API   │
+                          │ Google    │  │ Speech    │ │ Text      │
+                          │ Naver     │  │ to Text   │ │ Refinement│
+                          │ Kakao     │  └───────────┘ └───────────┘
+                          │ Apple     │
+                          └───────────┘
+```
+
+---
+
+## CI/CD Pipeline
+
+### Backend
+
+```
+┌──────────┐     ┌──────────┐     ┌──────────────┐     ┌───────────────┐     ┌──────────────────┐
+│  GitHub  │────▶│ GitHub   │────▶│ Docker       │────▶│ Amazon ECR    │────▶│ AWS Lambda        │
+│  Push    │     │ Actions  │     │ Build Image  │     │ Push Image    │     │ Container Image   │
+│          │     │          │     │              │     │               │     │ Deploy             │
+└──────────┘     └──────────┘     └──────────────┘     └───────────────┘     └──────────────────┘
+```
+
+| 단계 | 도구 | 설명 |
+|------|------|------|
+| 1. Source | GitHub | 코드 Push / PR 이벤트 트리거 |
+| 2. Build & Test | GitHub Actions | 린트, 단위/통합 테스트 실행 |
+| 3. Docker Build | Docker | NestJS 애플리케이션을 컨테이너 이미지로 빌드 |
+| 4. Push Image | Amazon ECR | 빌드된 Docker 이미지를 ECR 레지스트리에 Push |
+| 5. Deploy | AWS Lambda | ECR의 컨테이너 이미지를 Lambda에 배포 |
+
+### Frontend
+
+```
+┌──────────┐     ┌──────────┐     ┌──────────────┐     ┌──────────┐     ┌───────────────────┐     ┌──────────────┐
+│  GitHub  │────▶│ GitHub   │────▶│ React Native │────▶│ Fastlane │────▶│ App Store Connect │────▶│ App Store    │
+│  Push    │     │ Actions  │     │ Build        │     │ 서명/업로드 │     │ / Google Play     │     │ Google Play  │
+│          │     │          │     │ (EAS Build)  │     │          │     │ Console           │     │ 배포          │
+└──────────┘     └──────────┘     └──────────────┘     └──────────┘     └───────────────────┘     └──────────────┘
+```
+
+| 단계 | 도구 | 설명 |
+|------|------|------|
+| 1. Source | GitHub | 코드 Push / PR 이벤트 트리거 |
+| 2. Build & Test | GitHub Actions | 린트, 단위/통합 테스트 실행 |
+| 3. App Build | EAS Build (Expo) | iOS (.ipa) / Android (.aab) 빌드 |
+| 4. Sign & Upload | Fastlane | 코드 서명, 인증서 관리 (match), 스토어 업로드 자동화 |
+| 5. Submit | App Store Connect / Google Play Console | 스토어에 빌드 제출 |
+| 6. Release | App Store / Google Play | 스토어 심사 후 배포 |
+
+---
+
+## Components
+
+### Client
+
+| 컴포넌트 | 설명 |
+|----------|------|
+| React Native | iOS / Android 크로스 플랫폼 모바일 앱 |
+
+### AWS Infrastructure
+
+| 컴포넌트 | 설명 |
+|----------|------|
+| API Gateway | HTTPS 요청 라우팅, Rate Limiting |
+| AWS Lambda (Container Image) | NestJS 서버리스 실행 환경 |
+| Amazon ECR | Docker 컨테이너 이미지 레지스트리 |
+
+### Database
+
+| 컴포넌트 | 설명 |
+|----------|------|
+| Supabase (PostgreSQL) | 관리형 데이터베이스 |
+
+### External Services
+
+| 서비스 | 설명 |
+|--------|------|
+| Firebase (FCM) | 푸시 알림 발송 |
+| OAuth 2.0 (Google, Naver, Kakao, Apple) | 소셜 로그인 인증 |
+| STT API | 음성 → 텍스트 변환 |
+| LLM API | 텍스트 다듬기 (할 일 정제) |
+
