@@ -1,0 +1,84 @@
+import { Injectable } from '@nestjs/common';
+import { AuthRepository } from '../infrastructure/auth.repository';
+import { UserRepository } from '../../user/infrastructure/user.repository';
+import { UserDeviceRepository } from '../../notification/infrastructure/user-device.repository';
+import { TokenService } from '../infrastructure/token.service';
+import type { OAuthCallbackDto, OAuthCallbackResponseDto } from './dto';
+
+@Injectable()
+export class OAuthCallbackUsecase {
+  constructor(
+    private readonly authRepository: AuthRepository,
+    private readonly userRepository: UserRepository,
+    private readonly userDeviceRepository: UserDeviceRepository,
+    private readonly tokenService: TokenService,
+  ) {}
+
+  async execute(input: OAuthCallbackDto): Promise<OAuthCallbackResponseDto> {
+    const existingOauth = await this.authRepository.findOauthByProviderUserId(
+      input.providerUserId,
+    );
+
+    let userAuthId: string;
+    let userId: string;
+    let isNewUser: boolean;
+
+    if (existingOauth) {
+      userAuthId = existingOauth.userAuthId;
+      const user = await this.userRepository.findByUserAuthId(userAuthId);
+      userId = user!.id;
+      isNewUser = false;
+    } else {
+      const userAuth = await this.authRepository.createUserAuth({
+        loginId: null,
+        passwordHash: null,
+      });
+      userAuthId = userAuth.id;
+
+      await this.authRepository.createOauthAccount({
+        userAuthId,
+        provider: input.provider,
+        providerUserId: input.providerUserId,
+        providerUserEmail: input.providerUserEmail,
+        createdBy: userAuthId,
+        updatedBy: userAuthId,
+      });
+
+      const user = await this.userRepository.create({
+        userAuthId,
+        userName:
+          input.providerUserName || input.providerUserEmail?.split('@')[0] || `user_${Date.now()}`,
+        timezone: 'UTC',
+        language: 'ko-KR',
+        createdBy: userAuthId,
+        updatedBy: userAuthId,
+      });
+      userId = user.id;
+      isNewUser = true;
+    }
+
+    const accessToken = this.tokenService.generateAccessToken(userAuthId);
+    const refreshToken = this.tokenService.generateRefreshToken(userAuthId);
+
+    await this.authRepository.createSession({
+      userAuthId,
+      refreshToken,
+      userAgent: input.userAgent ?? null,
+      ipAddress: input.ipAddress ?? null,
+      expiredAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      createdBy: userAuthId,
+      updatedBy: userAuthId,
+    });
+
+    await this.userDeviceRepository.upsertDevice({
+      userId,
+      fcmToken: input.fcmToken,
+      deviceType: input.deviceType,
+      deviceName: input.deviceName,
+      createdBy: userAuthId,
+      updatedBy: userAuthId,
+    });
+
+    return { accessToken, refreshToken, isNewUser };
+  }
+}
