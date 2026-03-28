@@ -40,18 +40,16 @@ export class OAuthCallbackUsecase {
         provider: input.provider,
         providerUserId: input.providerUserId,
         providerUserEmail: input.providerUserEmail,
-        createdBy: userAuthId,
-        updatedBy: userAuthId,
       });
 
       const user = await this.userRepository.create({
         userAuthId,
         userName:
-          input.providerUserName || input.providerUserEmail?.split('@')[0] || `user_${Date.now()}`,
+          input.providerUserName ||
+          input.providerUserEmail?.split('@')[0] ||
+          `user_${Date.now()}`,
         timezone: 'UTC',
         language: 'ko-KR',
-        createdBy: userAuthId,
-        updatedBy: userAuthId,
       });
       userId = user.id;
       isNewUser = true;
@@ -62,12 +60,10 @@ export class OAuthCallbackUsecase {
 
     await this.authRepository.createSession({
       userAuthId,
-      refreshToken,
+      refreshToken: TokenService.hashToken(refreshToken),
       userAgent: input.userAgent ?? null,
       ipAddress: input.ipAddress ?? null,
       expiredAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      createdBy: userAuthId,
-      updatedBy: userAuthId,
     });
 
     await this.userDeviceRepository.upsertDevice({
@@ -75,8 +71,6 @@ export class OAuthCallbackUsecase {
       fcmToken: input.fcmToken,
       deviceType: input.deviceType,
       deviceName: input.deviceName,
-      createdBy: userAuthId,
-      updatedBy: userAuthId,
     });
 
     return { accessToken, refreshToken, isNewUser };

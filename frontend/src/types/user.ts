@@ -5,7 +5,6 @@ export interface UserProfile {
   reviewTime: string | null;
   timezone: string;
   language: string;
-  createdAt: string;
 }
 
 export interface UpdateSettingsRequest {

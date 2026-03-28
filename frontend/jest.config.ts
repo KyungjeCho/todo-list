@@ -13,6 +13,9 @@ const config: Config = {
   },
   testRegex: '(/__tests__/.*\\.(test|spec))\\.(ts|tsx)$',
   testPathIgnorePatterns: ['/node_modules/', '/e2e/'],
+  transformIgnorePatterns: [
+    'node_modules/(?!(@react-native|react-native)/)',
+  ],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
@@ -21,6 +24,8 @@ const config: Config = {
   setupFilesAfterEnv: [],
   moduleNameMapper: {
     '^src/(.*)$': '<rootDir>/src/$1',
+    '^expo-web-browser$': '<rootDir>/__mocks__/expo-web-browser.ts',
+    '^expo-linking$': '<rootDir>/__mocks__/expo-linking.ts',
   },
 };
 

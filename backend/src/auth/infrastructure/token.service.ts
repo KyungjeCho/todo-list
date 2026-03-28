@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { createHash } from 'crypto';
 import { StringValue } from 'ms';
 
 export interface JwtPayload {
@@ -42,5 +43,9 @@ export class TokenService {
     } catch {
       return false;
     }
+  }
+
+  static hashToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
   }
 }

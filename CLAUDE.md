@@ -54,6 +54,14 @@ cd frontend && npm test && npm run lint
 - 계층 분리: controller → application → domain → infrastructure
 - 모든 UI 상태: loading, empty, error 처리 필수
 - 한국어 문서, 영어 코드 식별자
+- 주석: WHY 중심, 공개 API는 JSDoc/TSDoc 문서화, 코드 반복 주석 금지, 주석 처리된 코드 금지
+
+## Branch Strategy
+
+- `main`: 보호 브랜치, PR 필수 (직접 push 금지)
+- `feature/*`: 새 기능 (e.g., `feature/001-todo-mobile-service`)
+- `fix/*`: 버그 수정
+- `hotfix/*`: 긴급 수정
 
 ## Recent Changes
 - 001-todo-mobile-service: Added TypeScript 5.x (Frontend & Backend)

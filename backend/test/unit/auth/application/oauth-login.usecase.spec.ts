@@ -1,15 +1,19 @@
 import { OAuthLoginUsecase } from 'src/auth/application/oauth-login.usecase';
+import { ConfigService } from '@nestjs/config';
 
 describe('OAuthLoginUsecase', () => {
   let usecase: OAuthLoginUsecase;
 
-  const mockAuthRepository = {
-    findOauthByProvider: jest.fn(),
+  const mockConfigService = {
+    get: jest.fn().mockReturnValue(''),
+    getOrThrow: jest.fn().mockReturnValue('test-state-secret'),
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    usecase = new OAuthLoginUsecase(mockAuthRepository as never);
+    usecase = new OAuthLoginUsecase(
+      mockConfigService as unknown as ConfigService,
+    );
   });
 
   it('should be defined', () => {
@@ -77,7 +81,7 @@ describe('OAuthLoginUsecase', () => {
       ).rejects.toThrow();
     });
 
-    it('should include state parameter with fcmToken and deviceType', async () => {
+    it('should include HMAC-signed state parameter', async () => {
       const result = await usecase.execute({
         provider: 'google',
         fcmToken: 'fcm-token-abc',
@@ -88,6 +92,56 @@ describe('OAuthLoginUsecase', () => {
 
       expect(result).toBeDefined();
       expect(result.redirectUrl).toBeDefined();
+
+      const url = new URL(result.redirectUrl);
+      const state = url.searchParams.get('state')!;
+      const parsed = JSON.parse(Buffer.from(state, 'base64').toString()) as {
+        data: string;
+        signature: string;
+      };
+      expect(parsed).toHaveProperty('data');
+      expect(parsed).toHaveProperty('signature');
+    });
+  });
+
+  describe('state verification', () => {
+    const secret = 'test-secret';
+
+    it('should verify a valid signed state', () => {
+      const state = OAuthLoginUsecase.signState(
+        { fcmToken: 'abc', deviceType: 'IOS' },
+        secret,
+      );
+      const result = OAuthLoginUsecase.verifyState(state, secret);
+
+      expect(result).not.toBeNull();
+      expect(result!.fcmToken).toBe('abc');
+    });
+
+    it('should reject state signed with different secret', () => {
+      const state = OAuthLoginUsecase.signState({ fcmToken: 'abc' }, secret);
+      const result = OAuthLoginUsecase.verifyState(state, 'wrong-secret');
+
+      expect(result).toBeNull();
+    });
+
+    it('should reject tampered state', () => {
+      const state = OAuthLoginUsecase.signState({ fcmToken: 'abc' }, secret);
+      const decoded = JSON.parse(Buffer.from(state, 'base64').toString()) as {
+        data: string;
+        signature: string;
+      };
+      decoded.data = decoded.data.replace('abc', 'xyz');
+      const tampered = Buffer.from(JSON.stringify(decoded)).toString('base64');
+
+      expect(OAuthLoginUsecase.verifyState(tampered, secret)).toBeNull();
+    });
+
+    it('should reject malformed state', () => {
+      expect(
+        OAuthLoginUsecase.verifyState('not-valid-base64', secret),
+      ).toBeNull();
+      expect(OAuthLoginUsecase.verifyState('', secret)).toBeNull();
     });
   });
 });

@@ -124,9 +124,18 @@ check_feature_branch() {
         return 0
     fi
 
-    if [[ ! "$branch" =~ ^[0-9]{3}- ]] && [[ ! "$branch" =~ ^[0-9]{8}-[0-9]{6}- ]]; then
+    # Support branch strategies: feature/NNN-*, fix/NNN-*, hotfix/NNN-*
+    # Also support legacy flat naming: NNN-* or YYYYMMDD-HHMMSS-*
+    if [[ ! "$branch" =~ ^[0-9]{3}- ]] && \
+       [[ ! "$branch" =~ ^[0-9]{8}-[0-9]{6}- ]] && \
+       [[ ! "$branch" =~ ^feature/[0-9]{3}- ]] && \
+       [[ ! "$branch" =~ ^fix/[0-9]{3}- ]] && \
+       [[ ! "$branch" =~ ^hotfix/[0-9]{3}- ]] && \
+       [[ ! "$branch" =~ ^feature/[0-9]{8}-[0-9]{6}- ]] && \
+       [[ ! "$branch" =~ ^fix/[0-9]{8}-[0-9]{6}- ]] && \
+       [[ ! "$branch" =~ ^hotfix/[0-9]{8}-[0-9]{6}- ]]; then
         echo "ERROR: Not on a feature branch. Current branch: $branch" >&2
-        echo "Feature branches should be named like: 001-feature-name or 20260319-143022-feature-name" >&2
+        echo "Feature branches should be named like: feature/001-name, fix/001-name, hotfix/001-name" >&2
         return 1
     fi
 
@@ -142,15 +151,21 @@ find_feature_dir_by_prefix() {
     local branch_name="$2"
     local specs_dir="$repo_root/specs"
 
+    # Strip branch strategy prefix (feature/, fix/, hotfix/) if present
+    local stripped_name="$branch_name"
+    if [[ "$branch_name" =~ ^(feature|fix|hotfix)/(.+)$ ]]; then
+        stripped_name="${BASH_REMATCH[2]}"
+    fi
+
     # Extract prefix from branch (e.g., "004" from "004-whatever" or "20260319-143022" from timestamp branches)
     local prefix=""
-    if [[ "$branch_name" =~ ^([0-9]{8}-[0-9]{6})- ]]; then
+    if [[ "$stripped_name" =~ ^([0-9]{8}-[0-9]{6})- ]]; then
         prefix="${BASH_REMATCH[1]}"
-    elif [[ "$branch_name" =~ ^([0-9]{3})- ]]; then
+    elif [[ "$stripped_name" =~ ^([0-9]{3})- ]]; then
         prefix="${BASH_REMATCH[1]}"
     else
         # If branch doesn't have a recognized prefix, fall back to exact match
-        echo "$specs_dir/$branch_name"
+        echo "$specs_dir/$stripped_name"
         return
     fi
 

@@ -35,10 +35,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       if (err instanceof UnauthorizedException) {
         throw err;
       }
-      // Passport strategy not registered or other internal error —
-      // in test environments, allow request through if Bearer token is present
-      request.user = { userAuthId: 'test-user-auth-id' };
-      return true;
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
   }
 

@@ -10,6 +10,7 @@ import { TokenRefreshUsecase } from './application/token-refresh.usecase';
 import { LogoutUsecase } from './application/logout.usecase';
 import { AuthRepository } from './infrastructure/auth.repository';
 import { TokenService } from './infrastructure/token.service';
+import { OAuthProviderService } from './infrastructure/oauth-provider.service';
 import { JwtStrategy } from './infrastructure/jwt.strategy';
 import { GoogleStrategy } from './infrastructure/strategies/google.strategy';
 import { NaverStrategy } from './infrastructure/strategies/naver.strategy';
@@ -72,7 +73,8 @@ function buildOAuthProviders(): Provider[] {
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('jwt.secret'),
         signOptions: {
-          expiresIn: configService.get<StringValue>('jwt.accessExpiration') || '15m',
+          expiresIn:
+            configService.get<StringValue>('jwt.accessExpiration') || '15m',
         },
       }),
     }),
@@ -85,6 +87,7 @@ function buildOAuthProviders(): Provider[] {
     LogoutUsecase,
     AuthRepository,
     TokenService,
+    OAuthProviderService,
     JwtStrategy,
     UserRepository,
     UserDeviceRepository,

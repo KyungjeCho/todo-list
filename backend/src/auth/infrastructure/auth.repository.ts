@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { UserAuth } from '../domain/user-auth.entity';
 import { UserAuthOauth } from '../domain/user-auth-oauth.entity';
 import { UserSession } from '../domain/user-session.entity';
+import { TokenService } from './token.service';
 
 @Injectable()
 export class AuthRepository {
@@ -40,8 +41,6 @@ export class AuthRepository {
     const entity = this.userAuthRepo.create({
       ...data,
       id,
-      createdBy: id,
-      updatedBy: id,
     });
     return this.userAuthRepo.save(entity);
   }
@@ -61,7 +60,10 @@ export class AuthRepository {
   async findSessionByRefreshToken(
     refreshToken: string,
   ): Promise<UserSession | null> {
-    return this.sessionRepo.findOne({ where: { refreshToken } });
+    const hashedToken = TokenService.hashToken(refreshToken);
+    return this.sessionRepo.findOne({
+      where: { refreshToken: hashedToken },
+    });
   }
 
   async deleteSession(sessionId: string): Promise<void> {

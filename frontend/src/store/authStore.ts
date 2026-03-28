@@ -1,5 +1,12 @@
 import { create } from 'zustand';
 import type { UserProfile } from '../types/user';
+import {
+  TokenManager,
+  secureTokenStorage,
+} from '../services/api/tokenManager';
+import { userApi } from '../services/api/userApi';
+
+export const tokenManager = new TokenManager(secureTokenStorage);
 
 interface AuthState {
   accessToken: string | null;
@@ -12,6 +19,7 @@ interface AuthState {
   setUser: (user: UserProfile) => void;
   clearAuth: () => void;
   setLoading: (isLoading: boolean) => void;
+  restoreTokens: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -21,18 +29,42 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
   isLoading: false,
 
-  setTokens: (accessToken, refreshToken) =>
-    set({ accessToken, refreshToken, isAuthenticated: true }),
+  setTokens: (accessToken, refreshToken) => {
+    tokenManager.saveTokens(accessToken, refreshToken);
+    set({ accessToken, refreshToken, isAuthenticated: true });
+  },
 
   setUser: (user) => set({ user }),
 
-  clearAuth: () =>
+  clearAuth: () => {
+    tokenManager.clearTokens();
     set({
       accessToken: null,
       refreshToken: null,
       user: null,
       isAuthenticated: false,
-    }),
+    });
+  },
 
   setLoading: (isLoading) => set({ isLoading }),
+
+  restoreTokens: async () => {
+    const accessToken = await tokenManager.getAccessToken();
+    const refreshToken = await tokenManager.getRefreshToken();
+    if (accessToken && refreshToken) {
+      set({ accessToken, refreshToken, isAuthenticated: true });
+      try {
+        const user = await userApi.getProfile();
+        set({ user });
+      } catch {
+        tokenManager.clearTokens();
+        set({
+          accessToken: null,
+          refreshToken: null,
+          user: null,
+          isAuthenticated: false,
+        });
+      }
+    }
+  },
 }));

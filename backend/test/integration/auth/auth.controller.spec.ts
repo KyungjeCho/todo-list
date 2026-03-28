@@ -2,11 +2,25 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import type { App } from 'supertest/types';
+import { PassportModule } from '@nestjs/passport';
+import { JwtModule } from '@nestjs/jwt';
 import { AuthController } from 'src/auth/auth.controller';
 import { OAuthLoginUsecase } from 'src/auth/application/oauth-login.usecase';
 import { OAuthCallbackUsecase } from 'src/auth/application/oauth-callback.usecase';
 import { TokenRefreshUsecase } from 'src/auth/application/token-refresh.usecase';
 import { LogoutUsecase } from 'src/auth/application/logout.usecase';
+import { OAuthProviderService } from 'src/auth/infrastructure/oauth-provider.service';
+import { JwtStrategy } from 'src/auth/infrastructure/jwt.strategy';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+import { OAuthLoginUsecase } from 'src/auth/application/oauth-login.usecase';
+
+const TEST_JWT_SECRET = 'test-jwt-secret';
+const TEST_STATE_SECRET = 'test-state-secret';
+
+function signTestState(payload: Record<string, unknown>): string {
+  return OAuthLoginUsecase.signState(payload, TEST_STATE_SECRET);
+}
 
 describe('AuthController (Integration)', () => {
   let app: INestApplication;
@@ -27,16 +41,46 @@ describe('AuthController (Integration)', () => {
     execute: jest.fn(),
   };
 
+  const mockOAuthProviderService = {
+    exchangeCodeForProfile: jest.fn(),
+  };
+
+  let jwtService: JwtService;
+
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [
+        PassportModule.register({ defaultStrategy: 'jwt' }),
+        JwtModule.register({
+          secret: TEST_JWT_SECRET,
+          signOptions: { expiresIn: '15m' },
+        }),
+      ],
       controllers: [AuthController],
       providers: [
         { provide: OAuthLoginUsecase, useValue: mockOAuthLoginUsecase },
         { provide: OAuthCallbackUsecase, useValue: mockOAuthCallbackUsecase },
         { provide: TokenRefreshUsecase, useValue: mockTokenRefreshUsecase },
         { provide: LogoutUsecase, useValue: mockLogoutUsecase },
+        { provide: OAuthProviderService, useValue: mockOAuthProviderService },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: (key: string) => {
+              if (key === 'oauth.stateSecret') return TEST_STATE_SECRET;
+              return TEST_JWT_SECRET;
+            },
+            getOrThrow: (key: string) => {
+              if (key === 'oauth.stateSecret') return TEST_STATE_SECRET;
+              return TEST_JWT_SECRET;
+            },
+          },
+        },
+        JwtStrategy,
       ],
     }).compile();
+
+    jwtService = moduleFixture.get(JwtService);
 
     app = moduleFixture.createNestApplication();
     await app.init();
@@ -126,23 +170,56 @@ describe('AuthController (Integration)', () => {
   });
 
   describe('GET /auth/oauth/:provider/callback', () => {
-    it('should redirect to app deep link with tokens (302)', async () => {
+    const mockProfile = {
+      provider: 'google',
+      providerUserId: 'google-uid-123',
+      providerUserEmail: 'user@gmail.com',
+      providerUserName: 'Test User',
+    };
+
+    beforeEach(() => {
+      mockOAuthProviderService.exchangeCodeForProfile.mockResolvedValue(
+        mockProfile,
+      );
+    });
+
+    it('should redirect to default deep link with tokens (302)', async () => {
       mockOAuthCallbackUsecase.execute.mockResolvedValue({
         accessToken: 'access-token-123',
         refreshToken: 'refresh-token-123',
         isNewUser: true,
       });
 
-      const stateWithRedirect = Buffer.from(
-        JSON.stringify({ redirectUri: 'exp://localhost/--/auth/callback' }),
-      ).toString('base64');
+      const stateWithRedirect = signTestState({
+        redirectUri: 'todolist://auth/callback',
+      });
 
       const response = await request(app.getHttpServer() as App)
         .get('/auth/oauth/google/callback')
         .query({ code: 'auth-code-123', state: stateWithRedirect });
 
       expect(response.status).toBe(302);
-      expect(response.headers.location).toContain('exp://localhost/--/auth/callback');
+      expect(response.headers.location).toContain('todolist://auth/callback');
+    });
+
+    it('should fall back to default redirect for disallowed scheme', async () => {
+      mockOAuthCallbackUsecase.execute.mockResolvedValue({
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        isNewUser: true,
+      });
+
+      const stateWithBadUri = signTestState({
+        redirectUri: 'https://evil.com/steal',
+      });
+
+      const response = await request(app.getHttpServer() as App)
+        .get('/auth/oauth/google/callback')
+        .query({ code: 'auth-code-123', state: stateWithBadUri });
+
+      expect(response.status).toBe(302);
+      expect(response.headers.location).toContain('todolist://auth/callback');
+      expect(response.headers.location).not.toContain('evil.com');
     });
 
     it('should include isNewUser=true for new users', async () => {
@@ -154,7 +231,7 @@ describe('AuthController (Integration)', () => {
 
       const response = await request(app.getHttpServer() as App)
         .get('/auth/oauth/google/callback')
-        .query({ code: 'auth-code-123', state: 'encoded-state' });
+        .query({ code: 'auth-code-123', state: signTestState({}) });
 
       expect(response.headers.location).toContain('isNewUser=true');
     });
@@ -168,9 +245,25 @@ describe('AuthController (Integration)', () => {
 
       const response = await request(app.getHttpServer() as App)
         .get('/auth/oauth/google/callback')
-        .query({ code: 'auth-code-123', state: 'encoded-state' });
+        .query({ code: 'auth-code-123', state: signTestState({}) });
 
       expect(response.headers.location).toContain('isNewUser=false');
+    });
+
+    it('should call OAuthProviderService to exchange code', async () => {
+      mockOAuthCallbackUsecase.execute.mockResolvedValue({
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        isNewUser: false,
+      });
+
+      await request(app.getHttpServer() as App)
+        .get('/auth/oauth/google/callback')
+        .query({ code: 'auth-code-123', state: signTestState({}) });
+
+      expect(
+        mockOAuthProviderService.exchangeCodeForProfile,
+      ).toHaveBeenCalledWith('google', 'auth-code-123');
     });
   });
 
@@ -218,9 +311,14 @@ describe('AuthController (Integration)', () => {
         message: 'Successfully logged out',
       });
 
+      const validToken = jwtService.sign(
+        { sub: 'test-user-auth-id', type: 'access' },
+        { secret: TEST_JWT_SECRET },
+      );
+
       const response = await request(app.getHttpServer() as App)
         .post('/auth/logout')
-        .set('Authorization', 'Bearer valid-access-token')
+        .set('Authorization', `Bearer ${validToken}`)
         .send({
           refreshToken: 'valid-refresh-token',
           fcmToken: 'fcm-token-123',
@@ -228,6 +326,11 @@ describe('AuthController (Integration)', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.message).toBe('Successfully logged out');
+      expect(mockLogoutUsecase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userAuthId: 'test-user-auth-id',
+        }),
+      );
     });
 
     it('should return 401 without auth header', async () => {

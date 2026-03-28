@@ -1,5 +1,15 @@
 import { useAuthStore } from 'src/store/authStore';
+import { userApi } from 'src/services/api/userApi';
 import type { UserProfile } from 'src/types/user';
+
+jest.mock('src/services/api/userApi', () => ({
+  userApi: {
+    getProfile: jest.fn(),
+    updateSettings: jest.fn(),
+  },
+}));
+
+const mockedUserApi = userApi as jest.Mocked<typeof userApi>;
 
 describe('AuthStore', () => {
   const mockUser: UserProfile = {
@@ -9,7 +19,6 @@ describe('AuthStore', () => {
     reviewTime: '22:00',
     timezone: 'Asia/Seoul',
     language: 'ko-KR',
-    createdAt: '2026-03-26T00:00:00.000Z',
   };
 
   beforeEach(() => {
@@ -152,6 +161,51 @@ describe('AuthStore', () => {
       expect(state.refreshToken).toBe('new-refresh');
       expect(state.user).toEqual(mockUser);
       expect(state.isAuthenticated).toBe(true);
+    });
+  });
+
+  describe('restoreTokens', () => {
+    it('토큰 복원 성공 시 사용자 프로필도 함께 복원한다', async () => {
+      const { tokenManager } = await import('src/store/authStore');
+      jest.spyOn(tokenManager, 'getAccessToken').mockResolvedValue('saved-access');
+      jest.spyOn(tokenManager, 'getRefreshToken').mockResolvedValue('saved-refresh');
+      mockedUserApi.getProfile.mockResolvedValue(mockUser);
+
+      await useAuthStore.getState().restoreTokens();
+
+      const state = useAuthStore.getState();
+      expect(state.isAuthenticated).toBe(true);
+      expect(state.user).toEqual(mockUser);
+      expect(mockedUserApi.getProfile).toHaveBeenCalled();
+    });
+
+    it('프로필 조회 실패 시 인증 상태를 초기화한다', async () => {
+      const { tokenManager } = await import('src/store/authStore');
+      jest.spyOn(tokenManager, 'getAccessToken').mockResolvedValue('saved-access');
+      jest.spyOn(tokenManager, 'getRefreshToken').mockResolvedValue('saved-refresh');
+      const clearSpy = jest.spyOn(tokenManager, 'clearTokens').mockResolvedValue();
+      mockedUserApi.getProfile.mockRejectedValue(new Error('Network error'));
+
+      await useAuthStore.getState().restoreTokens();
+
+      const state = useAuthStore.getState();
+      expect(state.isAuthenticated).toBe(false);
+      expect(state.accessToken).toBeNull();
+      expect(state.refreshToken).toBeNull();
+      expect(state.user).toBeNull();
+      expect(clearSpy).toHaveBeenCalled();
+    });
+
+    it('저장된 토큰이 없으면 프로필 조회를 시도하지 않는다', async () => {
+      const { tokenManager } = await import('src/store/authStore');
+      jest.spyOn(tokenManager, 'getAccessToken').mockResolvedValue(null);
+      jest.spyOn(tokenManager, 'getRefreshToken').mockResolvedValue(null);
+      mockedUserApi.getProfile.mockClear();
+
+      await useAuthStore.getState().restoreTokens();
+
+      expect(mockedUserApi.getProfile).not.toHaveBeenCalled();
+      expect(useAuthStore.getState().isAuthenticated).toBe(false);
     });
   });
 });

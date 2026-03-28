@@ -1,6 +1,7 @@
 import { join } from 'path';
 import { registerAs } from '@nestjs/config';
 import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { AuditSubscriber } from '../subscribers/audit.subscriber';
 
 export const databaseConfig = registerAs(
   'database',
@@ -16,6 +17,7 @@ export const databaseConfig = registerAs(
     logging: process.env.NODE_ENV !== 'production',
     migrations: [join(__dirname, '..', 'migrations', '*{.ts,.js}')],
     migrationsRun: false,
+    subscribers: [AuditSubscriber],
     ssl:
       process.env.DATABASE_SSL === 'true'
         ? { rejectUnauthorized: false }

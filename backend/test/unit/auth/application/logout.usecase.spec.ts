@@ -10,6 +10,7 @@ describe('LogoutUsecase', () => {
 
   const mockUserDeviceRepository = {
     deleteByFcmToken: jest.fn(),
+    deleteByFcmTokenForOwner: jest.fn(),
   };
 
   beforeEach(() => {
@@ -26,6 +27,7 @@ describe('LogoutUsecase', () => {
 
   describe('execute', () => {
     const logoutDto = {
+      userAuthId: 'auth-id-1',
       refreshToken: 'valid-refresh-token',
       fcmToken: 'fcm-token-123',
     };
@@ -41,7 +43,9 @@ describe('LogoutUsecase', () => {
         existingSession,
       );
       mockAuthRepository.deleteSession.mockResolvedValue(undefined);
-      mockUserDeviceRepository.deleteByFcmToken.mockResolvedValue(undefined);
+      mockUserDeviceRepository.deleteByFcmTokenForOwner.mockResolvedValue(
+        undefined,
+      );
 
       const result = await usecase.execute(logoutDto);
 
@@ -52,7 +56,7 @@ describe('LogoutUsecase', () => {
       );
     });
 
-    it('should delete FCM device token on logout', async () => {
+    it('should delete FCM device token scoped to the owner on logout', async () => {
       const existingSession = {
         id: 'session-id-1',
         userAuthId: 'auth-id-1',
@@ -63,13 +67,15 @@ describe('LogoutUsecase', () => {
         existingSession,
       );
       mockAuthRepository.deleteSession.mockResolvedValue(undefined);
-      mockUserDeviceRepository.deleteByFcmToken.mockResolvedValue(undefined);
+      mockUserDeviceRepository.deleteByFcmTokenForOwner.mockResolvedValue(
+        undefined,
+      );
 
       await usecase.execute(logoutDto);
 
-      expect(mockUserDeviceRepository.deleteByFcmToken).toHaveBeenCalledWith(
-        'fcm-token-123',
-      );
+      expect(
+        mockUserDeviceRepository.deleteByFcmTokenForOwner,
+      ).toHaveBeenCalledWith('fcm-token-123', 'auth-id-1');
     });
 
     it('should throw error for invalid refresh token', async () => {
@@ -77,7 +83,28 @@ describe('LogoutUsecase', () => {
 
       await expect(
         usecase.execute({
+          userAuthId: 'auth-id-1',
           refreshToken: 'invalid-token',
+          fcmToken: 'fcm-token-123',
+        }),
+      ).rejects.toThrow();
+    });
+
+    it('should throw error when userAuthId does not match session owner', async () => {
+      const existingSession = {
+        id: 'session-id-1',
+        userAuthId: 'auth-id-1',
+        refreshToken: 'valid-refresh-token',
+      };
+
+      mockAuthRepository.findSessionByRefreshToken.mockResolvedValue(
+        existingSession,
+      );
+
+      await expect(
+        usecase.execute({
+          userAuthId: 'different-auth-id',
+          refreshToken: 'valid-refresh-token',
           fcmToken: 'fcm-token-123',
         }),
       ).rejects.toThrow();
@@ -94,7 +121,9 @@ describe('LogoutUsecase', () => {
         existingSession,
       );
       mockAuthRepository.deleteSession.mockResolvedValue(undefined);
-      mockUserDeviceRepository.deleteByFcmToken.mockResolvedValue(undefined);
+      mockUserDeviceRepository.deleteByFcmTokenForOwner.mockResolvedValue(
+        undefined,
+      );
 
       const result = await usecase.execute(logoutDto);
 

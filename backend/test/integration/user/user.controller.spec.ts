@@ -2,12 +2,19 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import type { App } from 'supertest/types';
+import { PassportModule } from '@nestjs/passport';
+import { JwtModule, JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { UserController } from 'src/user/user.controller';
 import { GetProfileUsecase } from 'src/user/application/get-profile.usecase';
 import { UpdateSettingsUsecase } from 'src/user/application/update-settings.usecase';
+import { JwtStrategy } from 'src/auth/infrastructure/jwt.strategy';
+
+const TEST_JWT_SECRET = 'test-jwt-secret';
 
 describe('UserController (Integration)', () => {
   let app: INestApplication;
+  let jwtService: JwtService;
 
   const mockGetProfileUsecase = {
     execute: jest.fn(),
@@ -17,12 +24,15 @@ describe('UserController (Integration)', () => {
     execute: jest.fn(),
   };
 
-  const mockJwtAuthGuard = {
-    canActivate: jest.fn().mockReturnValue(true),
-  };
-
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [
+        PassportModule.register({ defaultStrategy: 'jwt' }),
+        JwtModule.register({
+          secret: TEST_JWT_SECRET,
+          signOptions: { expiresIn: '15m' },
+        }),
+      ],
       controllers: [UserController],
       providers: [
         { provide: GetProfileUsecase, useValue: mockGetProfileUsecase },
@@ -30,11 +40,20 @@ describe('UserController (Integration)', () => {
           provide: UpdateSettingsUsecase,
           useValue: mockUpdateSettingsUsecase,
         },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: () => TEST_JWT_SECRET,
+            getOrThrow: () => TEST_JWT_SECRET,
+          },
+        },
+        JwtStrategy,
       ],
     }).compile();
 
     app = moduleFixture.createNestApplication();
     await app.init();
+    jwtService = moduleFixture.get(JwtService);
   });
 
   afterAll(async () => {
@@ -44,6 +63,13 @@ describe('UserController (Integration)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
+
+  function createValidToken(): string {
+    return jwtService.sign(
+      { sub: 'test-user-auth-id', type: 'access' },
+      { secret: TEST_JWT_SECRET },
+    );
+  }
 
   describe('GET /users/me', () => {
     it('should return user profile (200)', async () => {
@@ -60,7 +86,7 @@ describe('UserController (Integration)', () => {
 
       const response = await request(app.getHttpServer() as App)
         .get('/users/me')
-        .set('Authorization', 'Bearer valid-access-token');
+        .set('Authorization', `Bearer ${createValidToken()}`);
 
       expect(response.status).toBe(200);
       expect(response.body.id).toBe('user-id-1');
@@ -85,7 +111,7 @@ describe('UserController (Integration)', () => {
 
       const response = await request(app.getHttpServer() as App)
         .get('/users/me')
-        .set('Authorization', 'Bearer valid-access-token');
+        .set('Authorization', `Bearer ${createValidToken()}`);
 
       expect(response.status).toBe(200);
       expect(response.body.planTime).toBeNull();
@@ -108,7 +134,7 @@ describe('UserController (Integration)', () => {
 
       const response = await request(app.getHttpServer() as App)
         .get('/users/me')
-        .set('Authorization', 'Bearer valid-access-token');
+        .set('Authorization', `Bearer ${createValidToken()}`);
 
       expect(response.status).toBe(404);
     });
@@ -129,7 +155,7 @@ describe('UserController (Integration)', () => {
 
       const response = await request(app.getHttpServer() as App)
         .patch('/users/me/settings')
-        .set('Authorization', 'Bearer valid-access-token')
+        .set('Authorization', `Bearer ${createValidToken()}`)
         .send({ userName: '김철수' });
 
       expect(response.status).toBe(200);
@@ -150,7 +176,7 @@ describe('UserController (Integration)', () => {
 
       const response = await request(app.getHttpServer() as App)
         .patch('/users/me/settings')
-        .set('Authorization', 'Bearer valid-access-token')
+        .set('Authorization', `Bearer ${createValidToken()}`)
         .send({ planTime: '09:00' });
 
       expect(response.status).toBe(200);
@@ -171,7 +197,7 @@ describe('UserController (Integration)', () => {
 
       const response = await request(app.getHttpServer() as App)
         .patch('/users/me/settings')
-        .set('Authorization', 'Bearer valid-access-token')
+        .set('Authorization', `Bearer ${createValidToken()}`)
         .send({ planTime: null });
 
       expect(response.status).toBe(200);
@@ -192,7 +218,7 @@ describe('UserController (Integration)', () => {
 
       const response = await request(app.getHttpServer() as App)
         .patch('/users/me/settings')
-        .set('Authorization', 'Bearer valid-access-token')
+        .set('Authorization', `Bearer ${createValidToken()}`)
         .send({
           planTime: '07:00',
           reviewTime: '23:00',
@@ -213,7 +239,7 @@ describe('UserController (Integration)', () => {
 
       const response = await request(app.getHttpServer() as App)
         .patch('/users/me/settings')
-        .set('Authorization', 'Bearer valid-access-token')
+        .set('Authorization', `Bearer ${createValidToken()}`)
         .send({ planTime: 'invalid' });
 
       expect(response.status).toBe(400);
@@ -227,7 +253,7 @@ describe('UserController (Integration)', () => {
 
       const response = await request(app.getHttpServer() as App)
         .patch('/users/me/settings')
-        .set('Authorization', 'Bearer valid-access-token')
+        .set('Authorization', `Bearer ${createValidToken()}`)
         .send({ timezone: 'Invalid/Zone' });
 
       expect(response.status).toBe(400);

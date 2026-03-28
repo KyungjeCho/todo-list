@@ -3,6 +3,7 @@ import { AuthRepository } from '../infrastructure/auth.repository';
 import { UserDeviceRepository } from '../../notification/infrastructure/user-device.repository';
 
 interface LogoutInput {
+  userAuthId: string;
   refreshToken: string;
   fcmToken: string;
 }
@@ -27,8 +28,15 @@ export class LogoutUsecase {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
 
+    if (session.userAuthId !== input.userAuthId) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+
     await this.authRepository.deleteSession(session.id);
-    await this.userDeviceRepository.deleteByFcmToken(input.fcmToken);
+    await this.userDeviceRepository.deleteByFcmTokenForOwner(
+      input.fcmToken,
+      input.userAuthId,
+    );
 
     return { message: 'Successfully logged out' };
   }

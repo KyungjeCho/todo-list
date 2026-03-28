@@ -1,4 +1,5 @@
 import { OAuthCallbackUsecase } from 'src/auth/application/oauth-callback.usecase';
+import { TokenService } from 'src/auth/infrastructure/token.service';
 
 describe('OAuthCallbackUsecase', () => {
   let usecase: OAuthCallbackUsecase;
@@ -142,6 +143,31 @@ describe('OAuthCallbackUsecase', () => {
       );
     });
 
+    it('should store hashed refresh token in session', async () => {
+      mockAuthRepository.findOauthByProviderUserId.mockResolvedValue({
+        id: 'oauth-id-1',
+        userAuthId: 'auth-id-1',
+      });
+      mockUserRepository.findByUserAuthId.mockResolvedValue({
+        id: 'user-id-1',
+      });
+      mockAuthRepository.createSession.mockResolvedValue({
+        id: 'session-id-1',
+      });
+      mockTokenService.generateAccessToken.mockReturnValue('access-token');
+      mockTokenService.generateRefreshToken.mockReturnValue('refresh-token');
+      mockUserDeviceRepository.upsertDevice.mockResolvedValue(undefined);
+
+      await usecase.execute(callbackDto);
+
+      const expectedHash = TokenService.hashToken('refresh-token');
+      expect(mockAuthRepository.createSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          refreshToken: expectedHash,
+        }),
+      );
+    });
+
     it('should create session with userAgent and ipAddress', async () => {
       mockAuthRepository.findOauthByProviderUserId.mockResolvedValue({
         id: 'oauth-id-1',
@@ -167,10 +193,40 @@ describe('OAuthCallbackUsecase', () => {
       );
     });
 
-    it('should throw error when provider email is missing', async () => {
-      const dtoWithoutEmail = { ...callbackDto, providerUserEmail: '' };
+    it('should create user with generated name when email is missing', async () => {
+      const dtoWithoutEmail = {
+        ...callbackDto,
+        providerUserEmail: '',
+        providerUserName: '',
+      };
 
-      await expect(usecase.execute(dtoWithoutEmail)).rejects.toThrow();
+      mockAuthRepository.findOauthByProviderUserId.mockResolvedValue(null);
+      mockAuthRepository.createUserAuth.mockResolvedValue({
+        id: 'auth-id-1',
+      });
+      mockAuthRepository.createOauthAccount.mockResolvedValue({
+        id: 'oauth-id-1',
+      });
+      mockUserRepository.create.mockResolvedValue({
+        id: 'user-id-1',
+        userAuthId: 'auth-id-1',
+      });
+      mockAuthRepository.createSession.mockResolvedValue({
+        id: 'session-id-1',
+      });
+      mockTokenService.generateAccessToken.mockReturnValue('access-token');
+      mockTokenService.generateRefreshToken.mockReturnValue('refresh-token');
+      mockUserDeviceRepository.upsertDevice.mockResolvedValue(undefined);
+
+      const result = await usecase.execute(dtoWithoutEmail);
+
+      expect(result).toBeDefined();
+      expect(result.isNewUser).toBe(true);
+      expect(mockUserRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userName: expect.stringMatching(/^user_\d+$/) as string,
+        }),
+      );
     });
   });
 });

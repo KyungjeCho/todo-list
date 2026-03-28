@@ -1,4 +1,5 @@
 import { TokenRefreshUsecase } from 'src/auth/application/token-refresh.usecase';
+import { TokenService } from 'src/auth/infrastructure/token.service';
 
 describe('TokenRefreshUsecase', () => {
   let usecase: TokenRefreshUsecase;
@@ -86,7 +87,12 @@ describe('TokenRefreshUsecase', () => {
       expect(mockAuthRepository.deleteSession).toHaveBeenCalledWith(
         'session-id-1',
       );
-      expect(mockAuthRepository.createSession).toHaveBeenCalled();
+      const expectedHash = TokenService.hashToken('new-refresh-token');
+      expect(mockAuthRepository.createSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          refreshToken: expectedHash,
+        }),
+      );
     });
 
     it('should throw UNAUTHORIZED for non-existent refresh token', async () => {

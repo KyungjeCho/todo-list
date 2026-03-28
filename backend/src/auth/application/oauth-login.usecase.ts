@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-// import { AuthRepository } from '../infrastructure/auth.repository';
+import { createHmac, randomBytes } from 'crypto';
 
 const VALID_PROVIDERS = ['google', 'naver', 'kakao', 'apple'] as const;
 
@@ -34,11 +34,40 @@ const PROVIDER_SCOPES: Record<string, string> = {
 export class OAuthLoginUsecase {
   private readonly configService: ConfigService;
 
-  constructor(
-    // private readonly authRepository: AuthRepository,
-    configService?: ConfigService,
-  ) {
+  constructor(configService?: ConfigService) {
     this.configService = configService ?? new ConfigService();
+  }
+
+  private getStateSecret(): string {
+    return this.configService.getOrThrow<string>('oauth.stateSecret');
+  }
+
+  static signState(payload: Record<string, unknown>, secret: string): string {
+    const nonce = randomBytes(16).toString('hex');
+    const data = JSON.stringify({ ...payload, nonce });
+    const signature = createHmac('sha256', secret).update(data).digest('hex');
+    return Buffer.from(JSON.stringify({ data, signature })).toString('base64');
+  }
+
+  static verifyState(
+    state: string,
+    secret: string,
+  ): Record<string, unknown> | null {
+    try {
+      const parsed = JSON.parse(Buffer.from(state, 'base64').toString()) as {
+        data: string;
+        signature: string;
+      };
+      const expectedSig = createHmac('sha256', secret)
+        .update(parsed.data)
+        .digest('hex');
+      if (parsed.signature !== expectedSig) {
+        return null;
+      }
+      return JSON.parse(parsed.data) as Record<string, unknown>;
+    } catch {
+      return null;
+    }
   }
 
   async execute(input: OAuthLoginInput): Promise<OAuthLoginOutput> {
@@ -50,14 +79,15 @@ export class OAuthLoginUsecase {
       throw new BadRequestException('INVALID_PROVIDER');
     }
 
-    const state = Buffer.from(
-      JSON.stringify({
+    const state = OAuthLoginUsecase.signState(
+      {
         fcmToken: input.fcmToken,
         deviceType: input.deviceType,
         deviceName: input.deviceName,
         redirectUri: input.redirectUri,
-      }),
-    ).toString('base64');
+      },
+      this.getStateSecret(),
+    );
 
     const baseUrl = PROVIDER_AUTH_URLS[input.provider];
     const clientId =

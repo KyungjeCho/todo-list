@@ -32,7 +32,6 @@ const mockUserProfile: UserProfile = {
   reviewTime: '22:00',
   timezone: 'Asia/Seoul',
   language: 'ko-KR',
-  createdAt: '2026-03-26T00:00:00.000Z',
 };
 
 describe('UserApi', () => {

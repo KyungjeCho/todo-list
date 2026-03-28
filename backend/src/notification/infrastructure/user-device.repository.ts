@@ -15,8 +15,6 @@ export class UserDeviceRepository {
     fcmToken: string;
     deviceType: string;
     deviceName?: string;
-    createdBy: string;
-    updatedBy: string;
   }): Promise<void> {
     const existing = await this.deviceRepo.findOne({
       where: { fcmToken: data.fcmToken },
@@ -25,7 +23,6 @@ export class UserDeviceRepository {
     if (existing) {
       existing.userId = data.userId;
       existing.deviceType = data.deviceType;
-      existing.updatedBy = data.updatedBy;
       if (data.deviceName !== undefined) {
         existing.deviceName = data.deviceName ?? null;
       }
@@ -36,8 +33,6 @@ export class UserDeviceRepository {
         fcmToken: data.fcmToken,
         deviceType: data.deviceType,
         deviceName: data.deviceName ?? null,
-        createdBy: data.createdBy,
-        updatedBy: data.updatedBy,
       });
       await this.deviceRepo.save(entity);
     }
@@ -45,5 +40,21 @@ export class UserDeviceRepository {
 
   async deleteByFcmToken(fcmToken: string): Promise<void> {
     await this.deviceRepo.softDelete({ fcmToken });
+  }
+
+  async deleteByFcmTokenForOwner(
+    fcmToken: string,
+    userAuthId: string,
+  ): Promise<void> {
+    const device = await this.deviceRepo
+      .createQueryBuilder('device')
+      .innerJoin('device.user', 'user')
+      .where('device.fcmToken = :fcmToken', { fcmToken })
+      .andWhere('user.userAuthId = :userAuthId', { userAuthId })
+      .getOne();
+
+    if (device) {
+      await this.deviceRepo.softDelete(device.id);
+    }
   }
 }

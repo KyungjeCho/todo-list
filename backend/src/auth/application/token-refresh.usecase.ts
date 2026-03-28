@@ -43,7 +43,7 @@ export class TokenRefreshUsecase {
 
     await this.authRepository.createSession({
       userAuthId: session.userAuthId,
-      refreshToken,
+      refreshToken: TokenService.hashToken(refreshToken),
       expiredAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
