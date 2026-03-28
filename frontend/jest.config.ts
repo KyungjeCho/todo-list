@@ -21,6 +21,7 @@ const config: Config = {
     '!src/**/*.d.ts',
   ],
   coverageDirectory: './coverage',
+  setupFiles: ['./jest.setup.ts'],
   setupFilesAfterEnv: [],
   moduleNameMapper: {
     '^src/(.*)$': '<rootDir>/src/$1',

@@ -4,7 +4,7 @@ import { UserAuthOauth } from './user-auth-oauth.entity';
 import { UserSession } from './user-session.entity';
 import { User } from '../../user/domain/user.entity';
 
-@Entity('TODOLIST_USER_AUTH')
+@Entity('todolist_user_auth')
 export class UserAuth extends BaseEntity {
   @Column({
     name: 'login_id',

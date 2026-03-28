@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { AuthNavigator } from './src/app/navigation/AuthNavigator';
 import { useAuthStore } from './src/store/authStore';
@@ -16,8 +17,10 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
-      <AuthNavigator />
-    </NavigationContainer>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <NavigationContainer>
+        <AuthNavigator />
+      </NavigationContainer>
+    </GestureHandlerRootView>
   );
 }

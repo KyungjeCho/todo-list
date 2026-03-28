@@ -27,7 +27,13 @@ export const useTodoStore = create<TodoState>((set) => ({
 
   setTodos: (todos) => set({ todos }),
 
-  addTodo: (todo) => set((state) => ({ todos: [...state.todos, todo] })),
+  addTodo: (todo) =>
+    set((state) => {
+      if (state.todos.some((t) => t.id === todo.id)) {
+        return state;
+      }
+      return { todos: [...state.todos, todo] };
+    }),
 
   updateTodo: (id, updates) =>
     set((state) => ({
@@ -39,7 +45,8 @@ export const useTodoStore = create<TodoState>((set) => ({
       todos: state.todos.filter((t) => t.id !== id),
     })),
 
-  setSelectedDate: (date) => set({ selectedDate: date }),
+  setSelectedDate: (date) =>
+    set({ selectedDate: date, todos: [], isLoading: false, error: null }),
 
   setMemos: (todoId, memos) =>
     set((state) => ({

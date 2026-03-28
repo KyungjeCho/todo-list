@@ -3,7 +3,7 @@ import { BaseEntity } from '../../common/entities/base.entity';
 import { UserAuth } from '../../auth/domain/user-auth.entity';
 import { UserDevice } from '../../notification/domain/user-device.entity';
 
-@Entity('TODOLIST_USER')
+@Entity('todolist_user')
 export class User extends BaseEntity {
   @Column({ name: 'user_auth_id', type: 'uuid', unique: true })
   userAuthId!: string;

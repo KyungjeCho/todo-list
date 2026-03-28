@@ -17,6 +17,7 @@ export default () => ({
     refreshExpiration: process.env.JWT_REFRESH_EXPIRATION || '7d',
   },
   oauth: {
+    stateSecret: process.env.OAUTH_STATE_SECRET || process.env.JWT_SECRET,
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,

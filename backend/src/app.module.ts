@@ -10,6 +10,7 @@ import { databaseConfig } from './common/config/database.config';
 import { RequestContextInterceptor } from './common/context/request-context.interceptor';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
+import { TodoModule } from './todo/todo.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { UserModule } from './user/user.module';
     }),
     AuthModule,
     UserModule,
+    TodoModule,
   ],
   controllers: [AppController],
   providers: [

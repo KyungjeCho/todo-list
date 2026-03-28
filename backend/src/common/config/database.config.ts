@@ -16,7 +16,7 @@ export const databaseConfig = registerAs(
     synchronize: false,
     logging: process.env.NODE_ENV !== 'production',
     migrations: [join(__dirname, '..', 'migrations', '*{.ts,.js}')],
-    migrationsRun: false,
+    migrationsRun: true,
     subscribers: [AuditSubscriber],
     ssl:
       process.env.DATABASE_SSL === 'true'

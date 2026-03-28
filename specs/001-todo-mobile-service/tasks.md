@@ -154,44 +154,55 @@
 
 > **NOTE: 테스트를 먼저 작성하고 FAIL 확인 후 구현한다**
 
-- [ ] T077 [P] [US2] Todo Entity 단위 테스트 (상태 전이 규칙: ACTIVE→COMPLETED, ACTIVE→INACTIVE, INACTIVE→ACTIVE, COMPLETED→ACTIVE) — `backend/test/unit/todo/domain/todo.entity.spec.ts`
-- [ ] T078 [P] [US2] Todo 생성 usecase 단위 테스트 — `backend/test/unit/todo/application/create-todo.usecase.spec.ts`
-- [ ] T079 [P] [US2] Todo 목록 조회 usecase 단위 테스트 — `backend/test/unit/todo/application/get-todos.usecase.spec.ts`
-- [ ] T080 [P] [US2] Todo 수정 usecase 단위 테스트 — `backend/test/unit/todo/application/update-todo.usecase.spec.ts`
-- [ ] T081 [P] [US2] Todo 상태 변경 usecase 단위 테스트 (상태 전이 규칙 포함) — `backend/test/unit/todo/application/change-todo-status.usecase.spec.ts`
-- [ ] T082 [P] [US2] Todo 삭제 usecase 단위 테스트 — `backend/test/unit/todo/application/delete-todo.usecase.spec.ts`
-- [ ] T083 [P] [US2] Todo Controller 통합 테스트 — `backend/test/integration/todo/todo.controller.spec.ts`
+- [X] T077 [P] [US2] Todo Entity 단위 테스트 (상태 전이 규칙: ACTIVE→COMPLETED, ACTIVE→INACTIVE, INACTIVE→ACTIVE, COMPLETED→ACTIVE) — `backend/test/unit/todo/domain/todo.entity.spec.ts`
+- [X] T078 [P] [US2] Todo 생성 usecase 단위 테스트 — `backend/test/unit/todo/application/create-todo.usecase.spec.ts`
+- [X] T078A [P] [US2] Todo 생성 usecase 보강 — 오늘 날짜 기본값 검증 (jest.useFakeTimers로 시간 고정, todoDate 미전달 시 YYYY-MM-DD 정확 일치 assert) — `backend/test/unit/todo/application/create-todo.usecase.spec.ts`
+- [X] T079 [P] [US2] Todo 목록 조회 usecase 단위 테스트 — `backend/test/unit/todo/application/get-todos.usecase.spec.ts`
+- [X] T079A [P] [US2] Todo 목록 조회 usecase 보강 — 정렬 순서 고정, CARRIED_OVER 항목 통계 포함/제외 정책 검증 — `backend/test/unit/todo/application/get-todos.usecase.spec.ts`
+- [X] T080 [P] [US2] Todo 수정 usecase 단위 테스트 — `backend/test/unit/todo/application/update-todo.usecase.spec.ts`
+- [X] T081 [P] [US2] Todo 상태 변경 usecase 단위 테스트 (상태 전이 규칙 포함) — `backend/test/unit/todo/application/change-todo-status.usecase.spec.ts`
+- [X] T081A [P] [US2] Todo 상태 변경 usecase 보강 — 유효 전이 시 changeStatus/repository.update 호출·인자 검증, 거부 전이 시 update 미호출 검증 — `backend/test/unit/todo/application/change-todo-status.usecase.spec.ts`
+- [X] T082 [P] [US2] Todo 삭제 usecase 단위 테스트 — `backend/test/unit/todo/application/delete-todo.usecase.spec.ts`
+- [X] T082A [P] [US2] Todo 삭제 usecase 보강 — 이미 soft-deleted 항목 재삭제 처리, softDelete 실패 시 예외 전파 — `backend/test/unit/todo/application/delete-todo.usecase.spec.ts`
+- [X] T083 [P] [US2] Todo Controller 통합 테스트 — `backend/test/integration/todo/todo.controller.spec.ts`
+- [X] T083A [P] [US2] Todo Controller 통합 테스트 보강 — 만료 JWT 401, 잘못된 JWT 형식 401, 잘못된 날짜 포맷 400, DTO validation (빈 status, content 누락) 400 — `backend/test/integration/todo/todo.controller.spec.ts`
 
 ### Frontend Tests for User Story 2 ⚠️
 
 > **NOTE: 테스트를 먼저 작성하고 FAIL 확인 후 구현한다**
 
-- [ ] T084 [P] [US2] Frontend 메인 화면 단위 테스트 (Plan/Review 모드 렌더링, 모드 전환, 진행률 표시) — `frontend/__tests__/unit/screens/main/MainScreen.test.tsx`
-- [ ] T085 [P] [US2] Frontend Todo Store 단위 테스트 (CRUD 액션, 상태 전이, 옵티미스틱 업데이트) — `frontend/__tests__/unit/store/todoStore.test.ts`
-- [ ] T086 [P] [US2] Frontend TodoItem 컴포넌트 단위 테스트 (체크박스, 탭 수정, 더블탭 비활성화) — `frontend/__tests__/unit/components/todo/TodoItem.test.tsx`
-- [ ] T087 [P] [US2] Frontend AddTodoInput 컴포넌트 단위 테스트 ("+" 버튼, 입력 필드, 255자 제한) — `frontend/__tests__/unit/components/todo/AddTodoInput.test.tsx`
-- [ ] T088 [P] [US2] Frontend Todo API 서비스 단위 테스트 — `frontend/__tests__/unit/services/api/todoApi.test.ts`
+- [X] T084 [P] [US2] Frontend 메인 화면 단위 테스트 (Plan/Review 모드 렌더링, 모드 전환, 진행률 표시) — `frontend/__tests__/unit/screens/main/MainScreen.test.tsx`
+- [X] T085 [P] [US2] Frontend Todo Store 단위 테스트 (CRUD 액션, 상태 전이, 옵티미스틱 업데이트) — `frontend/__tests__/unit/store/todoStore.test.ts`
+- [X] T085A [P] [US2] Frontend Todo Store 보강 — 옵티미스틱 업데이트 이름 정정, selectedDate 변경 시 todos/isLoading 초기화, 중복 addTodo 방지 — `frontend/__tests__/unit/store/todoStore.test.ts`
+- [X] T085B [P] [US2] Frontend Todo Store 리뷰 수정 — 날짜 변경 시 상태 리셋 테스트 방향 수정 (todos/isLoading/error 리셋 검증), 동일 id 중복 방지 테스트 수정 — `frontend/__tests__/unit/store/todoStore.test.ts`
+- [X] T086 [P] [US2] Frontend TodoItem 컴포넌트 단위 테스트 (체크박스, 탭 수정, 더블탭 비활성화) — `frontend/__tests__/unit/components/todo/TodoItem.test.tsx`
+- [X] T086A [P] [US2] Frontend TodoItem 보강 — 편집 취소 (blur/escape), 빈 문자열 수정 차단, 동일 텍스트 제출 시 콜백 미호출 — `frontend/__tests__/unit/components/todo/TodoItem.test.tsx`
+- [X] T087 [P] [US2] Frontend AddTodoInput 컴포넌트 단위 테스트 ("+" 버튼, 입력 필드, 255자 제한) — `frontend/__tests__/unit/components/todo/AddTodoInput.test.tsx`
+- [X] T087A [P] [US2] Frontend AddTodoInput 보강 — 로딩 중 제출 무시, trim 후 값 전달, 연속 탭 중복 제출 방지 — `frontend/__tests__/unit/components/todo/AddTodoInput.test.tsx`
+- [X] T088 [P] [US2] Frontend Todo API 서비스 단위 테스트 — `frontend/__tests__/unit/services/api/todoApi.test.ts`
+- [X] T088A [P] [US2] Frontend Todo API 보강 — 400/401/404 상태별 ApiError 매핑, todoDate optional 전송, 응답 shape 필수 필드 누락 대응 — `frontend/__tests__/unit/services/api/todoApi.test.ts`
+- [X] T088B [P] [US2] Frontend 공유 타입 리뷰 수정 — CreateTodoRequest.todoDate optional 변경, Todo 인터페이스에 isCarriedOver/memos 추가, 스텁 ad-hoc DTO 제거 — `frontend/src/types/todo.ts`, `frontend/src/screens/main/MainScreen.tsx`, `frontend/src/components/todo/TodoItem.tsx`
 
 ### Implementation for User Story 2
 
-- [ ] T089 [US2] Todo Entity 구현 (상태 전이 도메인 로직 포함) — `backend/src/todo/domain/todo.entity.ts`
-- [ ] T090 [US2] Todo DTO 정의 (생성/수정/상태변경/목록응답) — `backend/src/todo/application/dto/`
-- [ ] T091 [US2] Todo Repository 구현 — `backend/src/todo/infrastructure/todo.repository.ts`
-- [ ] T092 [US2] Todo 목록 조회 Usecase 구현 (날짜별 조회, 이월 포함, 모드 결정) — `backend/src/todo/application/get-todos.usecase.ts`
-- [ ] T093 [US2] Todo 생성 Usecase 구현 — `backend/src/todo/application/create-todo.usecase.ts`
-- [ ] T094 [US2] Todo 수정 Usecase 구현 — `backend/src/todo/application/update-todo.usecase.ts`
-- [ ] T095 [US2] Todo 상태 변경 Usecase 구현 (ACTIVE/INACTIVE/COMPLETED, 전이 규칙 검증) — `backend/src/todo/application/change-todo-status.usecase.ts`
-- [ ] T096 [US2] Todo 삭제 Usecase 구현 (Soft Delete) — `backend/src/todo/application/delete-todo.usecase.ts`
-- [ ] T097 [US2] Todo Controller 구현 (GET /todos, POST /todos, PATCH /todos/:id, PATCH /todos/:id/status, DELETE /todos/:id) — `backend/src/todo/todo.controller.ts`
-- [ ] T098 [US2] Todo Module 구성 — `backend/src/todo/todo.module.ts`
-- [ ] T099 [P] [US2] Frontend Todo API 서비스 구현 — `frontend/src/services/api/todoApi.ts`
-- [ ] T100 [US2] Frontend Todo Store 구현 (Zustand, todoStore.ts 확장) — `frontend/src/store/todoStore.ts`
-- [ ] T101 [US2] Frontend 메인 화면 구현 (Plan/Review 모드, 할 일 목록, 진행률) — `frontend/src/screens/main/MainScreen.tsx`
-- [ ] T102 [US2] Frontend 할 일 아이템 컴포넌트 (체크박스, 탭 수정, 더블 탭 비활성화, 접근성 라벨) — `frontend/src/components/todo/TodoItem.tsx`
-- [ ] T103 [US2] Frontend 할 일 추가 컴포넌트 ("+" 버튼, 입력 필드) — `frontend/src/components/todo/AddTodoInput.tsx`
-- [ ] T104 [US2] Frontend 길게 누르기 + 드래그 삭제 구현 (하단 휴지통 UI) — `frontend/src/components/todo/TodoDragDelete.tsx`
-- [ ] T105 [US2] Frontend 모드 전환 컴포넌트 (수동 토글) — `frontend/src/components/todo/ModeToggle.tsx`
-- [ ] T106 [US2] Frontend 메인 화면 loading/empty/error 상태 처리 — `frontend/src/screens/main/MainScreen.tsx`
+- [X] T089 [US2] Todo Entity 구현 (상태 전이 도메인 로직 포함) — `backend/src/todo/domain/todo.entity.ts`
+- [X] T090 [US2] Todo DTO 정의 (생성/수정/상태변경/목록응답, todoDate optional 반영) — `backend/src/todo/application/dto/`
+- [X] T091 [US2] Todo Repository 구현 — `backend/src/todo/infrastructure/todo.repository.ts`
+- [X] T092 [US2] Todo 목록 조회 Usecase 구현 (날짜별 조회, 이월 포함, 모드 결정, createdAt 오름차순 정렬, CARRIED_OVER 통계 제외) — `backend/src/todo/application/get-todos.usecase.ts`
+- [X] T093 [US2] Todo 생성 Usecase 구현 (todoDate 미전달 시 오늘 날짜 기본값) — `backend/src/todo/application/create-todo.usecase.ts`
+- [X] T094 [US2] Todo 수정 Usecase 구현 — `backend/src/todo/application/update-todo.usecase.ts`
+- [X] T095 [US2] Todo 상태 변경 Usecase 구현 (ACTIVE/INACTIVE/COMPLETED, 전이 규칙 검증, entity.changeStatus 호출, updatedBy 전달) — `backend/src/todo/application/change-todo-status.usecase.ts`
+- [X] T096 [US2] Todo 삭제 Usecase 구현 (Soft Delete, 이미 삭제된 항목 재삭제 시 예외) — `backend/src/todo/application/delete-todo.usecase.ts`
+- [X] T097 [US2] Todo Controller 구현 (GET /todos, POST /todos, PATCH /todos/:id, PATCH /todos/:id/status, DELETE /todos/:id, JWT 검증 cross-cutting, DTO validation: content 필수/255자, status enum, todoDate 포맷) — `backend/src/todo/todo.controller.ts`
+- [X] T098 [US2] Todo Module 구성 — `backend/src/todo/todo.module.ts`
+- [X] T099 [P] [US2] Frontend Todo API 서비스 구현 (apiClient 연동, TodoListResponse/DeleteTodoResponse 타입 export) — `frontend/src/services/api/todoApi.ts`
+- [X] T100 [US2] Frontend Todo Store 구현 (setSelectedDate 시 todos/isLoading/error 리셋, addTodo 동일 id 중복 방지) — `frontend/src/store/todoStore.ts`
+- [X] T101 [US2] Frontend 메인 화면 구현 (Plan/Review 모드, 할 일 목록, 진행률) — `frontend/src/screens/main/MainScreen.tsx`
+- [X] T102 [US2] Frontend 할 일 아이템 컴포넌트 (체크박스 완료 토글, 탭→편집 모드, blur→취소/복원, 빈문자열·동일텍스트 차단, longPress 비활성화, INACTIVE 편집 불가, 접근성 라벨) — `frontend/src/components/todo/TodoItem.tsx`
+- [X] T103 [US2] Frontend 할 일 추가 컴포넌트 ("+" 버튼, 입력 필드, maxLength 255, trim, 키보드 submitEditing, 로딩 시 비활성화, 연속 탭 방지, 접근성 라벨) — `frontend/src/components/todo/AddTodoInput.tsx`
+- [X] T104 [US2] Frontend 길게 누르기 + 드래그 삭제 구현 (하단 휴지통 UI) — `frontend/src/components/todo/TodoDragDelete.tsx`
+- [X] T105 [US2] Frontend 모드 전환 컴포넌트 (수동 토글) — `frontend/src/components/todo/ModeToggle.tsx`
+- [X] T106 [US2] Frontend 메인 화면 loading/empty/error 상태 처리 (빈 목록 메시지, ActivityIndicator, 에러 재시도, 접근성) — `frontend/src/screens/main/MainScreen.tsx`
 
 **Checkpoint**: 할 일 CRUD + 모드 전환 완전 동작. 독립적으로 테스트 가능.
 

@@ -2,7 +2,7 @@ import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { User } from '../../user/domain/user.entity';
 
-@Entity('TODOLIST_USER_DEVICE')
+@Entity('todolist_user_device')
 export class UserDevice extends BaseEntity {
   @Column({ name: 'user_id', type: 'uuid' })
   userId!: string;

@@ -2,7 +2,7 @@ import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { UserAuth } from './user-auth.entity';
 
-@Entity('TODOLIST_USER_SESSION')
+@Entity('todolist_user_session')
 export class UserSession extends BaseEntity {
   @Column({ name: 'user_auth_id', type: 'uuid' })
   userAuthId!: string;

@@ -4,8 +4,12 @@ import {
   Text,
   TouchableOpacity,
   ActivityIndicator,
+  Platform,
   StyleSheet,
 } from 'react-native';
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
 
 interface OnboardingSettings {
   planTime: string;
@@ -18,25 +22,18 @@ interface OnboardingScreenProps {
   error?: string;
 }
 
-interface TimePickerProps {
-  testID: string;
-  value: string;
-  onChange: (time: string) => void;
+function timeStringToDate(time: string): Date {
+  const [hours, minutes] = time.split(':').map(Number);
+  const date = new Date();
+  date.setHours(hours, minutes, 0, 0);
+  return date;
 }
 
-const TimePicker: React.FC<TimePickerProps> = ({ testID, value, onChange }) => {
-  return (
-    <View
-      testID={testID}
-      // @ts-expect-error: onChange is used by react-native-testing-library fireEvent
-      onChange={(time: string) => {
-        onChange(time);
-      }}
-    >
-      <Text>{value}</Text>
-    </View>
-  );
-};
+function formatTime(date: Date): string {
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`;
+}
 
 export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
   onComplete,
@@ -45,6 +42,25 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
 }) => {
   const [planTime, setPlanTime] = useState('08:00');
   const [reviewTime, setReviewTime] = useState('22:00');
+  const [showPicker, setShowPicker] = useState<'plan' | 'review' | null>(null);
+
+  const handleTimeChange = useCallback(
+    (target: 'plan' | 'review') =>
+      (_event: DateTimePickerEvent, selectedDate?: Date) => {
+        if (Platform.OS === 'android') {
+          setShowPicker(null);
+        }
+        if (selectedDate) {
+          const formatted = formatTime(selectedDate);
+          if (target === 'plan') {
+            setPlanTime(formatted);
+          } else {
+            setReviewTime(formatted);
+          }
+        }
+      },
+    [],
+  );
 
   const handleComplete = useCallback(() => {
     onComplete?.({ planTime, reviewTime });
@@ -69,20 +85,44 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
 
       <View style={styles.section}>
         <Text style={styles.label}>계획 시간</Text>
-        <TimePicker
+        <TouchableOpacity
           testID="plan-time-picker"
-          value={planTime}
-          onChange={setPlanTime}
-        />
+          style={styles.timeButton}
+          onPress={() => setShowPicker('plan')}
+        >
+          <Text style={styles.timeText}>{planTime}</Text>
+        </TouchableOpacity>
+        {showPicker === 'plan' && (
+          <DateTimePicker
+            testID="plan-time-native-picker"
+            value={timeStringToDate(planTime)}
+            mode="time"
+            is24Hour={true}
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={handleTimeChange('plan')}
+          />
+        )}
       </View>
 
       <View style={styles.section}>
         <Text style={styles.label}>회고 시간</Text>
-        <TimePicker
+        <TouchableOpacity
           testID="review-time-picker"
-          value={reviewTime}
-          onChange={setReviewTime}
-        />
+          style={styles.timeButton}
+          onPress={() => setShowPicker('review')}
+        >
+          <Text style={styles.timeText}>{reviewTime}</Text>
+        </TouchableOpacity>
+        {showPicker === 'review' && (
+          <DateTimePicker
+            testID="review-time-native-picker"
+            value={timeStringToDate(reviewTime)}
+            mode="time"
+            is24Hour={true}
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={handleTimeChange('review')}
+          />
+        )}
       </View>
 
       <TouchableOpacity
@@ -119,6 +159,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 8,
+  },
+  timeButton: {
+    backgroundColor: '#F2F2F7',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  timeText: {
+    fontSize: 20,
+    fontWeight: '500',
+    color: '#007AFF',
   },
   completeButton: {
     backgroundColor: '#007AFF',

@@ -1,15 +1,5 @@
 export type TodoStatus = 'ACTIVE' | 'INACTIVE' | 'COMPLETED' | 'CARRIED_OVER';
 
-export interface Todo {
-  id: string;
-  userId: string;
-  todoDate: string;
-  content: string;
-  status: TodoStatus;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface TodoMemo {
   id: string;
   todoId: string;
@@ -18,9 +8,20 @@ export interface TodoMemo {
   updatedAt: string;
 }
 
+export interface Todo {
+  id: string;
+  todoDate: string;
+  content: string;
+  status: TodoStatus;
+  isCarriedOver: boolean;
+  memos: TodoMemo[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface CreateTodoRequest {
   content: string;
-  todoDate: string;
+  todoDate?: string;
 }
 
 export interface UpdateTodoRequest {

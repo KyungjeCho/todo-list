@@ -9,6 +9,25 @@ jest.mock('@react-navigation/native', () => ({
   }),
 }));
 
+jest.mock('@react-native-community/datetimepicker', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { createElement } = require('react');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View } = require('react-native');
+  const MockPicker = (props: {
+    testID: string;
+    value: Date;
+    onChange: (event: { type: string }, date?: Date) => void;
+  }) =>
+    createElement(View, {
+      testID: props.testID,
+      onChange: (date: Date) => {
+        props.onChange({ type: 'set' }, date);
+      },
+    });
+  return { __esModule: true, default: MockPicker };
+});
+
 describe('OnboardingScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -65,8 +84,14 @@ describe('OnboardingScreen', () => {
       const mockOnComplete = jest.fn();
       render(<OnboardingScreen onComplete={mockOnComplete} />);
 
-      const planTimePicker = screen.getByTestId('plan-time-picker');
-      fireEvent(planTimePicker, 'onChange', '09:00');
+      // Tap to open picker
+      fireEvent.press(screen.getByTestId('plan-time-picker'));
+
+      // Select new time via native picker
+      const nativePicker = screen.getByTestId('plan-time-native-picker');
+      const newDate = new Date();
+      newDate.setHours(9, 0, 0, 0);
+      fireEvent(nativePicker, 'onChange', newDate);
 
       fireEvent.press(screen.getByTestId('onboarding-complete-button'));
 
@@ -81,8 +106,14 @@ describe('OnboardingScreen', () => {
       const mockOnComplete = jest.fn();
       render(<OnboardingScreen onComplete={mockOnComplete} />);
 
-      const reviewTimePicker = screen.getByTestId('review-time-picker');
-      fireEvent(reviewTimePicker, 'onChange', '21:00');
+      // Tap to open picker
+      fireEvent.press(screen.getByTestId('review-time-picker'));
+
+      // Select new time via native picker
+      const nativePicker = screen.getByTestId('review-time-native-picker');
+      const newDate = new Date();
+      newDate.setHours(21, 0, 0, 0);
+      fireEvent(nativePicker, 'onChange', newDate);
 
       fireEvent.press(screen.getByTestId('onboarding-complete-button'));
 

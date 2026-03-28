@@ -53,7 +53,10 @@ export class AuthController {
     res.redirect(302, result.redirectUrl);
   }
 
-  private static readonly ALLOWED_REDIRECT_SCHEMES = ['todolist://'];
+  private static readonly ALLOWED_REDIRECT_SCHEMES = [
+    'todolist://',
+    'exp://',
+  ];
   private static readonly DEFAULT_REDIRECT_URI = 'todolist://auth/callback';
 
   @Get('oauth/:provider/callback')
