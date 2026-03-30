@@ -281,35 +281,35 @@
 
 > **NOTE: 테스트를 먼저 작성하고 FAIL 확인 후 구현한다**
 
-- [ ] T126 [P] [US4] NotificationLog Entity 단위 테스트 — `backend/test/unit/notification/domain/notification-log.entity.spec.ts`
-- [ ] T127 [P] [US4] 알림 발송 usecase 단위 테스트 (FCM 호출, 로그 기록, 실패 재시도) — `backend/test/unit/notification/application/send-notification.usecase.spec.ts`
-- [ ] T128 [P] [US4] 알림 스케줄러 단위 테스트 (타임존별 발송, NULL 시간 미발송, 타임존 변경 시 알림 시점 재계산) — `backend/test/unit/scheduler/application/notification-scheduler.usecase.spec.ts`
-- [ ] T129 [P] [US4] FCM 서비스 단위 테스트 (firebase-admin SDK 호출) — `backend/test/unit/notification/infrastructure/fcm.service.spec.ts`
+- [X] T126 [P] [US4] NotificationLog Entity 단위 테스트 — `backend/test/unit/notification/domain/notification-log.entity.spec.ts`
+- [X] T127 [P] [US4] 알림 발송 usecase 단위 테스트 (FCM 호출, 로그 기록, 실패 재시도) — `backend/test/unit/notification/application/send-notification.usecase.spec.ts`
+- [X] T128 [P] [US4] 알림 스케줄러 단위 테스트 (타임존별 발송, NULL 시간 미발송, 타임존 변경 시 알림 시점 재계산) — `backend/test/unit/scheduler/application/notification-scheduler.usecase.spec.ts`
+- [X] T129 [P] [US4] FCM 서비스 단위 테스트 (firebase-admin SDK 호출) — `backend/test/unit/notification/infrastructure/fcm.service.spec.ts`
 
 ### Frontend Tests for User Story 4 ⚠️
 
 > **NOTE: 테스트를 먼저 작성하고 FAIL 확인 후 구현한다**
 
-- [ ] T130 [P] [US4] Frontend 설정 화면 단위 테스트 (계획/회고 시간 변경, NULL 시 알림 해제, 타임존 선택) — `frontend/__tests__/unit/screens/settings/SettingsScreen.test.tsx`
-- [ ] T131 [P] [US4] Frontend usePushNotification 훅 단위 테스트 (FCM 토큰 등록, 알림 권한 요청) — `frontend/__tests__/unit/features/notification/usePushNotification.test.ts`
+- [X] T130 [P] [US4] Frontend 설정 화면 단위 테스트 (계획/회고 시간 변경, NULL 시 알림 해제, 타임존 선택) — `frontend/__tests__/unit/screens/settings/SettingsScreen.test.tsx`
+- [X] T131 [P] [US4] Frontend usePushNotification 훅 단위 테스트 (FCM 토큰 등록, 알림 권한 요청) — `frontend/__tests__/unit/features/notification/usePushNotification.test.ts`
 
 ### Implementation for User Story 4
 
-- [ ] T132 [US4] NotificationLog Entity 구현 — `backend/src/notification/domain/notification-log.entity.ts`
-- [ ] T133 [US4] NotificationLog Repository 구현 — `backend/src/notification/infrastructure/notification-log.repository.ts`
-- [ ] T134 [US4] FCM 서비스 구현 (firebase-admin SDK) — `backend/src/notification/infrastructure/fcm.service.ts`
-- [ ] T135 [US4] 알림 발송 Usecase 구현 (PLAN/REVIEW 타입, 디바이스 조회, FCM 발송, 로그 기록) — `backend/src/notification/application/send-notification.usecase.ts`
-- [ ] T136 [US4] 알림 스케줄러 구현 (사용자별 planTime/reviewTime 기준, NULL 시 미발송) — `backend/src/scheduler/application/notification-scheduler.usecase.ts`
-- [ ] T137 [US4] Notification Module 구성 — `backend/src/notification/notification.module.ts`
-- [ ] T138 [US4] Frontend 푸시 알림 수신 설정 (FCM 토큰 등록, 알림 탭 시 앱 진입) — `frontend/src/features/notification/usePushNotification.ts`
-- [ ] T139 [US4] Frontend 설정 화면 구현 (계획/회고 시간 변경, 타임존 변경, 알림 해제) — `frontend/src/screens/settings/SettingsScreen.tsx`
-- [ ] T140 [US4] Frontend 설정 화면 loading/error 상태 처리 — `frontend/src/screens/settings/SettingsScreen.tsx`
+- [X] T132 [US4] NotificationLog Entity 구현 — `backend/src/notification/domain/notification-log.entity.ts`
+- [X] T133 [US4] NotificationLog Repository 구현 — `backend/src/notification/infrastructure/notification-log.repository.ts`
+- [X] T134 [US4] FCM 서비스 구현 (firebase-admin SDK) — `backend/src/notification/infrastructure/fcm.service.ts`
+- [X] T135 [US4] 알림 발송 Usecase 구현 (PLAN/REVIEW 타입, 디바이스 조회, FCM 발송, 로그 기록) — `backend/src/notification/application/send-notification.usecase.ts`
+- [X] T136 [US4] 알림 스케줄러 구현 (사용자별 planTime/reviewTime 기준, NULL 시 미발송) — `backend/src/scheduler/application/notification-scheduler.usecase.ts`
+- [X] T137 [US4] Notification Module 구성 — `backend/src/notification/notification.module.ts`
+- [X] T138 [US4] Frontend 푸시 알림 수신 설정 (FCM 토큰 등록, 알림 탭 시 앱 진입) — `frontend/src/features/notification/usePushNotification.ts`
+- [X] T139 [US4] Frontend 설정 화면 구현 (계획/회고 시간 변경, 타임존 변경, 알림 해제) — `frontend/src/screens/settings/SettingsScreen.tsx`
+- [X] T140 [US4] Frontend 설정 화면 loading/error 상태 처리 — `frontend/src/screens/settings/SettingsScreen.tsx`
 
 ### Maestro E2E Tests for User Story 4 ⚠️
 
 > **NOTE: 헌법 X조 — Phase 완료 시 Maestro E2E 테스트 작성 필수 (TDD)**
 
-- [ ] T209 [US4] Maestro E2E: 푸시 알림 설정 흐름 (설정 화면 → 시간 변경 → 저장 확인) — `.maestro/notification/push_notification.yml`
+- [X] T209 [US4] Maestro E2E: 푸시 알림 설정 흐름 (설정 화면 → 시간 변경 → 저장 확인) — `.maestro/notification/push_notification.yml`
 
 **Checkpoint**: 푸시 알림 발송 및 수신 동작 완료. E2E 검증 포함. 독립적으로 테스트 가능.
 

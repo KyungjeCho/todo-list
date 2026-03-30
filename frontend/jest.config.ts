@@ -14,7 +14,7 @@ const config: Config = {
   testRegex: '(/__tests__/.*\\.(test|spec))\\.(ts|tsx)$',
   testPathIgnorePatterns: ['/node_modules/', '/e2e/'],
   transformIgnorePatterns: [
-    'node_modules/(?!(@react-native|react-native)/)',
+    'node_modules/(?!(@react-native|react-native|@react-native-community|@react-native-firebase)/)',
   ],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
@@ -27,6 +27,7 @@ const config: Config = {
     '^src/(.*)$': '<rootDir>/src/$1',
     '^expo-web-browser$': '<rootDir>/__mocks__/expo-web-browser.ts',
     '^expo-linking$': '<rootDir>/__mocks__/expo-linking.ts',
+    '^@react-native-community/datetimepicker$': '<rootDir>/__mocks__/@react-native-community/datetimepicker.tsx',
   },
 };
 

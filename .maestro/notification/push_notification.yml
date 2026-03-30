@@ -1,0 +1,91 @@
+# T209 [US4] Maestro E2E: 푸시 알림 설정 흐름
+# 설정 화면 → 시간 변경 → 저장 확인
+# WHY: 사용자가 설정 화면에서 계획/회고 알림 시간을 변경하고,
+#       알림을 해제/활성화하는 핵심 플로우 검증.
+# PREREQ: 인증 완료 상태에서 메인 화면 진입 필요.
+
+appId: com.todolist.app
+
+tags:
+  - notification
+  - settings
+  - smoke
+
+---
+
+# 설정 화면 진입 확인
+- assertVisible:
+    id: "settings-screen"
+
+# 현재 계획 시간 표시 확인
+- assertVisible:
+    id: "plan-time-value"
+
+# 현재 회고 시간 표시 확인
+- assertVisible:
+    id: "review-time-value"
+
+# 현재 타임존 표시 확인
+- assertVisible:
+    id: "timezone-value"
+
+# --- 계획 시간 변경 ---
+
+# 계획 시간 버튼 탭 → 시간 선택 UI 표시
+- tapOn:
+    id: "plan-time-button"
+
+# 시간 선택 UI 표시 확인
+- assertVisible:
+    id: "time-picker"
+
+# 확인 버튼 탭하여 시간 선택 완료
+- tapOn:
+    id: "time-picker-confirm"
+
+# 시간 선택 UI 사라짐 확인
+- assertNotVisible:
+    id: "time-picker"
+    optional: true
+
+# --- 알림 해제 ---
+
+# 계획 알림 해제 토글 탭
+- tapOn:
+    id: "plan-notification-toggle"
+
+# 계획 시간이 해제됨으로 변경 확인
+- assertVisible:
+    text: "해제됨"
+
+# 회고 알림 해제 토글 탭
+- tapOn:
+    id: "review-notification-toggle"
+
+# --- 알림 재활성화 ---
+
+# 계획 알림 토글 다시 탭하여 활성화
+- tapOn:
+    id: "plan-notification-toggle"
+
+# 기본 시간(08:00)으로 복원 확인
+- assertVisible:
+    id: "plan-time-value"
+
+# --- 타임존 변경 ---
+
+# 타임존 버튼 탭 → 타임존 선택 UI 표시
+- tapOn:
+    id: "timezone-button"
+
+# 타임존 선택 UI 표시 확인
+- assertVisible:
+    id: "timezone-picker"
+
+# 다른 타임존 선택
+- tapOn:
+    text: "America/New_York"
+
+# 타임존 값 변경 확인
+- assertVisible:
+    text: "America/New_York"

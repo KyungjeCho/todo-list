@@ -37,7 +37,7 @@ export class AuthController {
   @Get('oauth/:provider')
   async oauthLogin(
     @Param('provider') provider: string,
-    @Query('fcmToken') fcmToken: string,
+    @Query('fcmToken') fcmToken: string | undefined,
     @Query('deviceType') deviceType: string,
     @Query('redirectUri') redirectUri: string,
     @Query('deviceName') deviceName: string | undefined,
@@ -92,7 +92,7 @@ export class AuthController {
       providerUserId: userProfile.providerUserId,
       providerUserEmail: userProfile.providerUserEmail,
       providerUserName: userProfile.providerUserName,
-      fcmToken: stateData.fcmToken || '',
+      fcmToken: stateData.fcmToken || undefined,
       deviceType: (stateData.deviceType as 'IOS' | 'ANDROID') || 'IOS',
       deviceName: stateData.deviceName,
       userAgent: req.headers['user-agent'] ?? undefined,

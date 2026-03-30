@@ -17,8 +17,8 @@ export class User extends BaseEntity {
   @Column({ name: 'review_time', type: 'time', nullable: true })
   reviewTime!: string | null;
 
-  @Column({ name: 'timezone', type: 'varchar', length: 64, default: 'UTC' })
-  timezone!: string;
+  @Column({ name: 'timezone', type: 'varchar', length: 64, nullable: true })
+  timezone!: string | null;
 
   @Column({ name: 'language', type: 'varchar', length: 10 })
   language!: string;

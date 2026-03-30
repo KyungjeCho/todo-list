@@ -3,7 +3,7 @@ export class OAuthCallbackDto {
   providerUserId!: string;
   providerUserEmail!: string;
   providerUserName!: string;
-  fcmToken!: string;
+  fcmToken?: string;
   deviceType!: 'IOS' | 'ANDROID';
   deviceName?: string;
   userAgent?: string;

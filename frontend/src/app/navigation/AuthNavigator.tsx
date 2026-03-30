@@ -1,13 +1,17 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
 import { useAuthStore } from '../../store/authStore';
 import { userApi } from '../../services/api/userApi';
 import { todoApi } from '../../services/api/todoApi';
 import type { TodoListResponse, CompleteDayResponse } from '../../services/api/todoApi';
 import { useTodoStore } from '../../store/todoStore';
+import { usePushNotification } from '../../features/notification/usePushNotification';
 import { LoginScreen } from '../../screens/auth/LoginScreen';
 import { OnboardingScreen } from '../../screens/onboarding/OnboardingScreen';
 import { MainScreen } from '../../screens/main/MainScreen';
+import { SettingsWrapper } from './SettingsWrapper';
 import type { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -50,7 +54,13 @@ const OnboardingWrapper: React.FC = () => {
 const defaultStats = { total: 0, completed: 0, active: 0, inactive: 0, progressRate: 0 };
 
 const MainWrapper: React.FC = () => {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { selectedDate } = useTodoStore();
+
+  // WHY: 로그인 후 토큰 갱신(onTokenRefresh)·앱 재실행 시 서버에 FCM 토큰 재등록
+  usePushNotification({
+    onRegisterDevice: userApi.registerDevice,
+  });
   const [data, setData] = useState<TodoListResponse | null>(null);
   const [modeOverride, setModeOverride] = useState<'PLAN' | 'REVIEW' | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -93,6 +103,7 @@ const MainWrapper: React.FC = () => {
   const handleToggleComplete = useCallback(async (id: string) => {
     const todo = data?.todos.find((t) => t.id === id);
     if (!todo) return;
+    if (todo.status === 'INACTIVE') return;
     const newStatus = todo.status === 'COMPLETED' ? 'ACTIVE' : 'COMPLETED';
     try {
       await todoApi.changeTodoStatus(id, { status: newStatus });
@@ -184,6 +195,7 @@ const MainWrapper: React.FC = () => {
       onDeactivate={handleDeactivate}
       onDelete={handleDelete}
       onCompleteDay={handleCompleteDay}
+      onNavigateSettings={() => navigation.navigate('Settings')}
       isLoading={isLoading}
       isAdding={isAdding}
       isCompleting={isCompleting}
@@ -199,9 +211,12 @@ const MainWrapper: React.FC = () => {
 export const AuthNavigator: React.FC = () => {
   const { isAuthenticated, user } = useAuthStore();
 
+  // WHY: 신규 유저는 timezone이 null로 내려옴. undefined와 null 모두 체크해야 온보딩을 건너뛰지 않음
+  const isOnboarded = user?.timezone != null;
+
   const getInitialRoute = (): keyof RootStackParamList => {
     if (!isAuthenticated) return 'Auth';
-    if (!user?.planTime) return 'Onboarding';
+    if (!isOnboarded) return 'Onboarding';
     return 'Main';
   };
 
@@ -212,10 +227,17 @@ export const AuthNavigator: React.FC = () => {
     >
       {!isAuthenticated ? (
         <Stack.Screen name="Auth" component={LoginScreen} />
-      ) : !user?.planTime ? (
+      ) : !isOnboarded ? (
         <Stack.Screen name="Onboarding" component={OnboardingWrapper} />
       ) : (
-        <Stack.Screen name="Main" component={MainWrapper} />
+        <>
+          <Stack.Screen name="Main" component={MainWrapper} />
+          <Stack.Screen
+            name="Settings"
+            component={SettingsWrapper}
+            options={{ headerShown: true, title: '설정' }}
+          />
+        </>
       )}
     </Stack.Navigator>
   );

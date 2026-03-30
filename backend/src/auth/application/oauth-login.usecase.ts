@@ -6,7 +6,7 @@ const VALID_PROVIDERS = ['google', 'naver', 'kakao', 'apple'] as const;
 
 interface OAuthLoginInput {
   provider: string;
-  fcmToken: string;
+  fcmToken?: string;
   deviceType: string;
   redirectUri: string;
   deviceName?: string;

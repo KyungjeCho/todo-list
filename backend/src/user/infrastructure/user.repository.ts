@@ -14,10 +14,15 @@ export class UserRepository {
     return this.userRepo.findOne({ where: { userAuthId } });
   }
 
-  async findAllWithTimezone(): Promise<User[]> {
-    return this.userRepo.find({
-      select: ['id', 'timezone'],
-    });
+  async findAllWithTimezone(): Promise<
+    (Pick<User, 'id' | 'planTime' | 'reviewTime'> & { timezone: string })[]
+  > {
+    const users = await this.userRepo
+      .createQueryBuilder('user')
+      .select(['user.id', 'user.planTime', 'user.reviewTime', 'user.timezone'])
+      .where('user.timezone IS NOT NULL')
+      .getMany();
+    return users as (Pick<User, 'id' | 'planTime' | 'reviewTime'> & { timezone: string })[];
   }
 
   async create(data: Partial<User>): Promise<User> {

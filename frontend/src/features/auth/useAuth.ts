@@ -1,10 +1,36 @@
 import { useCallback, useState } from 'react';
+import { Platform, PermissionsAndroid } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
+import { getMessaging, getToken, requestPermission } from '@react-native-firebase/messaging';
 import { authApi } from '../../services/api/authApi';
 import { userApi } from '../../services/api/userApi';
 import { useAuthStore } from '../../store/authStore';
-import type { OAuthProvider } from '../../types/user';
+import type { OAuthProvider, DeviceType } from '../../types/user';
+
+/** WHY: FCM 토큰 획득 실패가 로그인을 막으면 안 됨. 알림은 부가 기능 */
+async function getOptionalFcmToken(): Promise<string | null> {
+  try {
+    if (Platform.OS === 'android' && Platform.Version >= 33) {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+      );
+      if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+        return null;
+      }
+    }
+
+    const msg = getMessaging();
+    const authStatus = await requestPermission(msg);
+    if (authStatus === 0) {
+      return null;
+    }
+
+    return await getToken(msg);
+  } catch {
+    return null;
+  }
+}
 
 export function useAuth() {
   const { setTokens, setUser, clearAuth, setLoading } = useAuthStore();
@@ -16,8 +42,8 @@ export function useAuth() {
       setError(null);
 
       try {
-        const fcmToken = 'placeholder-fcm-token';
-        const deviceType = 'IOS' as const;
+        const fcmToken = await getOptionalFcmToken();
+        const deviceType: DeviceType = Platform.OS === 'ios' ? 'IOS' : 'ANDROID';
         const redirectUri = Linking.createURL('auth/callback');
         const url = authApi.getOAuthUrl(provider, fcmToken, deviceType, redirectUri);
         const result = await WebBrowser.openAuthSessionAsync(url, redirectUri);

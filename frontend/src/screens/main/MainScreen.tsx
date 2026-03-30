@@ -35,6 +35,7 @@ interface MainScreenProps {
   onDeactivate?: (id: string) => void;
   onDelete?: (id: string) => void;
   onCompleteDay?: () => void;
+  onNavigateSettings?: () => void;
   isLoading?: boolean;
   isAdding?: boolean;
   isCompleting?: boolean;
@@ -56,6 +57,7 @@ export const MainScreen: React.FC<MainScreenProps> = ({
   onDeactivate,
   onDelete,
   onCompleteDay,
+  onNavigateSettings,
   isLoading,
   isAdding,
   isCompleting,
@@ -79,9 +81,20 @@ export const MainScreen: React.FC<MainScreenProps> = ({
         <Text style={styles.modeText}>
           {mode === 'PLAN' ? 'Plan' : 'Review'}
         </Text>
-        {onModeToggle && (
-          <ModeToggle mode={mode} onToggle={onModeToggle} />
-        )}
+        <View style={styles.headerRight}>
+          {onModeToggle && (
+            <ModeToggle mode={mode} onToggle={onModeToggle} />
+          )}
+          {onNavigateSettings && (
+            <TouchableOpacity
+              testID="settings-button"
+              onPress={onNavigateSettings}
+              style={styles.settingsButton}
+            >
+              <Text style={styles.settingsIcon}>⚙</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       <View style={styles.statsContainer}>
@@ -163,6 +176,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   modeText: { fontSize: 24, fontWeight: 'bold' },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  settingsButton: { padding: 4 },
+  settingsIcon: { fontSize: 22 },
   statsContainer: { marginBottom: 16 },
   errorContainer: { padding: 12, marginBottom: 16 },
   errorText: { color: 'red' },

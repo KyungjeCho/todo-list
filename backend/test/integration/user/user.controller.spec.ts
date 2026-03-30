@@ -8,6 +8,8 @@ import { ConfigService } from '@nestjs/config';
 import { UserController } from 'src/user/user.controller';
 import { GetProfileUsecase } from 'src/user/application/get-profile.usecase';
 import { UpdateSettingsUsecase } from 'src/user/application/update-settings.usecase';
+import { RegisterDeviceUsecase } from 'src/notification/application/register-device.usecase';
+import { UserRepository } from 'src/user/infrastructure/user.repository';
 import { JwtStrategy } from 'src/auth/infrastructure/jwt.strategy';
 
 const TEST_JWT_SECRET = 'test-jwt-secret';
@@ -22,6 +24,14 @@ describe('UserController (Integration)', () => {
 
   const mockUpdateSettingsUsecase = {
     execute: jest.fn(),
+  };
+
+  const mockRegisterDeviceUsecase = {
+    execute: jest.fn(),
+  };
+
+  const mockUserRepository = {
+    findByUserAuthId: jest.fn(),
   };
 
   beforeAll(async () => {
@@ -39,6 +49,14 @@ describe('UserController (Integration)', () => {
         {
           provide: UpdateSettingsUsecase,
           useValue: mockUpdateSettingsUsecase,
+        },
+        {
+          provide: RegisterDeviceUsecase,
+          useValue: mockRegisterDeviceUsecase,
+        },
+        {
+          provide: UserRepository,
+          useValue: mockUserRepository,
         },
         {
           provide: ConfigService,

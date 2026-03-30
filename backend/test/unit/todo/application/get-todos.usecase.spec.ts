@@ -17,9 +17,7 @@ describe('GetTodosUsecase', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockCarriedOverHistoryRepository.findToTodoIds.mockResolvedValue(
-      new Set(),
-    );
+    mockCarriedOverHistoryRepository.findToTodoIds.mockResolvedValue(new Set());
     usecase = new GetTodosUsecase(
       mockTodoRepository as never,
       mockCarriedOverHistoryRepository as never,

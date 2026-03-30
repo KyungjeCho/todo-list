@@ -1,4 +1,12 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
+jest.mock('@react-native-firebase/messaging', () => ({
+  getMessaging: jest.fn().mockReturnValue({}),
+  requestPermission: jest.fn().mockResolvedValue(1),
+  getToken: jest.fn().mockResolvedValue('mock-fcm-token'),
+  onTokenRefresh: jest.fn().mockReturnValue(jest.fn()),
+  onMessage: jest.fn().mockReturnValue(jest.fn()),
+}));
+
 jest.mock('react-native-gesture-handler', () => {
   const React = require('react');
   const { View } = require('react-native');

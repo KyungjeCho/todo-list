@@ -56,7 +56,7 @@ export class GetTodosUsecase {
     const mode = this.determineMode(
       user.planTime,
       user.reviewTime,
-      user.timezone,
+      user.timezone ?? 'UTC',
     );
 
     const todoIds = sortedTodos.map((t) => t.id);

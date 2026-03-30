@@ -10,6 +10,10 @@ export class UserDeviceRepository {
     private readonly deviceRepo: Repository<UserDevice>,
   ) {}
 
+  async findByUserId(userId: string): Promise<UserDevice[]> {
+    return this.deviceRepo.find({ where: { userId } });
+  }
+
   async upsertDevice(data: {
     userId: string;
     fcmToken: string;

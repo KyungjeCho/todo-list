@@ -42,13 +42,14 @@ export class OAuthCallbackUsecase {
         providerUserEmail: input.providerUserEmail,
       });
 
+      // WHY: 신규 유저는 timezone null로 생성하여 온보딩에서 설정하도록 유도
       const user = await this.userRepository.create({
         userAuthId,
         userName:
           input.providerUserName ||
           input.providerUserEmail?.split('@')[0] ||
           `user_${Date.now()}`,
-        timezone: 'UTC',
+        timezone: null,
         language: 'ko-KR',
       });
       userId = user.id;
@@ -66,12 +67,14 @@ export class OAuthCallbackUsecase {
       expiredAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
-    await this.userDeviceRepository.upsertDevice({
-      userId,
-      fcmToken: input.fcmToken,
-      deviceType: input.deviceType,
-      deviceName: input.deviceName,
-    });
+    if (input.fcmToken) {
+      await this.userDeviceRepository.upsertDevice({
+        userId,
+        fcmToken: input.fcmToken,
+        deviceType: input.deviceType,
+        deviceName: input.deviceName,
+      });
+    }
 
     return { accessToken, refreshToken, isNewUser };
   }

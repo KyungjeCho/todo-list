@@ -3,6 +3,6 @@ export class UserProfileDto {
   userName!: string;
   planTime!: string | null;
   reviewTime!: string | null;
-  timezone!: string;
+  timezone!: string | null;
   language!: string;
 }

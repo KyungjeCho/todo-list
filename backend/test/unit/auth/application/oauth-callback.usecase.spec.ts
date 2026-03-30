@@ -193,6 +193,54 @@ describe('OAuthCallbackUsecase', () => {
       );
     });
 
+    it('should create new user with null timezone', async () => {
+      mockAuthRepository.findOauthByProviderUserId.mockResolvedValue(null);
+      mockAuthRepository.createUserAuth.mockResolvedValue({
+        id: 'auth-id-1',
+      });
+      mockAuthRepository.createOauthAccount.mockResolvedValue({
+        id: 'oauth-id-1',
+      });
+      mockUserRepository.create.mockResolvedValue({
+        id: 'user-id-1',
+        userAuthId: 'auth-id-1',
+      });
+      mockAuthRepository.createSession.mockResolvedValue({
+        id: 'session-id-1',
+      });
+      mockTokenService.generateAccessToken.mockReturnValue('access-token');
+      mockTokenService.generateRefreshToken.mockReturnValue('refresh-token');
+      mockUserDeviceRepository.upsertDevice.mockResolvedValue(undefined);
+
+      await usecase.execute(callbackDto);
+
+      expect(mockUserRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({ timezone: null }),
+      );
+    });
+
+    it('should skip device registration when fcmToken is absent', async () => {
+      const dtoWithoutFcm = { ...callbackDto, fcmToken: undefined };
+
+      mockAuthRepository.findOauthByProviderUserId.mockResolvedValue({
+        id: 'oauth-id-1',
+        userAuthId: 'auth-id-1',
+      });
+      mockUserRepository.findByUserAuthId.mockResolvedValue({
+        id: 'user-id-1',
+      });
+      mockAuthRepository.createSession.mockResolvedValue({
+        id: 'session-id-1',
+      });
+      mockTokenService.generateAccessToken.mockReturnValue('access-token');
+      mockTokenService.generateRefreshToken.mockReturnValue('refresh-token');
+
+      const result = await usecase.execute(dtoWithoutFcm);
+
+      expect(result.accessToken).toBe('access-token');
+      expect(mockUserDeviceRepository.upsertDevice).not.toHaveBeenCalled();
+    });
+
     it('should create user with generated name when email is missing', async () => {
       const dtoWithoutEmail = {
         ...callbackDto,

@@ -1,4 +1,4 @@
-import { IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsIn, IsOptional, IsString } from 'class-validator';
 
 const VALID_PROVIDERS = ['google', 'naver', 'kakao', 'apple'] as const;
 const VALID_DEVICE_TYPES = ['IOS', 'ANDROID'] as const;
@@ -11,8 +11,8 @@ export class OAuthLoginDto {
   provider!: OAuthProvider;
 
   @IsString()
-  @IsNotEmpty()
-  fcmToken!: string;
+  @IsOptional()
+  fcmToken?: string;
 
   @IsIn(VALID_DEVICE_TYPES)
   deviceType!: DeviceType;

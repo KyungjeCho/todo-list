@@ -9,16 +9,18 @@ import type {
 export const authApi = {
   getOAuthUrl(
     provider: OAuthProvider,
-    fcmToken: string,
+    fcmToken: string | null,
     deviceType: DeviceType,
     redirectUri: string,
     deviceName?: string,
   ): string {
     const params = new URLSearchParams({
-      fcmToken,
       deviceType,
       redirectUri,
     });
+    if (fcmToken) {
+      params.set('fcmToken', fcmToken);
+    }
     if (deviceName) {
       params.set('deviceName', deviceName);
     }
