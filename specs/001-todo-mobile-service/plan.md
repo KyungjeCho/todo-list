@@ -15,13 +15,13 @@
 - Backend: NestJS, TypeORM, Passport (OAuth), node-cron, firebase-admin, class-validator
 **Storage**: Supabase (PostgreSQL) — 디스크 수준 AES-256 암호화, 추가 앱 레벨 암호화 없음
 **Testing**:
-- Frontend: Jest, React Native Testing Library, Detox (E2E)
+- Frontend: Jest, React Native Testing Library, Maestro MCP (E2E)
 - Backend: Jest, Supertest (통합 테스트)
 **Target Platform**: iOS 15+, Android 12+
 **Project Type**: Mobile App + API Server (Monorepo: `frontend/` + `backend/`)
 **Performance Goals**: 앱 로딩 2초 이내, API 응답 200ms 이내, 음성 인식 전체 3초 이내
 **Constraints**: 알림 ±1분 정확도, 서비스 가용률 99.5%+, 오프라인 미지원 (v1)
-**Scale/Scope**: 3개 타겟 페르소나, 8개 사용자 스토리, 23개 기능 요구사항, 9개 DB 테이블
+**Scale/Scope**: 3개 타겟 페르소나, 8개 사용자 스토리, 27개 기능 요구사항, 9개 DB 테이블
 **Accessibility**: v1 기본 접근성 (접근성 라벨, 색상 대비 4.5:1). WCAG 2.1 AA 완전 준수는 v2
 
 ## Constitution Check
@@ -37,8 +37,11 @@
 | V. 실패 처리와 관측성 | PASS | loading/empty/error 상태 설계. 구조화 로그 + 추적 가능 에러 코드 |
 | VI. 단순성 우선 | PASS | 최소 라이브러리, premature abstraction 회피, SRP 준수 |
 | VII. 명세서 중심 개발 | PASS | `specify/` 디렉토리에 PRD, TECH_SPEC, DDL, API_SPEC, COMPONENT_DIAGRAM, ARCHITECTURE_DIAGRAM 존재 확인 |
+| VIII. 주석 전략 | PASS | WHY 중심 주석, 공개 API JSDoc/TSDoc 문서화, TODO/FIXME는 `TODO(담당자): #이슈번호 설명` 형식 (GitHub Issues 연동) |
+| IX. 브랜치 전략 | PASS | `feature/001-todo-mobile-service` 브랜치에서 작업 중. main 병합 시 PR 필수 |
+| X. E2E 테스트 (Maestro) | PASS | P1-P2 Phase별 Maestro E2E 테스트 작성, P3-P4는 Polish 전 별도 Phase에서 진행. appId: `com.todolist.app`, testID 기반 요소 탐색 |
 
-**결과: 모든 Gate 통과. Phase 0 진행.**
+**결과: 모든 Gate 통과 (10/10). Phase 0 진행.**
 
 ## Project Structure
 
@@ -139,11 +142,26 @@ frontend/
 │   └── types/                     # 공유 타입 정의
 ├── __tests__/
 │   ├── unit/
-│   ├── integration/
-│   └── e2e/
+│   └── integration/
 ├── app.json
 ├── tsconfig.json
 └── package.json
+
+.maestro/                           # Maestro E2E 테스트 (헌법 X조)
+├── auth/                           # US1: OAuth 인증/온보딩
+│   ├── login.yml
+│   └── onboarding.yml
+├── todo/                           # US2: 할 일 CRUD
+│   ├── create.yml
+│   ├── update.yml
+│   └── delete.yml
+├── review/                         # US3: 회고/이월
+│   └── daily_review.yml
+├── notification/                   # US4: 푸시 알림
+│   └── push_notification.yml
+├── memo/                           # US5: 메모 첨부
+│   └── memo_crud.yml
+└── config.yaml                     # appId: com.todolist.app
 ```
 
 **Structure Decision**: Frontend + Backend 분리 구조를 선택한다. Monorepo 내에 `frontend/`와 `backend/` 디렉토리를 배치한다. Backend는 NestJS의 모듈 기반 구조에 계층 분리(controller → application → domain → infrastructure)를 적용한다. Frontend는 screen → features → services → components 계층으로 분리한다.

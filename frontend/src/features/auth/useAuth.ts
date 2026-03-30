@@ -48,14 +48,24 @@ export function useAuth() {
       setError(null);
 
       try {
-        setTokens(accessToken, refreshToken);
-        const profile = await userApi.getProfile();
-        setUser(profile);
+        await setTokens(accessToken, refreshToken);
+        try {
+          const profile = await userApi.getProfile();
+          setUser(profile);
+        } catch (profileErr) {
+          // WHY: 프로필 조회 실패가 인증 상태를 무효화하면 안 됨.
+          // 토큰은 유효하므로 인증 유지, 에러만 표시.
+          const message =
+            profileErr instanceof Error
+              ? profileErr.message
+              : '프로필 조회에 실패했습니다';
+          setError(message);
+        }
         return { isNewUser };
       } catch (err) {
         clearAuth();
         const message =
-          err instanceof Error ? err.message : '프로필 조회에 실패했습니다';
+          err instanceof Error ? err.message : '인증에 실패했습니다';
         setError(message);
         return { isNewUser: false };
       } finally {

@@ -7,10 +7,14 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Todo } from '../../types/todo';
+import type { CompleteDayResponse } from '../../services/api/todoApi';
 import { AddTodoInput } from '../../components/todo/AddTodoInput';
 import { TodoItem } from '../../components/todo/TodoItem';
 import { ModeToggle } from '../../components/todo/ModeToggle';
+import { ReviewModeView } from './ReviewModeView';
+import { CompleteDayButton } from '../../components/todo/CompleteDayButton';
 
 interface Stats {
   total: number;
@@ -30,8 +34,13 @@ interface MainScreenProps {
   onEdit?: (id: string, content: string) => void;
   onDeactivate?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onCompleteDay?: () => void;
   isLoading?: boolean;
   isAdding?: boolean;
+  isCompleting?: boolean;
+  isDayCompleted?: boolean;
+  completeDayResult?: CompleteDayResponse | null;
+  completeDayError?: string;
   error?: string;
   onRetry?: () => void;
 }
@@ -46,21 +55,26 @@ export const MainScreen: React.FC<MainScreenProps> = ({
   onEdit,
   onDeactivate,
   onDelete,
+  onCompleteDay,
   isLoading,
   isAdding,
+  isCompleting,
+  isDayCompleted,
+  completeDayResult,
+  completeDayError,
   error,
   onRetry,
 }) => {
   if (isLoading) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <ActivityIndicator testID="main-loading-indicator" size="large" />
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.modeText}>
           {mode === 'PLAN' ? 'Plan' : 'Review'}
@@ -91,34 +105,52 @@ export const MainScreen: React.FC<MainScreenProps> = ({
         </View>
       )}
 
-      {todos.length === 0 && !error ? (
-        <View testID="empty-state" style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>
-            {mode === 'PLAN'
-              ? '오늘의 할 일을 추가해보세요'
-              : '오늘의 할 일이 없습니다'}
-          </Text>
-        </View>
-      ) : (
-        <FlatList
-          data={todos}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <TodoItem
-              todo={item}
-              onToggleComplete={onToggleComplete}
-              onEdit={onEdit}
-              onDeactivate={onDeactivate}
-              onDelete={onDelete}
+      {mode === 'REVIEW' ? (
+        <>
+          <ReviewModeView todos={todos} stats={stats} onToggleComplete={onToggleComplete} />
+          {onCompleteDay && (
+            <CompleteDayButton
+              onComplete={onCompleteDay}
+              isLoading={isCompleting}
+              isCompleted={isDayCompleted}
+              carriedOverResult={completeDayResult ? {
+                carriedOverCount: completeDayResult.carriedOverCount,
+                carriedOverTodos: completeDayResult.carriedOverTodos,
+              } : undefined}
+              error={completeDayError}
             />
           )}
-        />
-      )}
+        </>
+      ) : (
+        <>
+          {todos.length === 0 && !error ? (
+            <View testID="empty-state" style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>
+                오늘의 할 일을 추가해보세요
+              </Text>
+            </View>
+          ) : (
+            <FlatList
+              data={todos}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TodoItem
+                  todo={item}
+                  onToggleComplete={onToggleComplete}
+                  onEdit={onEdit}
+                  onDeactivate={onDeactivate}
+                  onDelete={onDelete}
+                />
+              )}
+            />
+          )}
 
-      {onAddTodo && (
-        <AddTodoInput onAdd={onAddTodo} isLoading={isAdding} />
+          {onAddTodo && (
+            <AddTodoInput onAdd={onAddTodo} isLoading={isAdding} />
+          )}
+        </>
       )}
-    </View>
+    </SafeAreaView>
   );
 };
 

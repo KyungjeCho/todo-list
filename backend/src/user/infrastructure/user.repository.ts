@@ -14,6 +14,12 @@ export class UserRepository {
     return this.userRepo.findOne({ where: { userAuthId } });
   }
 
+  async findAllWithTimezone(): Promise<User[]> {
+    return this.userRepo.find({
+      select: ['id', 'timezone'],
+    });
+  }
+
   async create(data: Partial<User>): Promise<User> {
     const entity = this.userRepo.create(data);
     return this.userRepo.save(entity);

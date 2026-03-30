@@ -7,14 +7,22 @@ describe('GetTodosUsecase', () => {
     findByUserIdAndDate: jest.fn(),
   };
 
+  const mockCarriedOverHistoryRepository = {
+    findToTodoIds: jest.fn(),
+  };
+
   const mockUserRepository = {
     findByUserAuthId: jest.fn(),
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockCarriedOverHistoryRepository.findToTodoIds.mockResolvedValue(
+      new Set(),
+    );
     usecase = new GetTodosUsecase(
       mockTodoRepository as never,
+      mockCarriedOverHistoryRepository as never,
       mockUserRepository as never,
     );
   });
@@ -238,7 +246,7 @@ describe('GetTodosUsecase', () => {
       await expect(usecase.execute(queryDto)).rejects.toThrow();
     });
 
-    it('should include isCarriedOver flag in each todo', async () => {
+    it('should set isCarriedOver true for CARRIED_OVER status', async () => {
       const todosWithCarryOver = [
         {
           ...mockTodos[0],
@@ -257,6 +265,26 @@ describe('GetTodosUsecase', () => {
         (t: { id: string }) => t.id === 'todo-id-1',
       );
       expect(carriedOverTodo.isCarriedOver).toBe(true);
+
+      const normalTodo = result.todos.find(
+        (t: { id: string }) => t.id === 'todo-id-2',
+      );
+      expect(normalTodo.isCarriedOver).toBe(false);
+    });
+
+    it('should set isCarriedOver true for child todos created by carry-over', async () => {
+      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockTodoRepository.findByUserIdAndDate.mockResolvedValue(mockTodos);
+      mockCarriedOverHistoryRepository.findToTodoIds.mockResolvedValue(
+        new Set(['todo-id-1']),
+      );
+
+      const result = await usecase.execute(queryDto);
+
+      const childTodo = result.todos.find(
+        (t: { id: string }) => t.id === 'todo-id-1',
+      );
+      expect(childTodo.isCarriedOver).toBe(true);
 
       const normalTodo = result.todos.find(
         (t: { id: string }) => t.id === 'todo-id-2',

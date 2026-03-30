@@ -16,12 +16,14 @@ import {
 import type { Request } from 'express';
 import { CreateTodoDto } from './application/dto/create-todo.dto';
 import { ChangeTodoStatusDto } from './application/dto/change-todo-status.dto';
+import { CompleteDayDto } from './application/dto/complete-day.dto';
 import { GetTodosQueryDto } from './application/dto/get-todos-query.dto';
 import { CreateTodoUsecase } from './application/create-todo.usecase';
 import { GetTodosUsecase } from './application/get-todos.usecase';
 import { UpdateTodoUsecase } from './application/update-todo.usecase';
 import { ChangeTodoStatusUsecase } from './application/change-todo-status.usecase';
 import { DeleteTodoUsecase } from './application/delete-todo.usecase';
+import { CompleteDayUsecase } from './application/complete-day.usecase';
 import { JwtAuthGuard } from '../auth/infrastructure/jwt-auth.guard';
 import { HttpExceptionFilter } from '../common/filters/http-exception.filter';
 
@@ -39,6 +41,7 @@ export class TodoController {
     private readonly updateTodoUsecase: UpdateTodoUsecase,
     private readonly changeTodoStatusUsecase: ChangeTodoStatusUsecase,
     private readonly deleteTodoUsecase: DeleteTodoUsecase,
+    private readonly completeDayUsecase: CompleteDayUsecase,
   ) {}
 
   @Get()
@@ -62,6 +65,18 @@ export class TodoController {
       userAuthId: req.user.userAuthId,
       content: body.content,
       todoDate: body.todoDate,
+    });
+  }
+
+  @Post('complete')
+  @HttpCode(HttpStatus.OK)
+  async completeDay(
+    @Req() req: AuthenticatedRequest,
+    @Body() body: CompleteDayDto,
+  ) {
+    return this.completeDayUsecase.execute({
+      userAuthId: req.user.userAuthId,
+      date: body.date,
     });
   }
 

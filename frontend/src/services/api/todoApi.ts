@@ -14,6 +14,23 @@ export interface TodoListResponse {
   todos: Todo[];
 }
 
+export interface CompleteDayResponse {
+  date: string;
+  stats: {
+    total: number;
+    completed: number;
+    active: number;
+    inactive: number;
+    progressRate: number;
+  };
+  carriedOverCount: number;
+  carriedOverTodos: Array<{
+    fromTodoId: string;
+    toTodoId: string;
+    content: string;
+  }>;
+}
+
 export interface DeleteTodoResponse {
   id: string;
   deletedAt: string;
@@ -56,6 +73,11 @@ export const todoApi = {
 
   async deleteTodo(todoId: string): Promise<DeleteTodoResponse> {
     const response = await apiClient.delete(`/todos/${todoId}`);
+    return response.data;
+  },
+
+  async completeDay(date: string): Promise<CompleteDayResponse> {
+    const response = await apiClient.post('/todos/complete', { date });
     return response.data;
   },
 };

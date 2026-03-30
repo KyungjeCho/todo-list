@@ -30,7 +30,7 @@
 - [X] T004 [P] Frontend ESLint + Prettier 설정 — `frontend/.eslintrc.js`, `frontend/.prettierrc`
 - [X] T005 [P] Backend Jest 테스트 환경 설정 — `backend/jest.config.ts`, `backend/test/jest-e2e.json`
 - [X] T006 [P] Frontend Jest + React Native Testing Library 설정 — `frontend/jest.config.ts`
-- [X] T007 [P] Frontend Detox E2E 테스트 환경 설정 — `frontend/.detoxrc.js`, `frontend/__tests__/e2e/`
+- [X] T007 [P] Maestro E2E 테스트 환경 설정 — `.maestro/config.yaml` (appId: `com.todolist.app`), `.maestro/` 디렉토리 구조 생성
 - [X] T008 Backend 환경 변수 설정 — `backend/.env.example`, `backend/src/common/config/configuration.ts`
 - [X] T009 [P] Frontend 환경 변수 설정 — `frontend/.env.example`, `frontend/src/services/config.ts`
 
@@ -140,7 +140,14 @@
 - [X] T075 [US1] Frontend 인증 상태 기반 네비게이션 분기 (로그인/온보딩/메인) — `frontend/src/app/navigation/AuthNavigator.tsx`
 - [X] T076 [US1] Frontend 로그인/온보딩 화면 loading/error 상태 처리 — `frontend/src/screens/auth/LoginScreen.tsx`, `frontend/src/screens/onboarding/OnboardingScreen.tsx`
 
-**Checkpoint**: OAuth 로그인 → 온보딩 → 메인 화면 진입 흐름 완료. 독립적으로 테스트 가능.
+### Maestro E2E Tests for User Story 1 ⚠️
+
+> **NOTE: 헌법 X조 — Phase 완료 시 Maestro E2E 테스트 작성 필수 (TDD)**
+
+- [X] T203 [P] [US1] Maestro E2E: OAuth 소셜 로그인 흐름 (로그인 버튼 탭 → 인증 → 앱 복귀) — `.maestro/auth/login.yml`
+- [X] T204 [P] [US1] Maestro E2E: 신규 사용자 온보딩 흐름 (계획/회고 시간 설정 → 메인 화면 진입) — `.maestro/auth/onboarding.yml`
+
+**Checkpoint**: OAuth 로그인 → 온보딩 → 메인 화면 진입 흐름 완료. E2E 검증 포함. 독립적으로 테스트 가능.
 
 ---
 
@@ -204,7 +211,15 @@
 - [X] T105 [US2] Frontend 모드 전환 컴포넌트 (수동 토글) — `frontend/src/components/todo/ModeToggle.tsx`
 - [X] T106 [US2] Frontend 메인 화면 loading/empty/error 상태 처리 (빈 목록 메시지, ActivityIndicator, 에러 재시도, 접근성) — `frontend/src/screens/main/MainScreen.tsx`
 
-**Checkpoint**: 할 일 CRUD + 모드 전환 완전 동작. 독립적으로 테스트 가능.
+### Maestro E2E Tests for User Story 2 ⚠️
+
+> **NOTE: 헌법 X조 — Phase 완료 시 Maestro E2E 테스트 작성 필수 (TDD)**
+
+- [X] T205 [P] [US2] Maestro E2E: 할 일 추가 흐름 ("+" 탭 → 내용 입력 → 목록 표시) — `.maestro/todo/create.yml`
+- [X] T206 [P] [US2] Maestro E2E: 할 일 수정 흐름 (항목 탭 → 내용 수정 → 자동 저장) — `.maestro/todo/update.yml`
+- [X] T207 [P] [US2] Maestro E2E: 할 일 삭제 흐름 (길게 누르기 → 휴지통 드래그) — `.maestro/todo/delete.yml`
+
+**Checkpoint**: 할 일 CRUD + 모드 전환 완전 동작. E2E 검증 포함. 독립적으로 테스트 가능.
 
 ---
 
@@ -218,35 +233,41 @@
 
 > **NOTE: 테스트를 먼저 작성하고 FAIL 확인 후 구현한다**
 
-- [ ] T107 [P] [US3] CarriedOverHistory Entity 단위 테스트 — `backend/test/unit/todo/domain/carried-over-history.entity.spec.ts`
-- [ ] T108 [P] [US3] 일정 완료 usecase 단위 테스트 (이월 로직 포함: ACTIVE→CARRIED_OVER, 새 Todo ACTIVE 생성, 연속 이월 시나리오) — `backend/test/unit/todo/application/complete-day.usecase.spec.ts`
-- [ ] T109 [P] [US3] 자동 이월 스케줄러 단위 테스트 (타임존별 자정, 중복 이월 방지, 사용자 타임존 변경 시 자정 기준 재계산) — `backend/test/unit/scheduler/application/carryover-scheduler.usecase.spec.ts`
-- [ ] T110 [P] [US3] Complete/Report Controller 통합 테스트 — `backend/test/integration/todo/todo-complete.controller.spec.ts`
+- [X] T107 [P] [US3] CarriedOverHistory Entity 단위 테스트 — `backend/test/unit/todo/domain/carried-over-history.entity.spec.ts`
+- [X] T108 [P] [US3] 일정 완료 usecase 단위 테스트 (이월 로직 포함: ACTIVE→CARRIED_OVER, 새 Todo ACTIVE 생성, 연속 이월 시나리오) — `backend/test/unit/todo/application/complete-day.usecase.spec.ts`
+- [X] T109 [P] [US3] 자동 이월 스케줄러 단위 테스트 (타임존별 자정, 중복 이월 방지, 사용자 타임존 변경 시 자정 기준 재계산) — `backend/test/unit/scheduler/application/carryover-scheduler.usecase.spec.ts`
+- [X] T110 [P] [US3] Complete/Report Controller 통합 테스트 — `backend/test/integration/todo/todo-complete.controller.spec.ts`
 
 ### Frontend Tests for User Story 3 ⚠️
 
 > **NOTE: 테스트를 먼저 작성하고 FAIL 확인 후 구현한다**
 
-- [ ] T111 [P] [US3] Frontend ReviewModeView 단위 테스트 (진행률 표시, 완료/미완료 분리, 상태 변경 시 재계산) — `frontend/__tests__/unit/screens/main/ReviewModeView.test.tsx`
-- [ ] T112 [P] [US3] Frontend CompleteDayButton 단위 테스트 (일정 완료 API 호출, 이월 결과 표시, 중복 완료 방지) — `frontend/__tests__/unit/components/todo/CompleteDayButton.test.tsx`
-- [ ] T113 [P] [US3] Frontend 이월 항목 뱃지 테스트 (isCarriedOver 표시) — `frontend/__tests__/unit/components/todo/TodoItem.carriedOver.test.tsx`
-- [ ] T114 [P] [US3] Frontend useAppFocusRefresh 훅 단위 테스트 (앱 포커스 복귀 시 데이터 새로고침, 포그라운드 자정 경과 시 자동 갱신) — `frontend/__tests__/unit/features/todo/useAppFocusRefresh.test.ts`
+- [X] T111 [P] [US3] Frontend ReviewModeView 단위 테스트 (진행률 표시, 완료/미완료 분리, 상태 변경 시 재계산) — `frontend/__tests__/unit/screens/main/ReviewModeView.test.tsx`
+- [X] T112 [P] [US3] Frontend CompleteDayButton 단위 테스트 (일정 완료 API 호출, 이월 결과 표시, 중복 완료 방지) — `frontend/__tests__/unit/components/todo/CompleteDayButton.test.tsx`
+- [X] T113 [P] [US3] Frontend 이월 항목 뱃지 테스트 (isCarriedOver 표시) — `frontend/__tests__/unit/components/todo/TodoItem.carriedOver.test.tsx`
+- [X] T114 [P] [US3] Frontend useAppFocusRefresh 훅 단위 테스트 (앱 포커스 복귀 시 데이터 새로고침, 포그라운드 자정 경과 시 자동 갱신) — `frontend/__tests__/unit/features/todo/useAppFocusRefresh.test.ts`
 
 ### Implementation for User Story 3
 
-- [ ] T115 [US3] CarriedOverHistory Entity 구현 — `backend/src/todo/domain/carried-over-history.entity.ts`
-- [ ] T116 [US3] CarriedOverHistory Repository 구현 — `backend/src/todo/infrastructure/carried-over-history.repository.ts`
-- [ ] T117 [US3] 일정 완료 Usecase 구현 (미완료 → CARRIED_OVER, 새 Todo ACTIVE 생성, 이력 기록) — `backend/src/todo/application/complete-day.usecase.ts`
-- [ ] T118 [US3] 일정 완료 DTO 정의 — `backend/src/todo/application/dto/complete-day.dto.ts`
-- [ ] T119 [US3] Todo Controller에 POST /todos/complete 엔드포인트 추가 — `backend/src/todo/todo.controller.ts`
-- [ ] T120 [US3] 자동 이월 스케줄러 구현 (사용자별 타임존 자정 기준) — `backend/src/scheduler/application/carryover-scheduler.usecase.ts`
-- [ ] T121 [US3] Scheduler Module 구성 — `backend/src/scheduler/scheduler.module.ts`
-- [ ] T122 [US3] Frontend 회고 모드 UI 구현 (진행률 표시, 완료/미완료 분리, 최종 체크) — `frontend/src/screens/main/ReviewModeView.tsx`
-- [ ] T123 [US3] Frontend "오늘의 일정 완료" 버튼 및 이월 결과 표시 — `frontend/src/components/todo/CompleteDayButton.tsx`
-- [ ] T124 [US3] Frontend 이월 항목 표시 (isCarriedOver 뱃지) — `frontend/src/components/todo/TodoItem.tsx`
-- [ ] T125 [US3] Frontend 앱 포커스 복귀 시 데이터 새로고침 (자정 이월 반영) — `frontend/src/features/todo/useAppFocusRefresh.ts`
+- [X] T115 [US3] CarriedOverHistory Entity 구현 — `backend/src/todo/domain/carried-over-history.entity.ts`
+- [X] T116 [US3] CarriedOverHistory Repository 구현 — `backend/src/todo/infrastructure/carried-over-history.repository.ts`
+- [X] T117 [US3] 일정 완료 Usecase 구현 (미완료 → CARRIED_OVER, 새 Todo ACTIVE 생성, 이력 기록) — `backend/src/todo/application/complete-day.usecase.ts`
+- [X] T118 [US3] 일정 완료 DTO 정의 — `backend/src/todo/application/dto/complete-day.dto.ts`
+- [X] T119 [US3] Todo Controller에 POST /todos/complete 엔드포인트 추가 — `backend/src/todo/todo.controller.ts`
+- [X] T120 [US3] 자동 이월 스케줄러 구현 (사용자별 타임존 자정 기준) — `backend/src/scheduler/application/carryover-scheduler.usecase.ts`
+- [X] T121 [US3] Scheduler Module 구성 — `backend/src/scheduler/scheduler.module.ts`
+- [X] T122 [US3] Frontend 회고 모드 UI 구현 (진행률 표시, 완료/미완료 분리, 최종 체크) — `frontend/src/screens/main/ReviewModeView.tsx`
+- [X] T123 [US3] Frontend "오늘의 일정 완료" 버튼 및 이월 결과 표시 — `frontend/src/components/todo/CompleteDayButton.tsx`
+- [X] T124 [US3] Frontend 이월 항목 표시 (isCarriedOver 뱃지) — `frontend/src/components/todo/TodoItem.tsx`
+- [X] T125 [US3] Frontend 앱 포커스 복귀 시 데이터 새로고침 (자정 이월 반영) — `frontend/src/features/todo/useAppFocusRefresh.ts`
 
-**Checkpoint**: 회고 → 일정 완료 → 자동 이월 동작 완료. 독립적으로 테스트 가능.
+### Maestro E2E Tests for User Story 3 ⚠️
+
+> **NOTE: 헌법 X조 — Phase 완료 시 Maestro E2E 테스트 작성 필수 (TDD)**
+
+- [X] T208 [US3] Maestro E2E: 하루 회고 및 이월 흐름 (Review 모드 → 진행률 확인 → 일정 완료 → 이월 확인) — `.maestro/review/daily_review.yml`
+
+**Checkpoint**: 회고 → 일정 완료 → 자동 이월 동작 완료. E2E 검증 포함. 독립적으로 테스트 가능.
 
 ---
 
@@ -284,7 +305,13 @@
 - [ ] T139 [US4] Frontend 설정 화면 구현 (계획/회고 시간 변경, 타임존 변경, 알림 해제) — `frontend/src/screens/settings/SettingsScreen.tsx`
 - [ ] T140 [US4] Frontend 설정 화면 loading/error 상태 처리 — `frontend/src/screens/settings/SettingsScreen.tsx`
 
-**Checkpoint**: 푸시 알림 발송 및 수신 동작 완료. 독립적으로 테스트 가능.
+### Maestro E2E Tests for User Story 4 ⚠️
+
+> **NOTE: 헌법 X조 — Phase 완료 시 Maestro E2E 테스트 작성 필수 (TDD)**
+
+- [ ] T209 [US4] Maestro E2E: 푸시 알림 설정 흐름 (설정 화면 → 시간 변경 → 저장 확인) — `.maestro/notification/push_notification.yml`
+
+**Checkpoint**: 푸시 알림 발송 및 수신 동작 완료. E2E 검증 포함. 독립적으로 테스트 가능.
 
 ---
 
@@ -325,7 +352,13 @@
 - [ ] T157 [US5] Frontend 메모 UI 컴포넌트 (입력/표시/수정/삭제) — `frontend/src/components/todo/MemoSection.tsx`
 - [ ] T158 [US5] Frontend TodoItem에 메모 섹션 통합 — `frontend/src/components/todo/TodoItem.tsx`
 
-**Checkpoint**: 메모 CRUD 동작 완료. 독립적으로 테스트 가능.
+### Maestro E2E Tests for User Story 5 ⚠️
+
+> **NOTE: 헌법 X조 — Phase 완료 시 Maestro E2E 테스트 작성 필수 (TDD)**
+
+- [ ] T210 [US5] Maestro E2E: 메모 CRUD 흐름 (메모 추가 → 수정 → 삭제) — `.maestro/memo/memo_crud.yml`
+
+**Checkpoint**: 메모 CRUD 동작 완료. E2E 검증 포함. 독립적으로 테스트 가능.
 
 ---
 
@@ -427,7 +460,30 @@
 
 ---
 
-## Phase 11: Polish & Cross-Cutting Concerns
+## Phase 11: P3-P4 외부 API 연동 및 E2E 테스트
+
+**Purpose**: P3-P4(US6~US8) 기능의 외부 API key 등록 및 Maestro E2E 테스트 (헌법 X조)
+
+**Prerequisites**: Phase 8~10 (US6~US8) 구현 완료
+
+### 외부 API Key 등록
+
+- [ ] T211 STT 외부 API key 등록 및 연결 검증 — `backend/.env`, `backend/src/ai/infrastructure/stt.service.ts`
+- [ ] T212 [P] LLM 외부 API key 등록 및 연결 검증 — `backend/.env`, `backend/src/ai/infrastructure/llm.service.ts`
+
+### Maestro E2E Tests for P3-P4 ⚠️
+
+> **NOTE: 헌법 X조 — P3-P4 기능은 이 Phase에서 E2E 테스트 작성 (TDD)**
+
+- [ ] T213 [US6] Maestro E2E: 음성 인식 할 일 추가 흐름 (마이크 탭 → 녹음 → STT/LLM 변환 → 목록 추가) — `.maestro/voice/voice_todo.yml`
+- [ ] T214 [US7] Maestro E2E: 캘린더 조회 흐름 (캘린더 진입 → 월별 요약 → 날짜 선택 → 할 일 목록) — `.maestro/calendar/calendar_view.yml`
+- [ ] T215 [US8] Maestro E2E: TodoList 공유 흐름 (날짜 선택 → 공유 버튼 → 채널 선택) — `.maestro/share/share_todo.yml`
+
+**Checkpoint**: P3-P4 외부 API 연동 완료 및 E2E 검증 통과.
+
+---
+
+## Phase 12: Polish & Cross-Cutting Concerns
 
 **Purpose**: 전체 품질 개선 및 배포 준비
 
@@ -437,7 +493,7 @@
 - [ ] T196 [P] GitHub Actions CI 파이프라인 (Backend lint + test) — `.github/workflows/backend-ci.yml`
 - [ ] T197 [P] GitHub Actions CI 파이프라인 (Frontend lint + test) — `.github/workflows/frontend-ci.yml`
 - [ ] T198 Backend E2E 테스트 (온보딩 → 할 일 CRUD → 회고 → 이월 전체 흐름) — `backend/test/e2e/full-flow.e2e-spec.ts`
-- [ ] T199 Frontend E2E 테스트 (Detox: 로그인 → 온보딩 → 할 일 추가 → 완료, iOS 15+/Android 12+ 대상) — `frontend/__tests__/e2e/fullFlow.test.ts`
+- [ ] T199 Maestro E2E 전체 흐름 통합 테스트 (로그인 → 온보딩 → 할 일 추가 → 회고 → 이월, iOS 15+/Android 12+ 대상) — `.maestro/full_flow.yml`
 - [ ] T200 TypeScript 타입 오류 전체 점검 (`npx tsc --noEmit` backend + frontend)
 - [ ] T201 ESLint 전체 점검 및 수정
 - [ ] T202 quickstart.md 기반 전체 설정 검증
@@ -450,15 +506,16 @@
 
 - **Phase 1 (Setup)**: 의존성 없음 — 즉시 시작
 - **Phase 2 (Foundational)**: Phase 1 완료 후 시작 — **모든 사용자 스토리 차단**
-- **Phase 3 (US1 인증/온보딩)**: Phase 2 완료 후 시작 — 다른 스토리의 인증 의존
-- **Phase 4 (US2 할 일 CRUD)**: Phase 3 완료 후 시작 (인증 필요)
-- **Phase 5 (US3 회고/이월)**: Phase 4 완료 후 시작 (Todo CRUD 필요)
-- **Phase 6 (US4 알림)**: Phase 3 완료 후 시작 (인증/사용자 필요, US2와 병렬 가능)
-- **Phase 7 (US5 메모)**: Phase 4 완료 후 시작 (Todo 필요)
+- **Phase 3 (US1 인증/온보딩)**: Phase 2 완료 후 시작 — 다른 스토리의 인증 의존. Maestro E2E 포함.
+- **Phase 4 (US2 할 일 CRUD)**: Phase 3 완료 후 시작 (인증 필요). Maestro E2E 포함.
+- **Phase 5 (US3 회고/이월)**: Phase 4 완료 후 시작 (Todo CRUD 필요). Maestro E2E 포함.
+- **Phase 6 (US4 알림)**: Phase 3 완료 후 시작 (인증/사용자 필요, US2와 병렬 가능). Maestro E2E 포함.
+- **Phase 7 (US5 메모)**: Phase 4 완료 후 시작 (Todo 필요). Maestro E2E 포함.
 - **Phase 8 (US6 음성)**: Phase 4 완료 후 시작 (Todo CRUD 필요)
 - **Phase 9 (US7 캘린더)**: Phase 4 완료 후 시작 (Todo 데이터 필요)
 - **Phase 10 (US8 공유)**: Phase 4 완료 후 시작 (Todo 데이터 필요)
-- **Phase 11 (Polish)**: 원하는 스토리 완료 후 시작
+- **Phase 11 (P3-P4 E2E)**: Phase 8~10 완료 후 시작. 외부 API key 등록 + Maestro E2E (US6~US8)
+- **Phase 12 (Polish)**: 원하는 스토리 + Phase 11 완료 후 시작
 
 ### Within Each User Story
 
@@ -472,7 +529,9 @@
 - Phase 1: T003-T009 [P] 병렬 가능
 - Phase 2: T010-T013 [P] 테스트 병렬, T015-T022 [P] 구현 병렬
 - Phase 3-10: 각 Phase 내 [P] 표시된 테스트/구현 태스크 병렬 가능
+- Phase 3-7: 각 Phase 마지막에 Maestro E2E 테스트 병렬 작성 가능
 - Phase 6 (US4)과 Phase 4 (US2)는 Phase 3 완료 후 동시 시작 가능
+- Phase 11: T211-T212 API key 등록 병렬, T213-T215 E2E 테스트 병렬
 
 ---
 
@@ -491,4 +550,6 @@
 2. US1 (인증) → 테스트 → 배포
 3. US2 (CRUD) → 테스트 → 배포 (MVP!)
 4. US3 (회고/이월) → 테스트 → 배포 (루틴 완성)
-5. US4~8 → 각 스토리별 독립 배포
+5. US4~5 → 각 스토리별 Maestro E2E 포함 배포
+6. US6~8 → 구현 후 Phase 11에서 API key 등록 + E2E 일괄 검증
+7. Phase 12 → 전체 품질 점검 및 배포 준비

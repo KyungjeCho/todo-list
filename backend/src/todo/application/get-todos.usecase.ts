@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { TodoRepository } from '../infrastructure/todo.repository';
+import { CarriedOverHistoryRepository } from '../infrastructure/carried-over-history.repository';
 import { UserRepository } from '../../user/infrastructure/user.repository';
 import { TodoStatus } from '../domain/todo.entity';
 import type { TodoListResponseDto, TodoItemDto } from './dto';
@@ -13,6 +14,7 @@ interface GetTodosInput {
 export class GetTodosUsecase {
   constructor(
     private readonly todoRepository: TodoRepository,
+    private readonly carriedOverHistoryRepository: CarriedOverHistoryRepository,
     private readonly userRepository: UserRepository,
   ) {}
 
@@ -57,6 +59,10 @@ export class GetTodosUsecase {
       user.timezone,
     );
 
+    const todoIds = sortedTodos.map((t) => t.id);
+    const carriedOverToIds =
+      await this.carriedOverHistoryRepository.findToTodoIds(todoIds);
+
     const todoItems: TodoItemDto[] = sortedTodos.map((todo) => {
       const memos = (
         (todo.memos as {
@@ -81,7 +87,9 @@ export class GetTodosUsecase {
         id: todo.id,
         content: todo.content,
         status: todo.status,
-        isCarriedOver: todo.status === TodoStatus.CARRIED_OVER,
+        isCarriedOver:
+          todo.status === TodoStatus.CARRIED_OVER ||
+          carriedOverToIds.has(todo.id),
         todoDate: todo.todoDate,
         memos,
         createdAt: new Date(todo.createdAt).toISOString(),

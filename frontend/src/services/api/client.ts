@@ -1,7 +1,13 @@
 import axios from 'axios';
 import type { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import config from '../config';
-import { useAuthStore } from '../../store/authStore';
+
+// WHY: lazy import to break circular dependency (authStore → userApi → client → authStore)
+function getAuthStore() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { useAuthStore } = require('../../store/authStore') as typeof import('../../store/authStore');
+  return useAuthStore;
+}
 
 export class ApiError extends Error {
   readonly statusCode: number;
@@ -27,7 +33,7 @@ export const apiClient: AxiosInstance = axios.create({
 
 apiClient.interceptors.request.use(
   (requestConfig: InternalAxiosRequestConfig) => {
-    const { accessToken } = useAuthStore.getState();
+    const { accessToken } = getAuthStore().getState();
     if (accessToken) {
       requestConfig.headers.Authorization = `Bearer ${accessToken}`;
     }
@@ -69,7 +75,7 @@ apiClient.interceptors.response.use(
       !originalRequest.url?.includes('/auth/token/refresh')
     ) {
       const { refreshToken, setTokens, clearAuth } =
-        useAuthStore.getState();
+        getAuthStore().getState();
 
       if (!refreshToken) {
         clearAuth();

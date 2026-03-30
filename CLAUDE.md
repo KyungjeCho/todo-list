@@ -1,6 +1,6 @@
 # todo-list Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-03-26
+Auto-generated from all feature plans. Last updated: 2026-03-28
 
 ## Active Technologies
 - Supabase (PostgreSQL) — 디스크 수준 AES-256 암호화, 추가 앱 레벨 암호화 없음 (001-todo-mobile-service)
@@ -12,6 +12,7 @@ Auto-generated from all feature plans. Last updated: 2026-03-26
 - Supabase (PostgreSQL) — Database
 - Zustand — Frontend 상태 관리
 - Jest — 테스트 프레임워크
+- Maestro — Frontend E2E 테스트
 
 ## Project Structure
 
@@ -35,6 +36,11 @@ frontend/
 │   ├── components/
 │   └── store/
 └── __tests__/
+
+.maestro/
+├── auth/
+├── home/
+└── config.yaml
 ```
 
 ## Commands
@@ -55,6 +61,7 @@ cd frontend && npm test && npm run lint
 - 모든 UI 상태: loading, empty, error 처리 필수
 - 한국어 문서, 영어 코드 식별자
 - 주석: WHY 중심, 공개 API는 JSDoc/TSDoc 문서화, 코드 반복 주석 금지, 주석 처리된 코드 금지
+- Frontend E2E: Maestro MCP 기반, `.maestro/` 디렉토리에 YAML 작성, Phase별 TDD 필수
 
 ## Branch Strategy
 
@@ -65,7 +72,6 @@ cd frontend && npm test && npm run lint
 
 ## Recent Changes
 - 001-todo-mobile-service: Added TypeScript 5.x (Frontend & Backend)
-
 - 001-todo-mobile-service: Todo 모바일 서비스 초기 설계
 
 <!-- MANUAL ADDITIONS START -->

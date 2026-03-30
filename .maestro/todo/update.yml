@@ -1,0 +1,51 @@
+# T206 [US2] Maestro E2E: 할 일 수정 흐름
+# 기존 항목 탭 → 편집 모드 진입 → 내용 수정 → submitEditing 으로 저장 검증
+# WHY: 할 일 내용을 수정하는 인라인 편집 플로우 검증.
+#       탭으로 편집 모드 진입, 텍스트 변경, Enter로 저장까지의 흐름.
+# PREREQ: 인증 완료 + 메인 화면에 최소 1개 할 일 존재.
+#          create.yml 선행 실행 또는 사전 데이터 stub 필요.
+
+appId: com.todolist.app
+
+tags:
+  - todo
+  - crud
+
+---
+
+# 메인 화면 진입 확인
+- assertVisible:
+    text: "Plan"
+
+# 기존 할 일 항목이 목록에 존재하는지 확인
+- assertVisible:
+    text: "E2E 테스트 할 일 항목"
+
+# 할 일 항목 텍스트를 탭하여 편집 모드 진입
+- tapOn:
+    text: "E2E 테스트 할 일 항목"
+
+# 편집 입력 필드가 표시되는지 확인 (동적 testID이므로 텍스트 기반 확인)
+# WHY: testID가 todo-edit-input-{id}로 동적이므로 텍스트 존재 여부로 편집 모드 확인
+- assertVisible:
+    text: "E2E 테스트 할 일 항목"
+
+# 기존 텍스트를 지우고 새 내용 입력
+- eraseText: 12
+- inputText: "수정된 할 일 항목"
+
+# Enter 키로 수정 저장
+- pressKey: Enter
+
+# 수정된 내용이 목록에 반영되었는지 확인
+- assertVisible:
+    text: "수정된 할 일 항목"
+
+# 원래 텍스트는 더 이상 표시되지 않는지 확인
+- assertNotVisible:
+    text: "E2E 테스트 할 일 항목"
+
+# 체크박스 탭하여 완료 상태 전환 확인
+- tapOn:
+    text: "수정된 할 일 항목"
+    optional: true

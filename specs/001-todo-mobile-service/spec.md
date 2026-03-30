@@ -7,6 +7,14 @@
 
 ## Clarifications
 
+### Session 2026-03-28
+
+- Q: Maestro E2E 테스트 적용 범위? → A: P1-P2(US1~US5)는 각 Phase에서 E2E 테스트 작성. P3-P4(US6~US8)는 Polish 이전 별도 Phase에서 API key 등록 및 E2E 테스트 진행
+- Q: Maestro appId? → A: `com.todolist.app`
+- Q: testID 속성 부여를 FR로 명시? → A: 모든 인터랙티브 UI 요소에 testID 속성 필수를 FR로 추가
+- Q: 브랜치 전략(헌법 IX조) 반영 위치? → A: Assumptions에 개발 프로세스 가정으로 추가
+- Q: TODO/FIXME 이슈 트래킹 도구? → A: GitHub Issues
+
 ### Session 2026-03-26
 
 - Q: PRD에서 다중 디바이스 동기화 NFR이 삭제됨에 따라 spec 정합성 조정 필요? → A: SC-005(다중 디바이스 동기화 5초) 삭제, Edge Case(동일 계정 다중 디바이스 동기화) 삭제, FR-023을 FCM 디바이스 등록(알림용)으로 한정
@@ -185,6 +193,10 @@
 - **FR-021**: 캘린더 페이지에서 날짜별 할 일과 월별 요약(완료/전체 건수)을 조회할 수 있어야 한다.
 - **FR-022**: 사용자는 할 일 목록을 SNS/메신저로 공유할 수 있어야 하며, "나에게 전송" 옵션이 최상단에 배치되어야 한다.
 - **FR-023**: 시스템은 로그인 시 FCM 디바이스 토큰을 등록하여 푸시 알림 수신을 가능하게 해야 한다.
+- **FR-024**: 모든 인터랙티브 UI 요소(버튼, 입력 필드, 체크박스, 탭 가능 항목 등)에 고유한 `testID` 속성을 부여해야 한다. Maestro E2E 테스트에서 testID 기반 요소 탐색을 우선하며, testID가 없는 경우에만 텍스트로 fallback한다.
+- **FR-025**: P1-P2(US1~US5) 기능은 각 구현 Phase 완료 시 Maestro E2E 테스트를 작성해야 한다. P3-P4(US6~US8) 기능은 Polish 이전 별도 Phase에서 외부 API key 등록과 함께 E2E 테스트를 작성해야 한다.
+- **FR-026**: 모든 E2E 테스트는 `.maestro/` 디렉토리에 YAML로 작성하며, appId는 `com.todolist.app`을 사용한다. 각 플로우는 `launchApp` + `clearState: true`로 시작하고, 한 플로우당 하나의 유저 저니만 테스트한다.
+- **FR-027**: 코드 내 미해결 사항은 `TODO(담당자): #이슈번호 설명` 형식으로 작성하고, GitHub Issues에 대응하는 이슈를 등록해야 한다.
 
 ### Key Entities
 
@@ -222,3 +234,6 @@
 - 공유 기능은 OS 기본 공유 시트를 활용하며, 별도의 딥링크/URL 생성 서버는 v1에서 구현하지 않는다.
 - 데이터 암호화는 전송 중 TLS, 저장 시 Supabase 기본 디스크 암호화(AES-256)를 적용한다. 추가 애플리케이션 레벨 암호화는 v1에서 적용하지 않는다.
 - v1에서는 기본 접근성만 적용한다 (접근성 라벨, 최소 색상 대비 4.5:1). WCAG 2.1 AA 완전 준수는 v2 범위이다.
+- 모든 코드 변경은 `feature/*` 브랜치에서 작업하며, main 브랜치로의 병합은 PR(Pull Request) 리뷰를 필수로 거친다 (헌법 IX조).
+- 코드 주석은 WHY 중심으로 작성하고, 공개 API는 JSDoc/TSDoc으로 문서화한다. 주석 처리된 코드와 코드 반복 주석은 금지한다 (헌법 VIII조).
+- 이슈 트래킹은 GitHub Issues를 사용하며, TODO/FIXME 주석은 `TODO(담당자): #이슈번호 설명` 형식을 따른다 (헌법 VIII조).

@@ -1,0 +1,20 @@
+# Maestro E2E Test Configuration
+# https://maestro.mobile.dev/
+
+appId: com.todolist.app
+
+# Test execution settings
+name: Todo List E2E Tests
+
+# Base URL for API calls during E2E tests
+env:
+  API_BASE_URL: ${API_BASE_URL:-http://localhost:3000}
+
+# Tags for selective test execution
+tags:
+  - smoke
+  - regression
+
+# Default timeout for element interactions (ms)
+onFlowStart:
+  - clearState

@@ -68,8 +68,16 @@ export const TodoItem: React.FC<TodoItemProps> = ({
 
   const handleDelete = useCallback(() => {
     Alert.alert('삭제', `"${todo.content}"를 삭제할까요?`, [
-      { text: '취소', style: 'cancel', onPress: () => swipeableRef.current?.close() },
-      { text: '삭제', style: 'destructive', onPress: () => onDelete?.(todo.id) },
+      {
+        text: '취소',
+        style: 'cancel',
+        onPress: () => swipeableRef.current?.close(),
+      },
+      {
+        text: '삭제',
+        style: 'destructive',
+        onPress: () => onDelete?.(todo.id),
+      },
     ]);
   }, [onDelete, todo.id, todo.content]);
 
@@ -100,7 +108,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
       >
         <View
           testID={`todo-item-${todo.id}`}
-          accessibilityLabel={`${todo.content}, ${todo.status}`}
+          accessibilityLabel={`${todo.content}, ${todo.status}${todo.isCarriedOver ? ', 이월' : ''}`}
           style={[styles.container, isInactive && styles.inactive]}
         >
           <TouchableOpacity
@@ -112,6 +120,16 @@ export const TodoItem: React.FC<TodoItemProps> = ({
           >
             {isCompleted && <Text style={styles.checkmark}>&#10003;</Text>}
           </TouchableOpacity>
+
+          {todo.isCarriedOver && (
+            <View
+              testID={`carried-over-badge-${todo.id}`}
+              accessibilityLabel="이월된 항목"
+              style={styles.carriedOverBadge}
+            >
+              <Text style={styles.carriedOverBadgeText}>이월</Text>
+            </View>
+          )}
 
           <View style={styles.contentContainer}>
             {isEditing ? (
@@ -170,7 +188,20 @@ const styles = StyleSheet.create({
   contentText: { fontSize: 16 },
   completedText: { textDecorationLine: 'line-through', color: '#888' },
   inactiveText: { color: '#aaa' },
-  editInput: { fontSize: 16, borderBottomWidth: 1, borderBottomColor: '#2196F3', padding: 0 },
+  editInput: {
+    fontSize: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2196F3',
+    padding: 0,
+  },
+  carriedOverBadge: {
+    backgroundColor: '#FFF3E0',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  carriedOverBadgeText: { fontSize: 10, color: '#FF9800', fontWeight: 'bold' },
   deleteAction: {
     backgroundColor: '#FF3B30',
     justifyContent: 'center',

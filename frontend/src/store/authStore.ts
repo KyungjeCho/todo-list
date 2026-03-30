@@ -15,7 +15,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
 
-  setTokens: (accessToken: string, refreshToken: string) => void;
+  setTokens: (accessToken: string, refreshToken: string) => Promise<void>;
   setUser: (user: UserProfile) => void;
   clearAuth: () => void;
   setLoading: (isLoading: boolean) => void;
@@ -29,9 +29,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
   isLoading: false,
 
-  setTokens: (accessToken, refreshToken) => {
-    tokenManager.saveTokens(accessToken, refreshToken);
+  setTokens: async (accessToken, refreshToken) => {
     set({ accessToken, refreshToken, isAuthenticated: true });
+    await tokenManager.saveTokens(accessToken, refreshToken);
   },
 
   setUser: (user) => set({ user }),

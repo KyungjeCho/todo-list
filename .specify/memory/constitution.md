@@ -1,22 +1,19 @@
 <!--
 === Sync Impact Report ===
-Version change: 1.1.0 → 1.2.0
+Version change: 1.2.0 → 1.3.0
 Modified principles: N/A
 Added sections:
-  - IX. 브랜치 전략 (Branch Strategy)
+  - X. E2E 테스트 원칙 (E2E Testing with Maestro)
 Removed sections: N/A
 Templates requiring updates:
   - .specify/templates/plan-template.md ✅ compatible
     (Constitution Check section exists; gates will be derived
-     from these 9 principles at plan time)
+     from these 10 principles at plan time)
   - .specify/templates/spec-template.md ✅ compatible
-    (no changes needed)
+    (User Scenarios & Testing section already supports E2E scenarios)
   - .specify/templates/tasks-template.md ✅ compatible
-    (no changes needed)
+    (Phase structure supports E2E test tasks per user story)
   - .specify/templates/commands/*.md — no command files found
-  - .specify/scripts/bash/common.sh ✅ updated
-    (check_feature_branch, find_feature_dir_by_prefix now support
-     feature/*, fix/*, hotfix/* branch patterns)
 Follow-up TODOs: none
 -->
 
@@ -140,6 +137,37 @@ Follow-up TODOs: none
 **근거**: 브랜치 전략을 명확히 하면 동시 작업 시 충돌을
 최소화하고, PR 필수 정책은 코드 품질 게이트로 기능한다.
 
+### X. E2E 테스트 원칙 (Maestro E2E Testing)
+
+- Frontend E2E 테스트는 **Maestro MCP**를 이용하여 진행한다.
+- 매 Phase의 Frontend 작업 완료 시 E2E 테스트를 **반드시**
+  작성하고, TDD 원칙(III)에 따라 실패하는 테스트를 먼저
+  작성한 뒤 구현한다.
+- 모든 E2E 테스트는 `.maestro/` 디렉토리에 YAML로 작성한다.
+- **appId**: `com.yourapp.example`
+- 테스트 파일 네이밍: `{feature_name}.yml`
+- 각 플로우는 `launchApp`으로 시작하고 `clearState: true`를
+  포함해야 한다.
+- 요소 탐색은 **testID 기반**을 우선하되, 없으면 텍스트로
+  fallback한다.
+- 한 플로우당 **하나의 유저 저니**만 테스트한다.
+
+**디렉토리 구조**:
+
+```text
+.maestro/
+├── auth/
+│   ├── login.yml
+│   └── signup.yml
+├── home/
+│   └── navigation.yml
+└── config.yaml
+```
+
+**근거**: Maestro 기반 E2E 테스트는 실제 디바이스/에뮬레이터에서
+유저 저니를 검증하여 통합 결함을 조기에 발견한다.
+TDD와 결합하면 UI 수준의 회귀 방지가 가능하다.
+
 ## 거버넌스 (Governance)
 
 - 본 헌법은 모든 spec, plan, tasks보다 **상위 규범**이다.
@@ -163,5 +191,6 @@ Follow-up TODOs: none
 4. 린트 통과
 5. 문서 동기화 (변경된 기능에 대한 문서 업데이트)
 6. 실패 처리 구현 (loading, empty, error 상태)
+7. Frontend 변경 시 Maestro E2E 테스트 통과
 
-**Version**: 1.2.0 | **Ratified**: 2026-03-26 | **Last Amended**: 2026-03-28
+**Version**: 1.3.0 | **Ratified**: 2026-03-26 | **Last Amended**: 2026-03-28

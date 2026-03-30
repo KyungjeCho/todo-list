@@ -3,7 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuthStore } from '../../store/authStore';
 import { userApi } from '../../services/api/userApi';
 import { todoApi } from '../../services/api/todoApi';
-import type { TodoListResponse } from '../../services/api/todoApi';
+import type { TodoListResponse, CompleteDayResponse } from '../../services/api/todoApi';
 import { useTodoStore } from '../../store/todoStore';
 import { LoginScreen } from '../../screens/auth/LoginScreen';
 import { OnboardingScreen } from '../../screens/onboarding/OnboardingScreen';
@@ -55,6 +55,10 @@ const MainWrapper: React.FC = () => {
   const [modeOverride, setModeOverride] = useState<'PLAN' | 'REVIEW' | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [isDayCompleted, setIsDayCompleted] = useState(false);
+  const [completeDayResult, setCompleteDayResult] = useState<CompleteDayResponse | null>(null);
+  const [completeDayError, setCompleteDayError] = useState<string | undefined>();
   const [error, setError] = useState<string | undefined>();
 
   const fetchTodos = useCallback(async (date: string, showLoading = false) => {
@@ -136,6 +140,23 @@ const MainWrapper: React.FC = () => {
     }
   }, [selectedDate, fetchTodos]);
 
+  const handleCompleteDay = useCallback(async () => {
+    setIsCompleting(true);
+    setCompleteDayError(undefined);
+    try {
+      const result = await todoApi.completeDay(selectedDate);
+      setCompleteDayResult(result);
+      setIsDayCompleted(true);
+      await fetchTodos(selectedDate);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : '일정 완료에 실패했습니다';
+      setCompleteDayError(message);
+    } finally {
+      setIsCompleting(false);
+    }
+  }, [selectedDate, fetchTodos]);
+
   const handleModeToggle = useCallback(() => {
     const currentMode = modeOverride ?? data?.mode ?? 'PLAN';
     setModeOverride(currentMode === 'PLAN' ? 'REVIEW' : 'PLAN');
@@ -143,6 +164,9 @@ const MainWrapper: React.FC = () => {
 
   useEffect(() => {
     setModeOverride(null);
+    setIsDayCompleted(false);
+    setCompleteDayResult(null);
+    setCompleteDayError(undefined);
     fetchTodos(selectedDate, true);
   }, [selectedDate, fetchTodos]);
 
@@ -159,8 +183,13 @@ const MainWrapper: React.FC = () => {
       onEdit={handleEdit}
       onDeactivate={handleDeactivate}
       onDelete={handleDelete}
+      onCompleteDay={handleCompleteDay}
       isLoading={isLoading}
       isAdding={isAdding}
+      isCompleting={isCompleting}
+      isDayCompleted={isDayCompleted}
+      completeDayResult={completeDayResult}
+      completeDayError={completeDayError}
       error={error}
       onRetry={() => fetchTodos(selectedDate, true)}
     />
