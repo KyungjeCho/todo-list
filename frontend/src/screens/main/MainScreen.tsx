@@ -34,6 +34,9 @@ interface MainScreenProps {
   onEdit?: (id: string, content: string) => void;
   onDeactivate?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onAddMemo?: (todoId: string, content: string) => void;
+  onUpdateMemo?: (todoId: string, memoId: string, content: string) => void;
+  onDeleteMemo?: (todoId: string, memoId: string) => void;
   onCompleteDay?: () => void;
   onNavigateSettings?: () => void;
   isLoading?: boolean;
@@ -56,6 +59,9 @@ export const MainScreen: React.FC<MainScreenProps> = ({
   onEdit,
   onDeactivate,
   onDelete,
+  onAddMemo,
+  onUpdateMemo,
+  onDeleteMemo,
   onCompleteDay,
   onNavigateSettings,
   isLoading,
@@ -153,6 +159,9 @@ export const MainScreen: React.FC<MainScreenProps> = ({
                   onEdit={onEdit}
                   onDeactivate={onDeactivate}
                   onDelete={onDelete}
+                  onAddMemo={onAddMemo}
+                  onUpdateMemo={onUpdateMemo}
+                  onDeleteMemo={onDeleteMemo}
                 />
               )}
             />

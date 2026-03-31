@@ -4,25 +4,26 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
-import { TodoRepository } from '../infrastructure/todo.repository';
+import { MemoRepository } from '../infrastructure/memo.repository';
+import { TodoRepository } from '../../todo/infrastructure/todo.repository';
 import { UserRepository } from '../../user/infrastructure/user.repository';
-import { TodoStatus } from '../domain/todo.entity';
-import type { TodoItemDto } from './dto';
+import type { MemoResponseDto } from './dto';
 
-interface UpdateTodoInput {
+interface CreateMemoInput {
   userAuthId: string;
   todoId: string;
   content: string;
 }
 
 @Injectable()
-export class UpdateTodoUsecase {
+export class CreateMemoUsecase {
   constructor(
+    private readonly memoRepository: MemoRepository,
     private readonly todoRepository: TodoRepository,
     private readonly userRepository: UserRepository,
   ) {}
 
-  async execute(input: UpdateTodoInput): Promise<TodoItemDto> {
+  async execute(input: CreateMemoInput): Promise<MemoResponseDto> {
     const user = await this.userRepository.findByUserAuthId(input.userAuthId);
     if (!user) {
       throw new NotFoundException('USER_NOT_FOUND');
@@ -41,40 +42,19 @@ export class UpdateTodoUsecase {
       throw new BadRequestException('CONTENT_REQUIRED');
     }
 
-    if (input.content.length > 255) {
-      throw new BadRequestException('CONTENT_TOO_LONG');
-    }
-
-    const updated = await this.todoRepository.update(input.todoId, {
-      content: input.content,
+    const memo = await this.memoRepository.create({
+      todoId: input.todoId,
+      content: input.content.trim(),
+      createdBy: user.id,
       updatedBy: user.id,
     });
 
-    const memos = (
-      (updated.memos as {
-        id: string;
-        todoId: string;
-        content: string;
-        createdAt: Date;
-        updatedAt: Date;
-      }[]) ?? []
-    ).map((memo) => ({
+    return {
       id: memo.id,
       todoId: memo.todoId,
       content: memo.content,
       createdAt: new Date(memo.createdAt).toISOString(),
       updatedAt: new Date(memo.updatedAt).toISOString(),
-    }));
-
-    return {
-      id: updated.id,
-      content: updated.content,
-      status: updated.status,
-      isCarriedOver: updated.status === TodoStatus.CARRIED_OVER,
-      todoDate: updated.todoDate,
-      memos,
-      createdAt: new Date(updated.createdAt).toISOString(),
-      updatedAt: new Date(updated.updatedAt).toISOString(),
     };
   }
 }

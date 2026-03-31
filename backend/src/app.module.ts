@@ -11,6 +11,7 @@ import { RequestContextInterceptor } from './common/context/request-context.inte
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { TodoModule } from './todo/todo.module';
+import { MemoModule } from './memo/memo.module';
 import { SchedulerModule } from './scheduler/scheduler.module';
 
 @Module({
@@ -28,6 +29,7 @@ import { SchedulerModule } from './scheduler/scheduler.module';
     AuthModule,
     UserModule,
     TodoModule,
+    MemoModule,
     SchedulerModule,
   ],
   controllers: [AppController],

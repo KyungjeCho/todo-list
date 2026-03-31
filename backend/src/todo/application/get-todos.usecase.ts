@@ -67,6 +67,7 @@ export class GetTodosUsecase {
       const memos = (
         (todo.memos as {
           id: string;
+          todoId: string;
           content: string;
           createdAt: Date;
           updatedAt: Date;
@@ -78,6 +79,7 @@ export class GetTodosUsecase {
         )
         .map((memo) => ({
           id: memo.id,
+          todoId: memo.todoId,
           content: memo.content,
           createdAt: new Date(memo.createdAt).toISOString(),
           updatedAt: new Date(memo.updatedAt).toISOString(),

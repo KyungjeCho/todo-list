@@ -325,38 +325,38 @@
 
 > **NOTE: 테스트를 먼저 작성하고 FAIL 확인 후 구현한다**
 
-- [ ] T141 [P] [US5] TodoMemo Entity 단위 테스트 — `backend/test/unit/memo/domain/todo-memo.entity.spec.ts`
-- [ ] T142 [P] [US5] 메모 생성 usecase 단위 테스트 — `backend/test/unit/memo/application/create-memo.usecase.spec.ts`
-- [ ] T143 [P] [US5] 메모 수정 usecase 단위 테스트 — `backend/test/unit/memo/application/update-memo.usecase.spec.ts`
-- [ ] T144 [P] [US5] 메모 삭제 usecase 단위 테스트 — `backend/test/unit/memo/application/delete-memo.usecase.spec.ts`
-- [ ] T145 [P] [US5] Memo Controller 통합 테스트 — `backend/test/integration/memo/memo.controller.spec.ts`
+- [X] T141 [P] [US5] TodoMemo Entity 단위 테스트 — `backend/test/unit/memo/domain/todo-memo.entity.spec.ts`
+- [X] T142 [P] [US5] 메모 생성 usecase 단위 테스트 — `backend/test/unit/memo/application/create-memo.usecase.spec.ts`
+- [X] T143 [P] [US5] 메모 수정 usecase 단위 테스트 — `backend/test/unit/memo/application/update-memo.usecase.spec.ts`
+- [X] T144 [P] [US5] 메모 삭제 usecase 단위 테스트 — `backend/test/unit/memo/application/delete-memo.usecase.spec.ts`
+- [X] T145 [P] [US5] Memo Controller 통합 테스트 — `backend/test/integration/memo/memo.controller.spec.ts`
 
 ### Frontend Tests for User Story 5 ⚠️
 
 > **NOTE: 테스트를 먼저 작성하고 FAIL 확인 후 구현한다**
 
-- [ ] T146 [P] [US5] Frontend MemoSection 컴포넌트 단위 테스트 (메모 입력/표시/수정/삭제 UI) — `frontend/__tests__/unit/components/todo/MemoSection.test.tsx`
-- [ ] T147 [P] [US5] Frontend Memo API 서비스 단위 테스트 — `frontend/__tests__/unit/services/api/memoApi.test.ts`
+- [X] T146 [P] [US5] Frontend MemoSection 컴포넌트 단위 테스트 (메모 입력/표시/수정/삭제 UI) — `frontend/__tests__/unit/components/todo/MemoSection.test.tsx`
+- [X] T147 [P] [US5] Frontend Memo API 서비스 단위 테스트 — `frontend/__tests__/unit/services/api/memoApi.test.ts`
 
 ### Implementation for User Story 5
 
-- [ ] T148 [US5] TodoMemo Entity 구현 — `backend/src/memo/domain/todo-memo.entity.ts`
-- [ ] T149 [US5] Memo DTO 정의 (생성/수정/응답) — `backend/src/memo/application/dto/`
-- [ ] T150 [US5] Memo Repository 구현 — `backend/src/memo/infrastructure/memo.repository.ts`
-- [ ] T151 [US5] 메모 추가 Usecase 구현 — `backend/src/memo/application/create-memo.usecase.ts`
-- [ ] T152 [US5] 메모 수정 Usecase 구현 — `backend/src/memo/application/update-memo.usecase.ts`
-- [ ] T153 [US5] 메모 삭제 Usecase 구현 (Soft Delete) — `backend/src/memo/application/delete-memo.usecase.ts`
-- [ ] T154 [US5] Memo Controller 구현 (POST /todos/:id/memos, PATCH /todos/:id/memos/:memoId, DELETE /todos/:id/memos/:memoId) — `backend/src/memo/memo.controller.ts`
-- [ ] T155 [US5] Memo Module 구성 — `backend/src/memo/memo.module.ts`
-- [ ] T156 [P] [US5] Frontend Memo API 서비스 구현 — `frontend/src/services/api/memoApi.ts`
-- [ ] T157 [US5] Frontend 메모 UI 컴포넌트 (입력/표시/수정/삭제) — `frontend/src/components/todo/MemoSection.tsx`
-- [ ] T158 [US5] Frontend TodoItem에 메모 섹션 통합 — `frontend/src/components/todo/TodoItem.tsx`
+- [X] T148 [US5] TodoMemo Entity 구현 — `backend/src/memo/domain/todo-memo.entity.ts`
+- [X] T149 [US5] Memo DTO 정의 (생성/수정/응답) — `backend/src/memo/application/dto/`
+- [X] T150 [US5] Memo Repository 구현 — `backend/src/memo/infrastructure/memo.repository.ts`
+- [X] T151 [US5] 메모 추가 Usecase 구현 — `backend/src/memo/application/create-memo.usecase.ts`
+- [X] T152 [US5] 메모 수정 Usecase 구현 — `backend/src/memo/application/update-memo.usecase.ts`
+- [X] T153 [US5] 메모 삭제 Usecase 구현 (Soft Delete) — `backend/src/memo/application/delete-memo.usecase.ts`
+- [X] T154 [US5] Memo Controller 구현 (POST /todos/:id/memos, PATCH /todos/:id/memos/:memoId, DELETE /todos/:id/memos/:memoId) — `backend/src/memo/memo.controller.ts`
+- [X] T155 [US5] Memo Module 구성 — `backend/src/memo/memo.module.ts`
+- [X] T156 [P] [US5] Frontend Memo API 서비스 구현 — `frontend/src/services/api/memoApi.ts`
+- [X] T157 [US5] Frontend 메모 UI 컴포넌트 (입력/표시/수정/삭제) — `frontend/src/components/todo/MemoSection.tsx`
+- [X] T158 [US5] Frontend TodoItem에 메모 섹션 통합 — `frontend/src/components/todo/TodoItem.tsx`
 
 ### Maestro E2E Tests for User Story 5 ⚠️
 
 > **NOTE: 헌법 X조 — Phase 완료 시 Maestro E2E 테스트 작성 필수 (TDD)**
 
-- [ ] T210 [US5] Maestro E2E: 메모 CRUD 흐름 (메모 추가 → 수정 → 삭제) — `.maestro/memo/memo_crud.yml`
+- [X] T210 [US5] Maestro E2E: 메모 CRUD 흐름 (메모 추가 → 수정 → 삭제) — `.maestro/memo/memo_crud.yml`
 
 **Checkpoint**: 메모 CRUD 동작 완료. E2E 검증 포함. 독립적으로 테스트 가능.
 

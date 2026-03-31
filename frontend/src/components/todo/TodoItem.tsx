@@ -14,6 +14,7 @@ import {
 } from 'react-native-gesture-handler';
 import type { LongPressGestureHandlerStateChangeEvent } from 'react-native-gesture-handler';
 import type { Todo } from '../../types/todo';
+import { MemoSection } from './MemoSection';
 
 interface TodoItemProps {
   todo: Todo;
@@ -21,6 +22,9 @@ interface TodoItemProps {
   onEdit?: (id: string, content: string) => void;
   onDeactivate?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onAddMemo?: (todoId: string, content: string) => void;
+  onUpdateMemo?: (todoId: string, memoId: string, content: string) => void;
+  onDeleteMemo?: (todoId: string, memoId: string) => void;
 }
 
 export const TodoItem: React.FC<TodoItemProps> = ({
@@ -29,8 +33,12 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   onEdit,
   onDeactivate,
   onDelete,
+  onAddMemo,
+  onUpdateMemo,
+  onDeleteMemo,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [showMemos, setShowMemos] = useState(false);
   const [editText, setEditText] = useState(todo.content);
   const isCompleted = todo.status === 'COMPLETED';
   const isInactive = todo.status === 'INACTIVE';
@@ -156,8 +164,30 @@ export const TodoItem: React.FC<TodoItemProps> = ({
               </TouchableOpacity>
             )}
           </View>
+
+          <TouchableOpacity
+            testID={`memo-toggle-${todo.id}`}
+            onPress={() => setShowMemos(!showMemos)}
+            style={styles.memoToggle}
+            accessibilityLabel="메모"
+            accessibilityRole="button"
+          >
+            <Text style={styles.memoToggleText}>
+              {todo.memos.length > 0 ? `📝${todo.memos.length}` : '📝'}
+            </Text>
+          </TouchableOpacity>
         </View>
       </LongPressGestureHandler>
+
+      {showMemos && (
+        <MemoSection
+          todoId={todo.id}
+          memos={todo.memos}
+          onAddMemo={(content) => onAddMemo?.(todo.id, content)}
+          onUpdateMemo={(memoId, content) => onUpdateMemo?.(todo.id, memoId, content)}
+          onDeleteMemo={(memoId) => onDeleteMemo?.(todo.id, memoId)}
+        />
+      )}
     </Swipeable>
   );
 };
@@ -209,4 +239,6 @@ const styles = StyleSheet.create({
     width: 80,
   },
   deleteText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
+  memoToggle: { padding: 4, marginLeft: 8 },
+  memoToggleText: { fontSize: 14 },
 });

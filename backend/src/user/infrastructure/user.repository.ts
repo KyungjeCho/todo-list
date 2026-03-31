@@ -22,7 +22,9 @@ export class UserRepository {
       .select(['user.id', 'user.planTime', 'user.reviewTime', 'user.timezone'])
       .where('user.timezone IS NOT NULL')
       .getMany();
-    return users as (Pick<User, 'id' | 'planTime' | 'reviewTime'> & { timezone: string })[];
+    return users as (Pick<User, 'id' | 'planTime' | 'reviewTime'> & {
+      timezone: string;
+    })[];
   }
 
   async create(data: Partial<User>): Promise<User> {

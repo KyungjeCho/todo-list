@@ -6,6 +6,7 @@ import { useAuthStore } from '../../store/authStore';
 import { userApi } from '../../services/api/userApi';
 import { todoApi } from '../../services/api/todoApi';
 import type { TodoListResponse, CompleteDayResponse } from '../../services/api/todoApi';
+import { memoApi } from '../../services/api/memoApi';
 import { useTodoStore } from '../../store/todoStore';
 import { usePushNotification } from '../../features/notification/usePushNotification';
 import { LoginScreen } from '../../screens/auth/LoginScreen';
@@ -168,6 +169,39 @@ const MainWrapper: React.FC = () => {
     }
   }, [selectedDate, fetchTodos]);
 
+  const handleAddMemo = useCallback(async (todoId: string, content: string) => {
+    try {
+      await memoApi.createMemo(todoId, { content });
+      await fetchTodos(selectedDate);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : '메모 추가에 실패했습니다';
+      setError(message);
+    }
+  }, [selectedDate, fetchTodos]);
+
+  const handleUpdateMemo = useCallback(async (todoId: string, memoId: string, content: string) => {
+    try {
+      await memoApi.updateMemo(todoId, memoId, { content });
+      await fetchTodos(selectedDate);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : '메모 수정에 실패했습니다';
+      setError(message);
+    }
+  }, [selectedDate, fetchTodos]);
+
+  const handleDeleteMemo = useCallback(async (todoId: string, memoId: string) => {
+    try {
+      await memoApi.deleteMemo(todoId, memoId);
+      await fetchTodos(selectedDate);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : '메모 삭제에 실패했습니다';
+      setError(message);
+    }
+  }, [selectedDate, fetchTodos]);
+
   const handleModeToggle = useCallback(() => {
     const currentMode = modeOverride ?? data?.mode ?? 'PLAN';
     setModeOverride(currentMode === 'PLAN' ? 'REVIEW' : 'PLAN');
@@ -194,6 +228,9 @@ const MainWrapper: React.FC = () => {
       onEdit={handleEdit}
       onDeactivate={handleDeactivate}
       onDelete={handleDelete}
+      onAddMemo={handleAddMemo}
+      onUpdateMemo={handleUpdateMemo}
+      onDeleteMemo={handleDeleteMemo}
       onCompleteDay={handleCompleteDay}
       onNavigateSettings={() => navigation.navigate('Settings')}
       isLoading={isLoading}

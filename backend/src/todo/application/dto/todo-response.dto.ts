@@ -11,6 +11,7 @@ export interface TodoItemDto {
 
 export interface MemoItemDto {
   id: string;
+  todoId: string;
   content: string;
   createdAt: string;
   updatedAt: string;

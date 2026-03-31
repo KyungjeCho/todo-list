@@ -63,6 +63,7 @@ describe('GetTodosUsecase', () => {
         memos: [
           {
             id: 'memo-id-1',
+            todoId: 'todo-id-2',
             content: '헬스장 30분',
             createdAt: new Date('2026-03-28T10:00:00Z'),
             updatedAt: new Date('2026-03-28T10:00:00Z'),
@@ -212,12 +213,14 @@ describe('GetTodosUsecase', () => {
         memos: [
           {
             id: 'memo-1',
+            todoId: 'todo-id-1',
             content: '첫 번째 메모',
             createdAt: new Date('2026-03-28T10:00:00Z'),
             updatedAt: new Date('2026-03-28T10:00:00Z'),
           },
           {
             id: 'memo-2',
+            todoId: 'todo-id-1',
             content: '두 번째 메모',
             createdAt: new Date('2026-03-28T11:00:00Z'),
             updatedAt: new Date('2026-03-28T11:00:00Z'),
