@@ -410,27 +410,27 @@
 
 > **NOTE: 테스트를 먼저 작성하고 FAIL 확인 후 구현한다**
 
-- [ ] T174 [P] [US7] 월별 요약 usecase 단위 테스트 (날짜별 완료/전체 건수 집계) — `backend/test/unit/todo/application/get-monthly-summary.usecase.spec.ts`
-- [ ] T175 [P] [US7] Report Controller 통합 테스트 — `backend/test/integration/todo/todo-report.controller.spec.ts`
+- [X] T174 [P] [US7] 월별 요약 usecase 단위 테스트 (날짜별 완료/전체 건수 집계) — `backend/test/unit/todo/application/get-monthly-summary.usecase.spec.ts`
+- [X] T175 [P] [US7] Report Controller 통합 테스트 — `backend/test/integration/todo/todo-report.controller.spec.ts`
 
 ### Frontend Tests for User Story 7 ⚠️
 
 > **NOTE: 테스트를 먼저 작성하고 FAIL 확인 후 구현한다**
 
-- [ ] T176 [P] [US7] Frontend CalendarScreen 단위 테스트 (월별 뷰 렌더링, 날짜별 요약 표시, 빈 월 처리) — `frontend/__tests__/unit/screens/calendar/CalendarScreen.test.tsx`
-- [ ] T177 [P] [US7] Frontend DayDetailView 단위 테스트 (날짜 선택 시 할 일 목록 표시) — `frontend/__tests__/unit/screens/calendar/DayDetailView.test.tsx`
-- [ ] T178 [P] [US7] Frontend Report API 서비스 단위 테스트 — `frontend/__tests__/unit/services/api/reportApi.test.ts`
+- [X] T176 [P] [US7] Frontend CalendarScreen 단위 테스트 (월별 뷰 렌더링, 날짜별 요약 표시, 빈 월 처리) — `frontend/__tests__/unit/screens/calendar/CalendarScreen.test.tsx`
+- [X] T177 [P] [US7] Frontend DayDetailView 단위 테스트 (날짜 선택 시 할 일 목록 표시) — `frontend/__tests__/unit/screens/calendar/DayDetailView.test.tsx`
+- [X] T178 [P] [US7] Frontend Report API 서비스 단위 테스트 — `frontend/__tests__/unit/services/api/reportApi.test.ts`
 
 ### Implementation for User Story 7
 
-- [ ] T179 [US7] 월별 요약 Usecase 구현 — `backend/src/todo/application/get-monthly-summary.usecase.ts`
-- [ ] T180 [US7] Report DTO 정의 — `backend/src/todo/application/dto/monthly-summary.dto.ts`
-- [ ] T181 [US7] Todo Controller에 GET /todos/report/summary 엔드포인트 추가 — `backend/src/todo/todo.controller.ts`
-- [ ] T182 [P] [US7] Frontend Report API 서비스 구현 — `frontend/src/services/api/reportApi.ts`
-- [ ] T183 [US7] Frontend 캘린더 화면 구현 (월별 뷰, 날짜별 요약 표시) — `frontend/src/screens/calendar/CalendarScreen.tsx`
-- [ ] T184 [US7] Frontend 날짜 선택 시 할 일 목록 표시 — `frontend/src/screens/calendar/DayDetailView.tsx`
-- [ ] T185 [US7] Frontend 캘린더 화면 loading/empty/error 상태 처리 — `frontend/src/screens/calendar/CalendarScreen.tsx`
-- [ ] T186 [US7] Frontend Bottom Tab에 캘린더 탭 추가 — `frontend/src/app/navigation/MainTabNavigator.tsx`
+- [X] T179 [US7] 월별 요약 Usecase 구현 — `backend/src/todo/application/get-monthly-summary.usecase.ts`
+- [X] T180 [US7] Report DTO 정의 — `backend/src/todo/application/dto/monthly-summary.dto.ts`
+- [X] T181 [US7] Todo Controller에 GET /todos/report/summary 엔드포인트 추가 — `backend/src/todo/todo.controller.ts`
+- [X] T182 [P] [US7] Frontend Report API 서비스 구현 — `frontend/src/services/api/reportApi.ts`
+- [X] T183 [US7] Frontend 캘린더 화면 구현 (월별 뷰, 날짜별 요약 표시) — `frontend/src/screens/calendar/CalendarScreen.tsx`
+- [X] T184 [US7] Frontend 날짜 선택 시 할 일 목록 표시 — `frontend/src/screens/calendar/DayDetailView.tsx`
+- [X] T185 [US7] Frontend 캘린더 화면 loading/empty/error 상태 처리 — `frontend/src/screens/calendar/CalendarScreen.tsx`
+- [X] T186 [US7] Frontend Bottom Tab에 캘린더 탭 추가 — `frontend/src/app/navigation/MainTabNavigator.tsx`
 
 **Checkpoint**: 캘린더 조회 동작 완료. 독립적으로 테스트 가능.
 

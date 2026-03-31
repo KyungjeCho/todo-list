@@ -25,6 +25,27 @@ export class TodoRepository {
     });
   }
 
+  async findByUserIdAndMonth(
+    userId: string,
+    year: number,
+    month: number,
+  ): Promise<Todo[]> {
+    const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+    const lastDay = new Date(year, month, 0).getDate();
+    const endDate = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+
+    return this.todoRepo
+      .createQueryBuilder('todo')
+      .where('todo.userId = :userId', { userId })
+      .andWhere('todo.todoDate BETWEEN :startDate AND :endDate', {
+        startDate,
+        endDate,
+      })
+      .orderBy('todo.todoDate', 'ASC')
+      .addOrderBy('todo.createdAt', 'ASC')
+      .getMany();
+  }
+
   async create(data: Partial<Todo>): Promise<Todo> {
     const entity = this.todoRepo.create(data);
     const saved = await this.todoRepo.save(entity);

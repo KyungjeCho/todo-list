@@ -18,12 +18,14 @@ import { CreateTodoDto } from './application/dto/create-todo.dto';
 import { ChangeTodoStatusDto } from './application/dto/change-todo-status.dto';
 import { CompleteDayDto } from './application/dto/complete-day.dto';
 import { GetTodosQueryDto } from './application/dto/get-todos-query.dto';
+import { GetMonthlySummaryQueryDto } from './application/dto/monthly-summary.dto';
 import { CreateTodoUsecase } from './application/create-todo.usecase';
 import { GetTodosUsecase } from './application/get-todos.usecase';
 import { UpdateTodoUsecase } from './application/update-todo.usecase';
 import { ChangeTodoStatusUsecase } from './application/change-todo-status.usecase';
 import { DeleteTodoUsecase } from './application/delete-todo.usecase';
 import { CompleteDayUsecase } from './application/complete-day.usecase';
+import { GetMonthlySummaryUsecase } from './application/get-monthly-summary.usecase';
 import { JwtAuthGuard } from '../auth/infrastructure/jwt-auth.guard';
 import { HttpExceptionFilter } from '../common/filters/http-exception.filter';
 
@@ -42,7 +44,20 @@ export class TodoController {
     private readonly changeTodoStatusUsecase: ChangeTodoStatusUsecase,
     private readonly deleteTodoUsecase: DeleteTodoUsecase,
     private readonly completeDayUsecase: CompleteDayUsecase,
+    private readonly getMonthlySummaryUsecase: GetMonthlySummaryUsecase,
   ) {}
+
+  @Get('report/summary')
+  async getMonthlySummary(
+    @Req() req: AuthenticatedRequest,
+    @Query() query: GetMonthlySummaryQueryDto,
+  ) {
+    return this.getMonthlySummaryUsecase.execute({
+      userAuthId: req.user.userAuthId,
+      year: query.year,
+      month: query.month,
+    });
+  }
 
   @Get()
   async getTodos(
