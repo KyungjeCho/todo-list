@@ -446,15 +446,15 @@
 
 > **NOTE: 테스트를 먼저 작성하고 FAIL 확인 후 구현한다**
 
-- [ ] T187 [P] [US8] Frontend useShareTodo 훅 단위 테스트 (공유 데이터 생성, OS 공유 시트 호출) — `frontend/__tests__/unit/features/share/useShareTodo.test.ts`
-- [ ] T188 [P] [US8] Frontend ShareButton 컴포넌트 단위 테스트 ("나에게 전송" UI, 공유 버튼) — `frontend/__tests__/unit/components/todo/ShareButton.test.tsx`
-- [ ] T189 [P] [US8] Frontend formatShareData 단위 테스트 (할 일 목록 → 텍스트 포맷 변환) — `frontend/__tests__/unit/features/share/formatShareData.test.ts`
+- [X] T187 [P] [US8] Frontend useShareTodo 훅 단위 테스트 (공유 데이터 생성, OS 공유 시트 호출) — `frontend/__tests__/unit/features/share/useShareTodo.test.ts`
+- [X] T188 [P] [US8] Frontend ShareButton 컴포넌트 단위 테스트 ("나에게 전송" UI, 공유 버튼) — `frontend/__tests__/unit/components/todo/ShareButton.test.tsx`
+- [X] T189 [P] [US8] Frontend formatShareData 단위 테스트 (할 일 목록 → 텍스트 포맷 변환) — `frontend/__tests__/unit/features/share/formatShareData.test.ts`
 
 ### Implementation for User Story 8
 
-- [ ] T190 [US8] Frontend 공유 기능 구현 (OS 기본 공유 시트, expo-sharing) — `frontend/src/features/share/useShareTodo.ts`
-- [ ] T191 [US8] Frontend 공유 버튼 컴포넌트 ("나에게 전송" 최상단) — `frontend/src/components/todo/ShareButton.tsx`
-- [ ] T192 [US8] Frontend 공유 데이터 포맷팅 (할 일 목록 → 텍스트/이미지) — `frontend/src/features/share/formatShareData.ts`
+- [X] T190 [US8] Frontend 공유 기능 구현 (OS 기본 공유 시트, expo-sharing) — `frontend/src/features/share/useShareTodo.ts`
+- [X] T191 [US8] Frontend 공유 버튼 컴포넌트 ("나에게 전송" 최상단) — `frontend/src/components/todo/ShareButton.tsx`
+- [X] T192 [US8] Frontend 공유 데이터 포맷팅 (할 일 목록 → 텍스트/이미지) — `frontend/src/features/share/formatShareData.ts`
 
 **Checkpoint**: 공유 기능 동작 완료. 독립적으로 테스트 가능.
 
@@ -477,7 +477,7 @@
 
 - [ ] T213 [US6] Maestro E2E: 음성 인식 할 일 추가 흐름 (마이크 탭 → 녹음 → STT/LLM 변환 → 목록 추가) — `.maestro/voice/voice_todo.yml`
 - [ ] T214 [US7] Maestro E2E: 캘린더 조회 흐름 (캘린더 진입 → 월별 요약 → 날짜 선택 → 할 일 목록) — `.maestro/calendar/calendar_view.yml`
-- [ ] T215 [US8] Maestro E2E: TodoList 공유 흐름 (날짜 선택 → 공유 버튼 → 채널 선택) — `.maestro/share/share_todo.yml`
+- [X] T215 [US8] Maestro E2E: TodoList 공유 흐름 (날짜 선택 → 공유 버튼 → 채널 선택) — `.maestro/share/share_todo.yml`
 
 **Checkpoint**: P3-P4 외부 API 연동 완료 및 E2E 검증 통과.
 

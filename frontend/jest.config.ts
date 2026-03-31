@@ -27,6 +27,7 @@ const config: Config = {
     '^src/(.*)$': '<rootDir>/src/$1',
     '^expo-web-browser$': '<rootDir>/__mocks__/expo-web-browser.ts',
     '^expo-linking$': '<rootDir>/__mocks__/expo-linking.ts',
+    '^expo-clipboard$': '<rootDir>/__mocks__/expo-clipboard.ts',
     '^@react-native-community/datetimepicker$': '<rootDir>/__mocks__/@react-native-community/datetimepicker.tsx',
   },
 };

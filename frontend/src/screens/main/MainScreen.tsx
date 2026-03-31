@@ -13,6 +13,7 @@ import type { CompleteDayResponse } from '../../services/api/todoApi';
 import { AddTodoInput } from '../../components/todo/AddTodoInput';
 import { TodoItem } from '../../components/todo/TodoItem';
 import { ModeToggle } from '../../components/todo/ModeToggle';
+import { ShareButton } from '../../components/todo/ShareButton';
 import { ReviewModeView } from './ReviewModeView';
 import { CompleteDayButton } from '../../components/todo/CompleteDayButton';
 
@@ -28,6 +29,7 @@ interface MainScreenProps {
   mode: 'PLAN' | 'REVIEW';
   todos: Todo[];
   stats: Stats;
+  date: string;
   onModeToggle?: () => void;
   onAddTodo?: (content: string) => void;
   onToggleComplete?: (id: string) => void;
@@ -53,6 +55,7 @@ export const MainScreen: React.FC<MainScreenProps> = ({
   mode,
   todos,
   stats,
+  date,
   onModeToggle,
   onAddTodo,
   onToggleComplete,
@@ -88,6 +91,7 @@ export const MainScreen: React.FC<MainScreenProps> = ({
           {mode === 'PLAN' ? 'Plan' : 'Review'}
         </Text>
         <View style={styles.headerRight}>
+          <ShareButton todos={todos} date={date} />
           {onModeToggle && (
             <ModeToggle mode={mode} onToggle={onModeToggle} />
           )}

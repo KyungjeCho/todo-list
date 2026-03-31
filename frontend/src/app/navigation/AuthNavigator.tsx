@@ -261,6 +261,7 @@ const MainWrapper: React.FC = () => {
       mode={currentMode}
       todos={data?.todos ?? []}
       stats={data?.stats ?? defaultStats}
+      date={selectedDate}
       onModeToggle={handleModeToggle}
       onAddTodo={handleAddTodo}
       onToggleComplete={handleToggleComplete}
