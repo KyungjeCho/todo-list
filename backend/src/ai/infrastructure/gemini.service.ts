@@ -1,6 +1,9 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import {
+  GoogleGenerativeAI,
+  type GenerativeModel,
+} from '@google/generative-ai';
 
 export const SUPPORTED_AUDIO_MIME_TYPES = [
   'audio/wav',
@@ -13,7 +16,7 @@ const TRANSCRIBE_PROMPT =
 
 @Injectable()
 export class GeminiService {
-  private readonly model;
+  private readonly model: GenerativeModel;
 
   constructor(private readonly configService: ConfigService) {
     const apiKey = this.configService.getOrThrow<string>('ai.geminiApiKey');

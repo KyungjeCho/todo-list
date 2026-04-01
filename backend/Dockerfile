@@ -16,7 +16,9 @@ RUN npm run build
 FROM public.ecr.aws/lambda/nodejs:20
 
 COPY --from=builder /build/dist ${LAMBDA_TASK_ROOT}/dist
-COPY --from=builder /build/node_modules ${LAMBDA_TASK_ROOT}/node_modules
 COPY --from=builder /build/package.json ${LAMBDA_TASK_ROOT}/
+COPY --from=builder /build/package-lock.json ${LAMBDA_TASK_ROOT}/
+
+RUN npm ci --omit=dev
 
 CMD ["dist/lambda.handler"]

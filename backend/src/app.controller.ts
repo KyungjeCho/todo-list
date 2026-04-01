@@ -1,4 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
+import { SkipThrottle } from '@nestjs/throttler';
 import { DataSource } from 'typeorm';
 
 interface HealthResponse {
@@ -13,6 +14,7 @@ export class AppController {
 
   /** GET /health — 서비스 상태 및 DB 연결 확인 */
   @Get('health')
+  @SkipThrottle()
   async getHealth(): Promise<HealthResponse> {
     let dbStatus: 'connected' | 'disconnected' = 'disconnected';
 

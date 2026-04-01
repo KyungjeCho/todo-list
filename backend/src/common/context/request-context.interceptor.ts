@@ -4,13 +4,9 @@ import {
   ExecutionContext,
   NestInterceptor,
 } from '@nestjs/common';
-import type { Request } from 'express';
 import { Observable } from 'rxjs';
 import { RequestContext, SYSTEM_USER_ID } from './request-context';
-
-interface AuthenticatedRequest extends Request {
-  user?: { userAuthId: string };
-}
+import type { AuthenticatedRequest } from '../types/authenticated-request';
 
 /** Wraps every request in an AsyncLocalStorage context carrying the authenticated user ID. */
 @Injectable()

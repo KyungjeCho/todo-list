@@ -18,7 +18,6 @@ import {
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { FileInterceptor } from '@nestjs/platform-express';
-import type { Request } from 'express';
 import { CreateTodoDto } from './application/dto/create-todo.dto';
 import { UpdateTodoDto } from './application/dto/update-todo.dto';
 import { ChangeTodoStatusDto } from './application/dto/change-todo-status.dto';
@@ -37,10 +36,7 @@ import { CreateVoiceTodoUsecase } from './application/create-voice-todo.usecase'
 import { SUPPORTED_AUDIO_MIME_TYPES } from '../ai/infrastructure/gemini.service';
 import { JwtAuthGuard } from '../auth/infrastructure/jwt-auth.guard';
 import { HttpExceptionFilter } from '../common/filters/http-exception.filter';
-
-interface AuthenticatedRequest extends Request {
-  user: { userAuthId: string };
-}
+import type { AuthenticatedRequest } from '../common/types/authenticated-request';
 
 @Controller('todos')
 @UseGuards(JwtAuthGuard)

@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createHmac, randomBytes } from 'crypto';
+import { createHmac, randomBytes, timingSafeEqual } from 'crypto';
 
 const VALID_PROVIDERS = ['google', 'naver', 'kakao', 'apple'] as const;
 
@@ -61,7 +61,12 @@ export class OAuthLoginUsecase {
       const expectedSig = createHmac('sha256', secret)
         .update(parsed.data)
         .digest('hex');
-      if (parsed.signature !== expectedSig) {
+      const sigBuffer = Buffer.from(parsed.signature, 'hex');
+      const expectedBuffer = Buffer.from(expectedSig, 'hex');
+      if (
+        sigBuffer.length !== expectedBuffer.length ||
+        !timingSafeEqual(sigBuffer, expectedBuffer)
+      ) {
         return null;
       }
       return JSON.parse(parsed.data) as Record<string, unknown>;

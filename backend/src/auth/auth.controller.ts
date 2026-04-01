@@ -12,7 +12,7 @@ import {
   BadRequestException,
   HttpCode,
 } from '@nestjs/common';
-import { Throttle, SkipThrottle } from '@nestjs/throttler';
+import { Throttle } from '@nestjs/throttler';
 import type { Response, Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { OAuthLoginUsecase } from './application/oauth-login.usecase';
@@ -45,11 +45,12 @@ export class AuthController {
     @Query('deviceName') deviceName: string | undefined,
     @Res() res: Response,
   ): Promise<void> {
+    const validatedRedirectUri = this.validateRedirectUri(redirectUri);
     const result = await this.oauthLoginUsecase.execute({
       provider,
       fcmToken,
       deviceType,
-      redirectUri,
+      redirectUri: validatedRedirectUri,
       deviceName,
     });
     res.redirect(302, result.redirectUrl);
@@ -127,7 +128,10 @@ export class AuthController {
     const uris = [AuthController.DEFAULT_REDIRECT_URI];
     if (extra) {
       uris.push(
-        ...extra.split(',').map((u) => u.trim()).filter(Boolean),
+        ...extra
+          .split(',')
+          .map((u) => u.trim())
+          .filter(Boolean),
       );
     }
     return uris;

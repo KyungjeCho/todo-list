@@ -39,6 +39,7 @@ jobs:
       DATABASE_NAME: todolist_test
       JWT_SECRET: ci-test-secret
       JWT_REFRESH_SECRET: ci-test-refresh-secret
+      OAUTH_STATE_SECRET: ci-test-oauth-state-secret
 
     steps:
       - uses: actions/checkout@v4
@@ -50,6 +51,9 @@ jobs:
           cache-dependency-path: backend/package-lock.json
 
       - run: npm ci
+
+      - name: Build
+        run: npm run build
 
       - name: Lint
         run: npm run lint

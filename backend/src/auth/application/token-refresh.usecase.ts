@@ -1,6 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthRepository } from '../infrastructure/auth.repository';
 import { TokenService } from '../infrastructure/token.service';
+import { SESSION_EXPIRY_MS } from '../domain/auth.constants';
 
 interface TokenRefreshInput {
   refreshToken: string;
@@ -27,6 +28,11 @@ export class TokenRefreshUsecase {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
 
+    if (session.expiredAt && new Date(session.expiredAt) < new Date()) {
+      await this.authRepository.deleteSession(session.id);
+      throw new UnauthorizedException('SESSION_EXPIRED');
+    }
+
     const isValid = this.tokenService.verifyRefreshToken(input.refreshToken);
     if (!isValid) {
       throw new UnauthorizedException('UNAUTHORIZED');
@@ -44,7 +50,7 @@ export class TokenRefreshUsecase {
     await this.authRepository.createSession({
       userAuthId: session.userAuthId,
       refreshToken: TokenService.hashToken(refreshToken),
-      expiredAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      expiredAt: new Date(Date.now() + SESSION_EXPIRY_MS),
     });
 
     return { accessToken, refreshToken };

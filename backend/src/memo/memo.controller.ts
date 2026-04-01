@@ -11,7 +11,6 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import type { Request } from 'express';
 import { CreateMemoDto } from './application/dto/create-memo.dto';
 import { UpdateMemoDto } from './application/dto/update-memo.dto';
 import { CreateMemoUsecase } from './application/create-memo.usecase';
@@ -19,10 +18,7 @@ import { UpdateMemoUsecase } from './application/update-memo.usecase';
 import { DeleteMemoUsecase } from './application/delete-memo.usecase';
 import { JwtAuthGuard } from '../auth/infrastructure/jwt-auth.guard';
 import { HttpExceptionFilter } from '../common/filters/http-exception.filter';
-
-interface AuthenticatedRequest extends Request {
-  user: { userAuthId: string };
-}
+import type { AuthenticatedRequest } from '../common/types/authenticated-request';
 
 @Controller('todos/:todoId/memos')
 @UseGuards(JwtAuthGuard)

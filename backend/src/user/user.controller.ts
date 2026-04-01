@@ -9,7 +9,6 @@ import {
   Req,
   BadRequestException,
 } from '@nestjs/common';
-import type { Request } from 'express';
 import { GetProfileUsecase } from './application/get-profile.usecase';
 import { UpdateSettingsUsecase } from './application/update-settings.usecase';
 import { RegisterDeviceUsecase } from '../notification/application/register-device.usecase';
@@ -17,10 +16,7 @@ import { UserRepository } from './infrastructure/user.repository';
 import { JwtAuthGuard } from '../auth/infrastructure/jwt-auth.guard';
 import { HttpExceptionFilter } from '../common/filters/http-exception.filter';
 import { UpdateSettingsDto, RegisterDeviceDto } from './application/dto';
-
-interface AuthenticatedRequest extends Request {
-  user: { userAuthId: string };
-}
+import type { AuthenticatedRequest } from '../common/types/authenticated-request';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)

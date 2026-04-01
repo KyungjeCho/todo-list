@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { AuthRepository } from '../infrastructure/auth.repository';
 import { UserRepository } from '../../user/infrastructure/user.repository';
 import { UserDeviceRepository } from '../../notification/infrastructure/user-device.repository';
 import { TokenService } from '../infrastructure/token.service';
 import type { OAuthCallbackDto, OAuthCallbackResponseDto } from './dto';
+import { SESSION_EXPIRY_MS } from '../domain/auth.constants';
 
 @Injectable()
 export class OAuthCallbackUsecase {
@@ -27,7 +28,10 @@ export class OAuthCallbackUsecase {
     if (existingOauth) {
       userAuthId = existingOauth.userAuthId;
       const user = await this.userRepository.findByUserAuthId(userAuthId);
-      userId = user!.id;
+      if (!user) {
+        throw new InternalServerErrorException('USER_NOT_FOUND_FOR_OAUTH');
+      }
+      userId = user.id;
       isNewUser = false;
     } else {
       const userAuth = await this.authRepository.createUserAuth({
@@ -65,7 +69,7 @@ export class OAuthCallbackUsecase {
       refreshToken: TokenService.hashToken(refreshToken),
       userAgent: input.userAgent ?? null,
       ipAddress: input.ipAddress ?? null,
-      expiredAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      expiredAt: new Date(Date.now() + SESSION_EXPIRY_MS),
     });
 
     if (input.fcmToken) {
