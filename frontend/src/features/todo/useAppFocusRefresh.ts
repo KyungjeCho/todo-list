@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 import type { AppStateStatus } from 'react-native';
+import { getCurrentDate } from './getCurrentDate';
 
 interface UseAppFocusRefreshOptions {
   onRefresh: () => void;
@@ -44,9 +45,4 @@ export function useAppFocusRefresh({
       clearInterval(interval);
     };
   }, [onRefresh]);
-}
-
-function getCurrentDate(): string {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
