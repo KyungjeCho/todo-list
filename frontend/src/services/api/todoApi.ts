@@ -1,5 +1,10 @@
+import { Platform } from 'react-native';
 import { apiClient } from './client';
 import type { Todo, CreateTodoRequest } from '../../types/todo';
+
+export interface VoiceTodoResponse extends Todo {
+  rawText: string;
+}
 
 export interface TodoListResponse {
   date: string;
@@ -78,6 +83,39 @@ export const todoApi = {
 
   async completeDay(date: string): Promise<CompleteDayResponse> {
     const response = await apiClient.post('/todos/complete', { date });
+    return response.data;
+  },
+
+  async createVoiceTodo(
+    audioUri: string,
+    todoDate?: string,
+  ): Promise<VoiceTodoResponse> {
+    const formData = new FormData();
+
+    const extension = audioUri.split('.').pop() ?? 'm4a';
+    const mimeTypeMap: Record<string, string> = {
+      m4a: 'audio/mp4',
+      wav: 'audio/wav',
+      mp3: 'audio/mpeg',
+    };
+    const mimeType = mimeTypeMap[extension] ?? 'audio/mp4';
+
+    const uri = audioUri.startsWith('file://') ? audioUri : `file://${audioUri}`;
+
+    formData.append('audio', {
+      uri,
+      name: `recording.${extension}`,
+      type: mimeType,
+    } as unknown as Blob);
+
+    const todayLocal = new Date();
+    const localDate = `${todayLocal.getFullYear()}-${String(todayLocal.getMonth() + 1).padStart(2, '0')}-${String(todayLocal.getDate()).padStart(2, '0')}`;
+    formData.append('todoDate', todoDate ?? localDate);
+
+    const response = await apiClient.post('/todos/voice', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 30000,
+    });
     return response.data;
   },
 };

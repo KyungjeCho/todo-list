@@ -364,7 +364,7 @@
 
 ## Phase 8: User Story 6 — 음성 인식 할 일 추가 (Priority: P3)
 
-**Goal**: 마이크 버튼으로 음성 입력 → STT + LLM → 할 일 텍스트 변환 후 목록 추가.
+**Goal**: 마이크 버튼으로 음성 입력 → Gemini Flash 멀티모달 API → 할 일 텍스트 변환 후 목록 추가.
 
 **Independent Test**: 마이크 탭 → 음성 녹음 → 변환 → 목록 추가 흐름 검증
 
@@ -372,29 +372,27 @@
 
 > **NOTE: 테스트를 먼저 작성하고 FAIL 확인 후 구현한다**
 
-- [ ] T159 [P] [US6] STT 서비스 단위 테스트 (외부 API 호출, 오디오 포맷 검증, 실패 처리) — `backend/test/unit/ai/infrastructure/stt.service.spec.ts`
-- [ ] T160 [P] [US6] LLM 서비스 단위 테스트 (프롬프트 전달, 텍스트 다듬기, 실패 처리) — `backend/test/unit/ai/infrastructure/llm.service.spec.ts`
-- [ ] T161 [P] [US6] 음성 할 일 생성 usecase 단위 테스트 (오디오→STT→LLM→Todo 파이프라인) — `backend/test/unit/todo/application/create-voice-todo.usecase.spec.ts`
-- [ ] T162 [P] [US6] Voice Todo Controller 통합 테스트 — `backend/test/integration/todo/todo-voice.controller.spec.ts`
+- [X] T159 [P] [US6] GeminiService 단위 테스트 (오디오→텍스트 변환+다듬기 통합, 오디오 포맷 검증, 실패 처리) — `backend/test/unit/ai/infrastructure/gemini.service.spec.ts`
+- [X] T161 [P] [US6] 음성 할 일 생성 usecase 단위 테스트 (오디오→Gemini→Todo 파이프라인) — `backend/test/unit/todo/application/create-voice-todo.usecase.spec.ts`
+- [X] T162 [P] [US6] Voice Todo Controller 통합 테스트 — `backend/test/integration/todo/todo-voice.controller.spec.ts`
 
 ### Frontend Tests for User Story 6 ⚠️
 
 > **NOTE: 테스트를 먼저 작성하고 FAIL 확인 후 구현한다**
 
-- [ ] T163 [P] [US6] Frontend useVoiceRecording 훅 단위 테스트 (녹음 시작/중지, 오디오 데이터 반환) — `frontend/__tests__/unit/features/todo/useVoiceRecording.test.ts`
-- [ ] T164 [P] [US6] Frontend VoiceTodoButton 단위 테스트 (녹음 UI 상태, 로딩, STT/LLM 실패 안내) — `frontend/__tests__/unit/components/todo/VoiceTodoButton.test.tsx`
+- [X] T163 [P] [US6] Frontend useVoiceRecording 훅 단위 테스트 (녹음 시작/중지, 오디오 데이터 반환) — `frontend/__tests__/unit/features/todo/useVoiceRecording.test.ts`
+- [X] T164 [P] [US6] Frontend VoiceTodoButton 단위 테스트 (녹음 UI 상태, 로딩, AI 실패 안내) — `frontend/__tests__/unit/components/todo/VoiceTodoButton.test.tsx`
 
 ### Implementation for User Story 6
 
-- [ ] T165 [US6] STT 서비스 구현 (외부 STT API 클라이언트) — `backend/src/ai/infrastructure/stt.service.ts`
-- [ ] T166 [US6] LLM 서비스 구현 (외부 LLM API 클라이언트, 프롬프트 관리) — `backend/src/ai/infrastructure/llm.service.ts`
-- [ ] T167 [US6] 음성 할 일 생성 Usecase 구현 (오디오 → STT → LLM 다듬기 → Todo 생성) — `backend/src/todo/application/create-voice-todo.usecase.ts`
-- [ ] T168 [US6] Voice Todo DTO 정의 (multipart/form-data 요청, rawText 포함 응답) — `backend/src/todo/application/dto/voice-todo.dto.ts`
-- [ ] T169 [US6] Todo Controller에 POST /todos/voice 엔드포인트 추가 — `backend/src/todo/todo.controller.ts`
-- [ ] T170 [US6] AI Module 구성 — `backend/src/ai/ai.module.ts`
-- [ ] T171 [US6] Frontend 음성 녹음 기능 구현 (expo-av) — `frontend/src/features/todo/useVoiceRecording.ts`
-- [ ] T172 [US6] Frontend 마이크 버튼 컴포넌트 (녹음 UI, 로딩 상태) — `frontend/src/components/todo/VoiceTodoButton.tsx`
-- [ ] T173 [US6] Frontend 음성 인식 error 상태 처리 (STT/LLM 실패 안내, 오디오 포맷 에러) — `frontend/src/components/todo/VoiceTodoButton.tsx`
+- [X] T165 [US6] GeminiService 구현 (Gemini Flash 멀티모달 API 클라이언트, 오디오→할 일 텍스트 통합 처리) — `backend/src/ai/infrastructure/gemini.service.ts`
+- [X] T167 [US6] 음성 할 일 생성 Usecase 구현 (오디오 → Gemini 변환+다듬기 → Todo 생성) — `backend/src/todo/application/create-voice-todo.usecase.ts`
+- [X] T168 [US6] Voice Todo DTO 정의 (multipart/form-data 요청, rawText 포함 응답) — `backend/src/todo/application/dto/voice-todo.dto.ts`
+- [X] T169 [US6] Todo Controller에 POST /todos/voice 엔드포인트 추가 — `backend/src/todo/todo.controller.ts`
+- [X] T170 [US6] AI Module 구성 — `backend/src/ai/ai.module.ts`
+- [X] T171 [US6] Frontend 음성 녹음 기능 구현 (expo-av) — `frontend/src/features/todo/useVoiceRecording.ts`
+- [X] T172 [US6] Frontend 마이크 버튼 컴포넌트 (녹음 UI, 로딩 상태) — `frontend/src/components/todo/VoiceTodoButton.tsx`
+- [X] T173 [US6] Frontend 음성 인식 error 상태 처리 (Gemini API 실패 안내, 오디오 포맷 에러) — `frontend/src/components/todo/VoiceTodoButton.tsx`
 
 **Checkpoint**: 음성 인식 할 일 추가 동작 완료. 독립적으로 테스트 가능.
 
@@ -468,14 +466,13 @@
 
 ### 외부 API Key 등록
 
-- [ ] T211 STT 외부 API key 등록 및 연결 검증 — `backend/.env`, `backend/src/ai/infrastructure/stt.service.ts`
-- [ ] T212 [P] LLM 외부 API key 등록 및 연결 검증 — `backend/.env`, `backend/src/ai/infrastructure/llm.service.ts`
+- [ ] T211 Gemini API key 등록 및 연결 검증 — `backend/.env`, `backend/src/ai/infrastructure/gemini.service.ts`
 
 ### Maestro E2E Tests for P3-P4 ⚠️
 
 > **NOTE: 헌법 X조 — P3-P4 기능은 이 Phase에서 E2E 테스트 작성 (TDD)**
 
-- [ ] T213 [US6] Maestro E2E: 음성 인식 할 일 추가 흐름 (마이크 탭 → 녹음 → STT/LLM 변환 → 목록 추가) — `.maestro/voice/voice_todo.yml`
+- [X] T213 [US6] Maestro E2E: 음성 인식 할 일 추가 흐름 (마이크 탭 → 녹음 → Gemini 변환 → 목록 추가) — `.maestro/voice/voice_todo.yml`
 - [ ] T214 [US7] Maestro E2E: 캘린더 조회 흐름 (캘린더 진입 → 월별 요약 → 날짜 선택 → 할 일 목록) — `.maestro/calendar/calendar_view.yml`
 - [X] T215 [US8] Maestro E2E: TodoList 공유 흐름 (날짜 선택 → 공유 버튼 → 채널 선택) — `.maestro/share/share_todo.yml`
 

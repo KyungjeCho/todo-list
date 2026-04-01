@@ -184,7 +184,7 @@ interface CreateTodoRequest {
 ```typescript
 // Response 201
 interface VoiceTodoResponse extends TodoItem {
-  rawText: string;          // STT 원본 텍스트
+  rawText: string;          // Gemini 음성 인식 원본 텍스트
 }
 ```
 
@@ -329,8 +329,7 @@ interface MonthlySummaryResponse {
 | CONTENT_REQUIRED | 400 | content 누락/빈 문자열 |
 | CONTENT_TOO_LONG | 400 | content 255자 초과 |
 | INVALID_AUDIO_FORMAT | 400 | 지원하지 않는 오디오 형식 |
-| STT_API_ERROR | 500 | STT API 호출 실패 |
-| LLM_API_ERROR | 500 | LLM API 호출 실패 |
+| VOICE_AI_API_ERROR | 500 | Gemini 음성 AI API 호출 실패 |
 | INVALID_STATUS | 400 | 유효하지 않은 상태값 |
 | INVALID_STATUS_TRANSITION | 400 | 허용되지 않는 상태 전이 |
 | TODO_NOT_FOUND | 404 | 할 일 없음 |

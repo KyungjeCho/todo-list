@@ -13,6 +13,7 @@ import { UserModule } from './user/user.module';
 import { TodoModule } from './todo/todo.module';
 import { MemoModule } from './memo/memo.module';
 import { SchedulerModule } from './scheduler/scheduler.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { SchedulerModule } from './scheduler/scheduler.module';
     TodoModule,
     MemoModule,
     SchedulerModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [

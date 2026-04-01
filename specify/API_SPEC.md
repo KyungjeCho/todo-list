@@ -421,7 +421,7 @@ todolist://auth/callback?error=AUTHENTICATION_FAILED
 
 ### 3.3 음성으로 할 일 생성
 
-음성 데이터를 STT + LLM으로 처리하여 할 일을 생성합니다. (FR-03)
+음성 데이터를 Gemini Flash 멀티모달 API로 처리하여 할 일을 생성합니다. (FR-03)
 
 **POST** `/todos/voice`
 
@@ -457,8 +457,7 @@ todolist://auth/callback?error=AUTHENTICATION_FAILED
 | Status | Code | 상황 |
 | --- | --- | --- |
 | 400 | INVALID_AUDIO_FORMAT | 지원하지 않는 오디오 형식 |
-| 500 | STT_API_ERROR | STT API 호출 실패 |
-| 500 | LLM_API_ERROR | LLM API 호출 실패 |
+| 500 | VOICE_AI_API_ERROR | Gemini 음성 AI API 호출 실패 |
 
 ---
 

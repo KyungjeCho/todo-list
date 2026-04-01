@@ -46,7 +46,6 @@ export default () => ({
     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
   },
   ai: {
-    sttApiKey: process.env.STT_API_KEY,
-    llmApiKey: process.env.LLM_API_KEY,
+    geminiApiKey: process.env.GEMINI_API_KEY,
   },
 });

@@ -86,6 +86,10 @@ const MainWrapper: React.FC = () => {
     string | undefined
   >();
   const [error, setError] = useState<string | undefined>();
+  const [isVoiceProcessing, setIsVoiceProcessing] = useState(false);
+  const [voiceProcessingError, setVoiceProcessingError] = useState<
+    string | undefined
+  >();
 
   const fetchTodos = useCallback(async (date: string, showLoading = false) => {
     if (showLoading) setIsLoading(true);
@@ -241,6 +245,26 @@ const MainWrapper: React.FC = () => {
     [selectedDate, fetchTodos],
   );
 
+  const handleVoiceTodo = useCallback(
+    async (audioUri: string) => {
+      setIsVoiceProcessing(true);
+      setVoiceProcessingError(undefined);
+      try {
+        await todoApi.createVoiceTodo(audioUri, selectedDate);
+        await fetchTodos(selectedDate);
+      } catch (err) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : '음성 인식에 실패했습니다. 다시 시도해주세요.';
+        setVoiceProcessingError(message);
+      } finally {
+        setIsVoiceProcessing(false);
+      }
+    },
+    [selectedDate, fetchTodos],
+  );
+
   const handleModeToggle = useCallback(() => {
     const currentMode = modeOverride ?? data?.mode ?? 'PLAN';
     setModeOverride(currentMode === 'PLAN' ? 'REVIEW' : 'PLAN');
@@ -264,6 +288,9 @@ const MainWrapper: React.FC = () => {
       date={selectedDate}
       onModeToggle={handleModeToggle}
       onAddTodo={handleAddTodo}
+      onVoiceTodoCreated={handleVoiceTodo}
+      isVoiceProcessing={isVoiceProcessing}
+      voiceProcessingError={voiceProcessingError}
       onToggleComplete={handleToggleComplete}
       onEdit={handleEdit}
       onDeactivate={handleDeactivate}

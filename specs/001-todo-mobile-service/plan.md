@@ -5,7 +5,7 @@
 
 ## Summary
 
-"계획 → 실행 → 회고" 루틴 기반의 Todo 일정 관리 모바일 앱을 개발한다. React Native(Expo, TypeScript) 프론트엔드와 NestJS(TypeScript) 백엔드로 구성하며, Supabase(PostgreSQL)를 데이터 저장소로 사용한다. OAuth 소셜 로그인, 할 일 CRUD, 시간대별 모드 전환, 자동 이월, 푸시 알림, 음성 인식(STT+LLM), 캘린더, 공유 기능을 포함한다. AWS Lambda(Container Image) + API Gateway 기반으로 배포한다. 모든 기능은 TDD(Red → Green → Refactor) 원칙을 준수하여 개발한다.
+"계획 → 실행 → 회고" 루틴 기반의 Todo 일정 관리 모바일 앱을 개발한다. React Native(Expo, TypeScript) 프론트엔드와 NestJS(TypeScript) 백엔드로 구성하며, Supabase(PostgreSQL)를 데이터 저장소로 사용한다. OAuth 소셜 로그인, 할 일 CRUD, 시간대별 모드 전환, 자동 이월, 푸시 알림, 음성 인식(Gemini Flash 멀티모달), 캘린더, 공유 기능을 포함한다. AWS Lambda(Container Image) + API Gateway 기반으로 배포한다. 모든 기능은 TDD(Red → Green → Refactor) 원칙을 준수하여 개발한다.
 
 ## Technical Context
 
@@ -102,10 +102,10 @@ backend/
 │   ├── scheduler/                 # 스케줄러 모듈
 │   │   ├── scheduler.module.ts
 │   │   └── application/           # 이월, 알림 스케줄러
-│   └── ai/                        # AI 모듈 (STT + LLM)
+│   └── ai/                        # AI 모듈 (Gemini Flash 멀티모달)
 │       ├── ai.module.ts
 │       ├── application/
-│       └── infrastructure/        # 외부 API 클라이언트
+│       └── infrastructure/        # Gemini API 클라이언트
 ├── test/
 │   ├── unit/
 │   ├── integration/

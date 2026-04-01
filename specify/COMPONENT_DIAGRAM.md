@@ -22,7 +22,7 @@
                                 │             │              │             │
                                 │  ┌──────────▼──┐  ┌───────▼────────┐   │
                                 │  │ Scheduler    │  │ AI             │   │
-                                │  │ Notification │  │ STT + LLM     │   │
+                                │  │ Notification │  │ Gemini Flash  │   │
                                 │  │ / Carryover  │  │                │   │
                                 │  └──────────┬──┘  └───────┬────────┘   │
                                 │             │              │             │
@@ -43,13 +43,13 @@
                                 ┌──────────────────────────────────────────┐
                                 │  External Services                        │
                                 │                                           │
-                                │  ┌───────────┐ ┌─────┐ ┌───────┐ ┌─────┐│
-                                │  │ OAuth 2.0 │ │ FCM │ │ STT   │ │ LLM ││
-                                │  │ Google    │ │Push │ │ API   │ │ API ││
-                                │  │ Naver     │ │Noti.│ │Speech │ │Text ││
-                                │  │ Kakao     │ │     │ │to text│ │Refi.││
-                                │  │ Apple     │ │     │ │       │ │     ││
-                                │  └───────────┘ └─────┘ └───────┘ └─────┘│
+                                │  ┌───────────┐ ┌─────┐ ┌───────────────┐│
+                                │  │ OAuth 2.0 │ │ FCM │ │ Gemini Flash  ││
+                                │  │ Google    │ │Push │ │ (Google AI)   ││
+                                │  │ Naver     │ │Noti.│ │ 음성→텍스트   ││
+                                │  │ Kakao     │ │     │ │ 변환+다듬기   ││
+                                │  │ Apple     │ │     │ │               ││
+                                │  └───────────┘ └─────┘ └───────────────┘│
                                 └──────────────────────────────────────────┘
 ```
 
@@ -72,7 +72,7 @@
 | Todo Service | 할 일 CRUD, 상태 변경, 이월 비즈니스 로직 |
 | User Service | 사용자 프로필, 설정 관리 |
 | Scheduler | 알림 스케줄링 (node-cron), 자정 자동 이월 |
-| AI | STT + LLM API 호출을 통한 음성 인식 할 일 추가 |
+| AI | Gemini Flash 멀티모달 API 호출을 통한 음성 인식 할 일 추가 |
 | Repository | TypeORM 기반 데이터 접근 계층 |
 | Notification Service | FCM 푸시 알림 발송 |
 
@@ -88,5 +88,4 @@
 |--------|------|
 | OAuth 2.0 (Google, Naver, Kakao, Apple) | 소셜 로그인 인증 |
 | FCM | 푸시 알림 발송 (Android / iOS) |
-| STT API | 음성 → 텍스트 변환 |
-| LLM API | 텍스트 다듬기 (할 일 정제) |
+| Gemini Flash API | 음성 → 텍스트 변환 + 다듬기 통합 (Google AI Studio 무료) |

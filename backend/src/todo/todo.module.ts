@@ -8,6 +8,7 @@ import { ChangeTodoStatusUsecase } from './application/change-todo-status.usecas
 import { DeleteTodoUsecase } from './application/delete-todo.usecase';
 import { CompleteDayUsecase } from './application/complete-day.usecase';
 import { GetMonthlySummaryUsecase } from './application/get-monthly-summary.usecase';
+import { CreateVoiceTodoUsecase } from './application/create-voice-todo.usecase';
 import { TodoRepository } from './infrastructure/todo.repository';
 import { CarriedOverHistoryRepository } from './infrastructure/carried-over-history.repository';
 import { Todo } from './domain/todo.entity';
@@ -15,10 +16,12 @@ import { CarriedOverHistory } from './domain/carried-over-history.entity';
 import { TodoMemo } from '../memo/domain/todo-memo.entity';
 import { UserRepository } from '../user/infrastructure/user.repository';
 import { User } from '../user/domain/user.entity';
+import { AiModule } from '../ai/ai.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Todo, CarriedOverHistory, TodoMemo, User]),
+    AiModule,
   ],
   controllers: [TodoController],
   providers: [
@@ -29,6 +32,7 @@ import { User } from '../user/domain/user.entity';
     DeleteTodoUsecase,
     CompleteDayUsecase,
     GetMonthlySummaryUsecase,
+    CreateVoiceTodoUsecase,
     TodoRepository,
     CarriedOverHistoryRepository,
     UserRepository,

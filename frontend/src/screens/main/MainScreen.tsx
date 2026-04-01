@@ -16,6 +16,7 @@ import { ModeToggle } from '../../components/todo/ModeToggle';
 import { ShareButton } from '../../components/todo/ShareButton';
 import { ReviewModeView } from './ReviewModeView';
 import { CompleteDayButton } from '../../components/todo/CompleteDayButton';
+import { VoiceTodoButton } from '../../components/todo/VoiceTodoButton';
 
 interface Stats {
   total: number;
@@ -41,6 +42,9 @@ interface MainScreenProps {
   onDeleteMemo?: (todoId: string, memoId: string) => void;
   onCompleteDay?: () => void;
   onNavigateSettings?: () => void;
+  onVoiceTodoCreated?: (audioUri: string) => void;
+  isVoiceProcessing?: boolean;
+  voiceProcessingError?: string;
   isLoading?: boolean;
   isAdding?: boolean;
   isCompleting?: boolean;
@@ -67,6 +71,9 @@ export const MainScreen: React.FC<MainScreenProps> = ({
   onDeleteMemo,
   onCompleteDay,
   onNavigateSettings,
+  onVoiceTodoCreated,
+  isVoiceProcessing,
+  voiceProcessingError,
   isLoading,
   isAdding,
   isCompleting,
@@ -171,9 +178,20 @@ export const MainScreen: React.FC<MainScreenProps> = ({
             />
           )}
 
-          {onAddTodo && (
-            <AddTodoInput onAdd={onAddTodo} isLoading={isAdding} />
-          )}
+          <View style={styles.inputRow}>
+            {onAddTodo && (
+              <View style={styles.addInputWrapper}>
+                <AddTodoInput onAdd={onAddTodo} isLoading={isAdding} />
+              </View>
+            )}
+            {onVoiceTodoCreated && (
+              <VoiceTodoButton
+                onVoiceTodoCreated={onVoiceTodoCreated}
+                isProcessing={isVoiceProcessing}
+                processingError={voiceProcessingError}
+              />
+            )}
+          </View>
         </>
       )}
     </SafeAreaView>
@@ -197,6 +215,8 @@ const styles = StyleSheet.create({
   errorText: { color: 'red' },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyText: { fontSize: 16, color: '#888' },
+  inputRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  addInputWrapper: { flex: 1 },
   retryButton: {
     marginTop: 8,
     paddingVertical: 8,

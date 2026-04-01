@@ -36,7 +36,12 @@ export class GetMonthlySummaryUsecase {
 
     const dayMap = new Map<
       string,
-      { totalCount: number; completedCount: number; activeCount: number; carriedOverCount: number }
+      {
+        totalCount: number;
+        completedCount: number;
+        activeCount: number;
+        carriedOverCount: number;
+      }
     >();
 
     for (const todo of todos) {

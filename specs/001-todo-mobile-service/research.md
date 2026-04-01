@@ -35,12 +35,13 @@
 - AWS SNS: FCM 대비 모바일 푸시 설정이 복잡
 - OneSignal: 추가 외부 서비스 의존
 
-## R-005: 음성 인식(STT + LLM) 통합 전략
+## R-005: 음성 인식 통합 전략
 
-**Decision**: 서버사이드 처리 (클라이언트에서 오디오 파일 업로드 → 서버에서 STT API + LLM API 호출)
-**Rationale**: TECH_SPEC에서 서버사이드 처리로 명시되어 있다. API 키를 클라이언트에 노출하지 않으며(보안), 프롬프트를 서버 설정으로 관리하여 배포 없이 조정 가능하다.
+**Decision**: Gemini Flash 멀티모달 통합 (클라이언트에서 오디오 파일 업로드 → 서버에서 Gemini Flash API 1회 호출로 음성→텍스트 변환+다듬기 통합 처리)
+**Rationale**: Gemini Flash는 오디오 입력을 직접 지원하는 멀티모달 모델로, 별도 STT 서비스 없이 음성→다듬어진 할 일 텍스트 변환을 단일 API 호출로 처리할 수 있다. Google AI Studio에서 무료 API 키를 발급받아 사용하며(15 RPM, 100만 토큰/일 무료), 결제 등록이 불필요하다. API 키를 클라이언트에 노출하지 않으며(보안), 프롬프트를 서버 설정으로 관리하여 배포 없이 조정 가능하다.
 **Alternatives considered**:
-- 클라이언트 사이드 STT: API 키 노출 위험, 프롬프트 관리 불가
+- STT + LLM 2단계 파이프라인: Google Cloud STT + Gemini 조합. 별도 STT API 키 및 GCP 결제 등록 필요
+- 클라이언트 사이드 처리: API 키 노출 위험, 프롬프트 관리 불가
 
 ## R-006: 자동 이월 처리 전략
 
