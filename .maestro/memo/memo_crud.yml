@@ -1,0 +1,82 @@
+# T210 [US5] Maestro E2E: 메모 CRUD 흐름 (메모 추가 → 수정 → 삭제)
+# WHY: 메모 첨부 기능의 핵심 플로우를 검증한다.
+#       할 일에 메모 추가, 수정, 삭제까지의 전체 CRUD 흐름.
+# PREREQ: 인증 완료 + 메인 화면에 최소 1개 할 일 존재.
+
+appId: com.todolist.app
+
+tags:
+  - memo
+  - crud
+
+---
+
+# 메인 화면 진입 확인
+- assertVisible:
+    text: "Plan"
+
+# === 메모 추가 ===
+
+# 메모 토글 버튼 탭 — 메모 섹션 열기
+- tapOn:
+    text: "📝"
+
+# 메모 입력 필드가 표시되는지 확인
+- assertVisible:
+    id: "memo-input"
+
+# 메모 추가 버튼이 표시되는지 확인
+- assertVisible:
+    id: "memo-add-button"
+
+# 메모 입력 필드에 내용 입력 (ASCII only for Android emulator)
+- tapOn:
+    id: "memo-input"
+- inputText: "E2E test memo"
+
+# 메모 추가 버튼 탭
+- tapOn:
+    id: "memo-add-button"
+
+# 추가된 메모가 표시되는지 확인
+- assertVisible:
+    text: "E2E test memo"
+
+# 입력 필드가 초기화되었는지 확인
+- assertVisible:
+    id: "memo-input"
+
+# === 메모 수정 ===
+
+# 메모 항목을 탭하여 수정 모드 진입
+- tapOn:
+    text: "E2E test memo"
+
+# 기존 텍스트를 지우고 새 내용 입력
+- eraseText: 13
+- inputText: "Updated memo"
+
+# Enter 키로 수정 확인
+- pressKey: Enter
+
+# 수정된 메모 내용이 표시되는지 확인
+- assertVisible:
+    text: "Updated memo"
+
+# 원래 메모 텍스트가 사라졌는지 확인
+- assertNotVisible:
+    text: "E2E test memo"
+
+# === 메모 삭제 ===
+
+# 메모 삭제 버튼 탭
+- tapOn:
+    text: "✕"
+
+# 삭제된 메모가 목록에서 사라졌는지 확인
+- assertNotVisible:
+    text: "Updated memo"
+
+# 메모 입력 필드는 여전히 표시되는지 확인 (메모 섹션은 열린 상태)
+- assertVisible:
+    id: "memo-input"

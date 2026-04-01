@@ -1,0 +1,278 @@
+import { OAuthCallbackUsecase } from 'src/auth/application/oauth-callback.usecase';
+import { TokenService } from 'src/auth/infrastructure/token.service';
+
+describe('OAuthCallbackUsecase', () => {
+  let usecase: OAuthCallbackUsecase;
+
+  const mockAuthRepository = {
+    findOauthByProvider: jest.fn(),
+    createUserAuth: jest.fn(),
+    createOauthAccount: jest.fn(),
+    createSession: jest.fn(),
+  };
+
+  const mockUserRepository = {
+    create: jest.fn(),
+    findByUserAuthId: jest.fn(),
+  };
+
+  const mockUserDeviceRepository = {
+    upsertDevice: jest.fn(),
+  };
+
+  const mockTokenService = {
+    generateAccessToken: jest.fn(),
+    generateRefreshToken: jest.fn(),
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    usecase = new OAuthCallbackUsecase(
+      mockAuthRepository as never,
+      mockUserRepository as never,
+      mockUserDeviceRepository as never,
+      mockTokenService as never,
+    );
+  });
+
+  it('should be defined', () => {
+    expect(usecase).toBeDefined();
+  });
+
+  describe('execute', () => {
+    const callbackDto = {
+      provider: 'google',
+      providerUserId: 'google-123',
+      providerUserEmail: 'user@gmail.com',
+      providerUserName: 'Test User',
+      fcmToken: 'fcm-token-123',
+      deviceType: 'IOS' as const,
+      deviceName: 'iPhone 15',
+      userAgent: 'Mozilla/5.0',
+      ipAddress: '192.168.1.1',
+    };
+
+    it('should create new user for first-time OAuth login', async () => {
+      mockAuthRepository.findOauthByProvider.mockResolvedValue(null);
+      mockAuthRepository.createUserAuth.mockResolvedValue({
+        id: 'auth-id-1',
+      });
+      mockAuthRepository.createOauthAccount.mockResolvedValue({
+        id: 'oauth-id-1',
+      });
+      mockUserRepository.create.mockResolvedValue({
+        id: 'user-id-1',
+        userAuthId: 'auth-id-1',
+      });
+      mockAuthRepository.createSession.mockResolvedValue({
+        id: 'session-id-1',
+      });
+      mockTokenService.generateAccessToken.mockReturnValue('access-token');
+      mockTokenService.generateRefreshToken.mockReturnValue('refresh-token');
+      mockUserDeviceRepository.upsertDevice.mockResolvedValue(undefined);
+
+      const result = await usecase.execute(callbackDto);
+
+      expect(result).toBeDefined();
+      expect(result.accessToken).toBe('access-token');
+      expect(result.refreshToken).toBe('refresh-token');
+      expect(result.isNewUser).toBe(true);
+      expect(mockAuthRepository.createUserAuth).toHaveBeenCalled();
+      expect(mockUserRepository.create).toHaveBeenCalled();
+      expect(mockUserDeviceRepository.upsertDevice).toHaveBeenCalledWith(
+        expect.objectContaining({
+          fcmToken: 'fcm-token-123',
+          deviceType: 'IOS',
+        }),
+      );
+    });
+
+    it('should return existing user for returning OAuth login', async () => {
+      const existingOauth = {
+        id: 'oauth-id-1',
+        userAuthId: 'auth-id-1',
+        userAuth: { id: 'auth-id-1' },
+      };
+      mockAuthRepository.findOauthByProvider.mockResolvedValue(existingOauth);
+      mockUserRepository.findByUserAuthId.mockResolvedValue({
+        id: 'user-id-1',
+        userAuthId: 'auth-id-1',
+      });
+      mockAuthRepository.createSession.mockResolvedValue({
+        id: 'session-id-1',
+      });
+      mockTokenService.generateAccessToken.mockReturnValue('access-token');
+      mockTokenService.generateRefreshToken.mockReturnValue('refresh-token');
+      mockUserDeviceRepository.upsertDevice.mockResolvedValue(undefined);
+
+      const result = await usecase.execute(callbackDto);
+
+      expect(result).toBeDefined();
+      expect(result.accessToken).toBe('access-token');
+      expect(result.refreshToken).toBe('refresh-token');
+      expect(result.isNewUser).toBe(false);
+      expect(mockAuthRepository.createUserAuth).not.toHaveBeenCalled();
+      expect(mockUserRepository.create).not.toHaveBeenCalled();
+    });
+
+    it('should register FCM device on login', async () => {
+      mockAuthRepository.findOauthByProvider.mockResolvedValue({
+        id: 'oauth-id-1',
+        userAuthId: 'auth-id-1',
+      });
+      mockUserRepository.findByUserAuthId.mockResolvedValue({
+        id: 'user-id-1',
+      });
+      mockAuthRepository.createSession.mockResolvedValue({
+        id: 'session-id-1',
+      });
+      mockTokenService.generateAccessToken.mockReturnValue('access-token');
+      mockTokenService.generateRefreshToken.mockReturnValue('refresh-token');
+      mockUserDeviceRepository.upsertDevice.mockResolvedValue(undefined);
+
+      await usecase.execute(callbackDto);
+
+      expect(mockUserDeviceRepository.upsertDevice).toHaveBeenCalledWith(
+        expect.objectContaining({
+          fcmToken: 'fcm-token-123',
+          deviceType: 'IOS',
+          deviceName: 'iPhone 15',
+        }),
+      );
+    });
+
+    it('should store hashed refresh token in session', async () => {
+      mockAuthRepository.findOauthByProvider.mockResolvedValue({
+        id: 'oauth-id-1',
+        userAuthId: 'auth-id-1',
+      });
+      mockUserRepository.findByUserAuthId.mockResolvedValue({
+        id: 'user-id-1',
+      });
+      mockAuthRepository.createSession.mockResolvedValue({
+        id: 'session-id-1',
+      });
+      mockTokenService.generateAccessToken.mockReturnValue('access-token');
+      mockTokenService.generateRefreshToken.mockReturnValue('refresh-token');
+      mockUserDeviceRepository.upsertDevice.mockResolvedValue(undefined);
+
+      await usecase.execute(callbackDto);
+
+      const expectedHash = TokenService.hashToken('refresh-token');
+      expect(mockAuthRepository.createSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          refreshToken: expectedHash,
+        }),
+      );
+    });
+
+    it('should create session with userAgent and ipAddress', async () => {
+      mockAuthRepository.findOauthByProvider.mockResolvedValue({
+        id: 'oauth-id-1',
+        userAuthId: 'auth-id-1',
+      });
+      mockUserRepository.findByUserAuthId.mockResolvedValue({
+        id: 'user-id-1',
+      });
+      mockAuthRepository.createSession.mockResolvedValue({
+        id: 'session-id-1',
+      });
+      mockTokenService.generateAccessToken.mockReturnValue('access-token');
+      mockTokenService.generateRefreshToken.mockReturnValue('refresh-token');
+      mockUserDeviceRepository.upsertDevice.mockResolvedValue(undefined);
+
+      await usecase.execute(callbackDto);
+
+      expect(mockAuthRepository.createSession).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userAgent: 'Mozilla/5.0',
+          ipAddress: '192.168.1.1',
+        }),
+      );
+    });
+
+    it('should create new user with null timezone', async () => {
+      mockAuthRepository.findOauthByProvider.mockResolvedValue(null);
+      mockAuthRepository.createUserAuth.mockResolvedValue({
+        id: 'auth-id-1',
+      });
+      mockAuthRepository.createOauthAccount.mockResolvedValue({
+        id: 'oauth-id-1',
+      });
+      mockUserRepository.create.mockResolvedValue({
+        id: 'user-id-1',
+        userAuthId: 'auth-id-1',
+      });
+      mockAuthRepository.createSession.mockResolvedValue({
+        id: 'session-id-1',
+      });
+      mockTokenService.generateAccessToken.mockReturnValue('access-token');
+      mockTokenService.generateRefreshToken.mockReturnValue('refresh-token');
+      mockUserDeviceRepository.upsertDevice.mockResolvedValue(undefined);
+
+      await usecase.execute(callbackDto);
+
+      expect(mockUserRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({ timezone: null }),
+      );
+    });
+
+    it('should skip device registration when fcmToken is absent', async () => {
+      const dtoWithoutFcm = { ...callbackDto, fcmToken: undefined };
+
+      mockAuthRepository.findOauthByProvider.mockResolvedValue({
+        id: 'oauth-id-1',
+        userAuthId: 'auth-id-1',
+      });
+      mockUserRepository.findByUserAuthId.mockResolvedValue({
+        id: 'user-id-1',
+      });
+      mockAuthRepository.createSession.mockResolvedValue({
+        id: 'session-id-1',
+      });
+      mockTokenService.generateAccessToken.mockReturnValue('access-token');
+      mockTokenService.generateRefreshToken.mockReturnValue('refresh-token');
+
+      const result = await usecase.execute(dtoWithoutFcm);
+
+      expect(result.accessToken).toBe('access-token');
+      expect(mockUserDeviceRepository.upsertDevice).not.toHaveBeenCalled();
+    });
+
+    it('should create user with generated name when email is missing', async () => {
+      const dtoWithoutEmail = {
+        ...callbackDto,
+        providerUserEmail: '',
+        providerUserName: '',
+      };
+
+      mockAuthRepository.findOauthByProvider.mockResolvedValue(null);
+      mockAuthRepository.createUserAuth.mockResolvedValue({
+        id: 'auth-id-1',
+      });
+      mockAuthRepository.createOauthAccount.mockResolvedValue({
+        id: 'oauth-id-1',
+      });
+      mockUserRepository.create.mockResolvedValue({
+        id: 'user-id-1',
+        userAuthId: 'auth-id-1',
+      });
+      mockAuthRepository.createSession.mockResolvedValue({
+        id: 'session-id-1',
+      });
+      mockTokenService.generateAccessToken.mockReturnValue('access-token');
+      mockTokenService.generateRefreshToken.mockReturnValue('refresh-token');
+      mockUserDeviceRepository.upsertDevice.mockResolvedValue(undefined);
+
+      const result = await usecase.execute(dtoWithoutEmail);
+
+      expect(result).toBeDefined();
+      expect(result.isNewUser).toBe(true);
+      expect(mockUserRepository.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userName: expect.stringMatching(/^user_\d+$/) as string,
+        }),
+      );
+    });
+  });
+});

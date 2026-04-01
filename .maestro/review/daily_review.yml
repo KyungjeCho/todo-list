@@ -1,0 +1,118 @@
+# T208 [US3] Maestro E2E: 하루 회고 및 이월 흐름
+# Review 모드 → 진행률 확인 → 일정 완료 → 이월 확인
+# WHY: 사용자가 하루를 마무리하며 회고하고, 미완료 항목을 자동 이월하는 핵심 플로우.
+#       Review 모드 전환, 진행률 표시, 완료/미완료 분리, 일정 완료, 이월 결과까지 전체 검증.
+# PREREQ: 인증 완료 + 온보딩 완료 상태에서 메인 화면 진입 필요.
+#          최소 1개 ACTIVE + 1개 COMPLETED 할 일이 존재해야 함.
+#          실제 E2E 실행 시 사전 인증 stub 또는 login.yml + onboarding.yml 선행,
+#          todo/create.yml로 할 일 추가 후 일부 완료 처리 필요.
+
+appId: com.todolist.app
+
+tags:
+  - review
+  - carryover
+  - regression
+
+---
+
+# === 사전 조건: 할 일 생성 및 일부 완료 처리 ===
+
+# Plan 모드에서 메인 화면 확인
+- assertVisible:
+    text: "Plan"
+
+# 할 일 추가 (이월 대상 — 미완료 상태로 남길 항목)
+- tapOn:
+    id: "add-todo-input"
+- inputText: "이월될 할 일"
+- tapOn:
+    id: "add-todo-button"
+
+# 두 번째 할 일 추가 (완료 처리할 항목)
+- tapOn:
+    id: "add-todo-input"
+- inputText: "완료할 할 일"
+- tapOn:
+    id: "add-todo-button"
+
+# 추가된 항목 확인
+- assertVisible:
+    text: "이월될 할 일"
+- assertVisible:
+    text: "완료할 할 일"
+
+# 두 번째 할 일 체크박스 탭하여 COMPLETED 처리
+- tapOn:
+    id: "todo-checkbox-.*"
+    index: 1
+
+# === Review 모드로 전환 ===
+
+# 모드 토글 버튼 탭
+- tapOn:
+    id: "mode-toggle"
+
+# Review 모드 화면 확인
+- assertVisible:
+    text: "Review"
+
+# === 진행률 표시 확인 ===
+
+# 진행률 바 표시 확인
+- assertVisible:
+    id: "review-progress-bar"
+
+# 진행률 퍼센트 표시 확인
+- assertVisible:
+    id: "review-progress-rate"
+
+# === 완료/미완료 분리 확인 ===
+
+# 완료 섹션 표시 확인
+- assertVisible:
+    id: "review-completed-section"
+
+# 미완료 섹션 표시 확인
+- assertVisible:
+    id: "review-incomplete-section"
+
+# 완료된 항목이 완료 섹션에 표시됨
+- assertVisible:
+    text: "완료할 할 일"
+
+# 미완료 항목이 미완료 섹션에 표시됨
+- assertVisible:
+    text: "이월될 할 일"
+
+# === 일정 완료 ===
+
+# "오늘의 일정 완료" 버튼 표시 확인
+- assertVisible:
+    id: "complete-day-button"
+
+# 일정 완료 버튼 탭
+- tapOn:
+    id: "complete-day-button"
+
+# === 이월 결과 확인 ===
+
+# 이월 결과 영역 표시 확인
+- assertVisible:
+    id: "carried-over-result"
+
+# 이월된 항목 내용 확인
+- assertVisible:
+    text: "이월될 할 일"
+
+# === 완료 후 상태 확인 ===
+
+# 이미 완료 상태이면 버튼 비활성화
+- assertVisible:
+    id: "already-completed-text"
+    optional: true
+
+# 완료 버튼 재탭 시 중복 완료 방지 (비활성화 상태)
+- tapOn:
+    id: "complete-day-button"
+    optional: true

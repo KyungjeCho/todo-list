@@ -1,0 +1,70 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
+jest.mock('@react-native-firebase/messaging', () => ({
+  getMessaging: jest.fn().mockReturnValue({}),
+  requestPermission: jest.fn().mockResolvedValue(1),
+  getToken: jest.fn().mockResolvedValue('mock-fcm-token'),
+  onTokenRefresh: jest.fn().mockReturnValue(jest.fn()),
+  onMessage: jest.fn().mockReturnValue(jest.fn()),
+}));
+
+jest.mock('react-native-gesture-handler', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+
+  const State = {
+    UNDETERMINED: 0,
+    FAILED: 1,
+    BEGAN: 2,
+    CANCELLED: 3,
+    ACTIVE: 4,
+    END: 5,
+  };
+
+  const LongPressGestureHandler = ({
+    children,
+    onHandlerStateChange,
+  }: {
+    children: React.ReactNode;
+    onHandlerStateChange?: (event: { nativeEvent: { state: number } }) => void;
+    minDurationMs?: number;
+  }) =>
+    React.createElement(
+      View,
+      {
+        onLongPress: () =>
+          onHandlerStateChange?.({ nativeEvent: { state: State.ACTIVE } }),
+      },
+      children,
+    );
+
+  const Swipeable = React.forwardRef(
+    (
+      {
+        children,
+        renderRightActions,
+      }: {
+        children: React.ReactNode;
+        renderRightActions?: () => React.ReactNode;
+        overshootRight?: boolean;
+      },
+      _ref: React.Ref<unknown>,
+    ) =>
+      React.createElement(View, null, children, renderRightActions?.()),
+  );
+  Swipeable.displayName = 'Swipeable';
+
+  return {
+    Swipeable,
+    DrawerLayout: View,
+    State,
+    PanGestureHandler: View,
+    TapGestureHandler: View,
+    LongPressGestureHandler,
+    FlingGestureHandler: View,
+    ForceTouchGestureHandler: View,
+    RotationGestureHandler: View,
+    PinchGestureHandler: View,
+    GestureHandlerRootView: View,
+    Directions: {},
+  };
+});

@@ -1,0 +1,68 @@
+# T205 [US2] Maestro E2E: 할 일 추가 흐름
+# "+" 버튼 탭 → 내용 입력 → 목록에 새 항목 표시 검증
+# WHY: 사용자가 Plan 모드에서 할 일을 추가하는 핵심 플로우.
+#       입력 필드 렌더링, 버튼 탭, 목록 반영까지 전체 흐름 검증.
+# PREREQ: 인증 완료 + 온보딩 완료 상태에서 메인 화면 진입 필요.
+#          실제 E2E 실행 시 사전 인증 stub 또는 login.yml + onboarding.yml 선행 필요.
+
+appId: com.todolist.app
+
+tags:
+  - todo
+  - crud
+  - smoke
+
+---
+
+# 메인 화면 진입 확인 — Plan 모드 표시
+- assertVisible:
+    text: "Plan"
+
+# 할 일 입력 필드 표시 확인
+- assertVisible:
+    id: "add-todo-input"
+
+# 추가 버튼 표시 확인
+- assertVisible:
+    id: "add-todo-button"
+
+# 빈 상태 메시지 확인 (할 일이 없을 때)
+- assertVisible:
+    id: "empty-state"
+    optional: true
+
+# 할 일 입력 필드에 내용 입력
+- tapOn:
+    id: "add-todo-input"
+- inputText: "E2E 테스트 할 일 항목"
+
+# "+" 버튼 탭하여 추가
+- tapOn:
+    id: "add-todo-button"
+
+# 추가된 할 일이 목록에 표시되는지 확인
+- assertVisible:
+    text: "E2E 테스트 할 일 항목"
+
+# 빈 상태 메시지가 사라졌는지 확인
+- assertNotVisible:
+    id: "empty-state"
+    optional: true
+
+# 입력 필드가 초기화되었는지 확인 (placeholder 복원)
+- assertVisible:
+    id: "add-todo-input"
+
+# 진행률 표시 확인 (최소 1개 항목 존재)
+- assertVisible:
+    id: "progress-rate"
+
+# 두 번째 할 일 추가 — 키보드 submitEditing 방식
+- tapOn:
+    id: "add-todo-input"
+- inputText: "두 번째 할 일 항목"
+- pressKey: Enter
+
+# 두 번째 항목도 목록에 표시되는지 확인
+- assertVisible:
+    text: "두 번째 할 일 항목"

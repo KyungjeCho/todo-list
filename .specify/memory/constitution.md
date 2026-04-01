@@ -1,23 +1,18 @@
 <!--
 === Sync Impact Report ===
-Version change: (new) → 1.0.0
-Modified principles: N/A (initial ratification)
+Version change: 1.2.0 → 1.3.0
+Modified principles: N/A
 Added sections:
-  - 7 Core Principles (한국어 우선, 엄격한 TypeScript, TDD 우선,
-    계층 분리, 실패 처리와 관측성, 단순성 우선, 명세서 중심 개발)
-  - 거버넌스 (Governance)
-  - 완료 기준 (Completion Criteria)
+  - X. E2E 테스트 원칙 (E2E Testing with Maestro)
 Removed sections: N/A
 Templates requiring updates:
   - .specify/templates/plan-template.md ✅ compatible
     (Constitution Check section exists; gates will be derived
-     from these 7 principles at plan time)
+     from these 10 principles at plan time)
   - .specify/templates/spec-template.md ✅ compatible
-    (User Scenarios, Requirements, Success Criteria sections
-     align with TDD/실패 처리 principles)
+    (User Scenarios & Testing section already supports E2E scenarios)
   - .specify/templates/tasks-template.md ✅ compatible
-    (Test-first ordering, parallel structure, checkpoint
-     validation align with TDD/완료 기준)
+    (Phase structure supports E2E test tasks per user story)
   - .specify/templates/commands/*.md — no command files found
 Follow-up TODOs: none
 -->
@@ -103,6 +98,76 @@ Follow-up TODOs: none
 **근거**: 명세서를 단일 진실 공급원(Single Source of Truth)으로
 유지하여 구현과 문서 간 불일치를 방지한다.
 
+### VIII. 주석 전략 (Commenting Strategy)
+
+- **WHY 중심 주석**: 코드가 "무엇을 하는지"가 아니라
+  "왜 이렇게 하는지"를 설명하는 주석만 작성한다.
+  코드 자체가 WHAT을 설명해야 한다.
+- **공개 API 문서화**: 외부에 노출되는 함수, 클래스, 모듈은
+  JSDoc/TSDoc 형식으로 목적, 매개변수, 반환값을 문서화한다.
+- **복잡한 비즈니스 로직 설명**: 도메인 규칙이나 비자명한
+  알고리즘에는 의사결정 배경을 주석으로 남긴다.
+- **TODO/FIXME 규칙**: `TODO(담당자): 설명` 또는
+  `FIXME(담당자): 설명` 형식을 사용하며, 이슈 번호를
+  함께 기재한다 (e.g., `TODO(jkjk396): #42 캐시 무효화 로직 추가`).
+- **금지 사항**:
+  - 코드를 그대로 반복하는 주석 (e.g., `// i를 1 증가`)
+  - 주석 처리된 코드 (삭제하고 git history에 위임)
+  - 변경 로그 주석 (git commit에 위임)
+
+**근거**: 좋은 주석은 코드만으로 전달할 수 없는 맥락을 보존하고,
+나쁜 주석은 코드와 동기화되지 않아 오히려 혼란을 야기한다.
+팀 전체가 일관된 주석 기준을 공유해야 코드 리뷰 품질이 향상된다.
+
+### IX. 브랜치 전략 (Branch Strategy)
+
+- **main**: 프로덕션 배포 가능 상태를 유지하는 보호 브랜치.
+  직접 push를 **금지**하며, **PR(Pull Request)을 통해서만**
+  병합한다.
+- **feature/NNN-name**: 새 기능 개발 브랜치.
+  `/speckit.specify`로 새 기능을 시작하면 `feature/*` 브랜치를
+  생성한다 (e.g., `feature/001-todo-mobile-service`).
+- **fix/NNN-name**: 버그 수정 브랜치.
+  기존 기능의 결함을 수정할 때 사용한다.
+- **hotfix/NNN-name**: 긴급 수정 브랜치.
+  프로덕션 장애 대응 시 main에서 분기하여 즉시 수정한다.
+- 모든 브랜치는 main으로 병합 전 **PR 리뷰를 필수**로 거친다.
+- 병합 완료된 브랜치는 삭제한다.
+
+**근거**: 브랜치 전략을 명확히 하면 동시 작업 시 충돌을
+최소화하고, PR 필수 정책은 코드 품질 게이트로 기능한다.
+
+### X. E2E 테스트 원칙 (Maestro E2E Testing)
+
+- Frontend E2E 테스트는 **Maestro MCP**를 이용하여 진행한다.
+- 매 Phase의 Frontend 작업 완료 시 E2E 테스트를 **반드시**
+  작성하고, TDD 원칙(III)에 따라 실패하는 테스트를 먼저
+  작성한 뒤 구현한다.
+- 모든 E2E 테스트는 `.maestro/` 디렉토리에 YAML로 작성한다.
+- **appId**: `com.yourapp.example`
+- 테스트 파일 네이밍: `{feature_name}.yml`
+- 각 플로우는 `launchApp`으로 시작하고 `clearState: true`를
+  포함해야 한다.
+- 요소 탐색은 **testID 기반**을 우선하되, 없으면 텍스트로
+  fallback한다.
+- 한 플로우당 **하나의 유저 저니**만 테스트한다.
+
+**디렉토리 구조**:
+
+```text
+.maestro/
+├── auth/
+│   ├── login.yml
+│   └── signup.yml
+├── home/
+│   └── navigation.yml
+└── config.yaml
+```
+
+**근거**: Maestro 기반 E2E 테스트는 실제 디바이스/에뮬레이터에서
+유저 저니를 검증하여 통합 결함을 조기에 발견한다.
+TDD와 결합하면 UI 수준의 회귀 방지가 가능하다.
+
 ## 거버넌스 (Governance)
 
 - 본 헌법은 모든 spec, plan, tasks보다 **상위 규범**이다.
@@ -126,5 +191,6 @@ Follow-up TODOs: none
 4. 린트 통과
 5. 문서 동기화 (변경된 기능에 대한 문서 업데이트)
 6. 실패 처리 구현 (loading, empty, error 상태)
+7. Frontend 변경 시 Maestro E2E 테스트 통과
 
-**Version**: 1.0.0 | **Ratified**: 2026-03-26 | **Last Amended**: 2026-03-26
+**Version**: 1.3.0 | **Ratified**: 2026-03-26 | **Last Amended**: 2026-03-28

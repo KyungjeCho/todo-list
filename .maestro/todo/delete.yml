@@ -1,0 +1,54 @@
+# T207 [US2] Maestro E2E: 할 일 삭제 흐름
+# 항목 스와이프 → 삭제 버튼 표시 → 삭제 확인 다이얼로그 → 삭제 완료 검증
+# WHY: 할 일 삭제는 Swipeable 우측 액션 + Alert 확인 다이얼로그로 구현됨.
+#       스와이프 제스처 → 삭제 버튼 탭 → 확인 다이얼로그 "삭제" 탭 전체 흐름 검증.
+# PREREQ: 인증 완료 + 메인 화면에 최소 1개 할 일 존재.
+#          create.yml 선행 실행 또는 사전 데이터 stub 필요.
+
+appId: com.todolist.app
+
+tags:
+  - todo
+  - crud
+
+---
+
+# 메인 화면 진입 확인
+- assertVisible:
+    text: "Plan"
+
+# 삭제 대상 할 일 항목이 존재하는지 확인
+- assertVisible:
+    text: "두 번째 할 일 항목"
+
+# 항목을 왼쪽으로 스와이프하여 삭제 버튼 노출
+- swipe:
+    text: "두 번째 할 일 항목"
+    direction: LEFT
+    duration: 400
+
+# 삭제 버튼이 표시되는지 확인
+- assertVisible:
+    text: "삭제"
+
+# 삭제 버튼 탭 — Alert 다이얼로그 표시
+- tapOn:
+    text: "삭제"
+
+# Alert 다이얼로그에서 "삭제" 확인 버튼 탭
+# WHY: Alert.alert으로 구현된 확인 다이얼로그. "취소"와 "삭제" 두 버튼 존재.
+- tapOn:
+    text: "삭제"
+
+# 삭제된 항목이 목록에서 사라졌는지 확인
+- assertNotVisible:
+    text: "두 번째 할 일 항목"
+
+# 나머지 항목은 여전히 표시되는지 확인
+- assertVisible:
+    text: "수정된 할 일 항목"
+    optional: true
+
+# 진행률이 업데이트되었는지 확인
+- assertVisible:
+    id: "progress-rate"

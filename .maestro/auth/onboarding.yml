@@ -1,0 +1,79 @@
+# T204 [US1] Maestro E2E: 신규 사용자 온보딩 흐름
+# 온보딩 화면에서 계획/회고 시간 설정 후 완료 버튼 탭 → 메인 화면 진입 검증
+# WHY: 신규 사용자의 첫 진입 경험을 검증. 시간 설정 기본값(08:00/22:00) 확인 및
+#       완료 버튼 탭 후 메인 화면 전환까지의 전체 플로우.
+# PREREQ: 인증 완료 상태(planTime 미설정)에서 시작해야 함.
+#          실제 E2E 실행 시 사전 인증 stub 또는 login.yml 선행 필요.
+
+appId: com.todolist.app
+
+tags:
+  - auth
+  - onboarding
+  - smoke
+
+---
+
+# 온보딩 화면 진입 확인
+- assertVisible:
+    text: "루틴 설정"
+
+# 계획 시간 기본값 08:00 표시 확인
+- assertVisible:
+    id: "plan-time-picker"
+- assertVisible:
+    text: "08:00"
+
+# 회고 시간 기본값 22:00 표시 확인
+- assertVisible:
+    id: "review-time-picker"
+- assertVisible:
+    text: "22:00"
+
+# 계획 시간 라벨 표시 확인
+- assertVisible:
+    text: "계획 시간"
+
+# 회고 시간 라벨 표시 확인
+- assertVisible:
+    text: "회고 시간"
+
+# 완료 버튼 표시 확인
+- assertVisible:
+    id: "onboarding-complete-button"
+- assertVisible:
+    text: "완료"
+
+# 계획 시간 피커 열기
+- tapOn:
+    id: "plan-time-picker"
+
+# 시간 피커가 표시되는지 확인
+- assertVisible:
+    id: "plan-time-native-picker"
+    optional: true
+
+# 회고 시간 피커 열기
+- tapOn:
+    id: "review-time-picker"
+
+# 시간 피커가 표시되는지 확인
+- assertVisible:
+    id: "review-time-native-picker"
+    optional: true
+
+# 완료 버튼 탭 — 온보딩 완료 및 메인 화면 전환
+- tapOn:
+    id: "onboarding-complete-button"
+
+# 온보딩 완료 후 로딩 표시 확인
+- assertVisible:
+    id: "onboarding-loading-indicator"
+    optional: true
+
+# 에러 발생 시 에러 메시지 표시 확인
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-error-message"
+    timeout: 5000
+    optional: true

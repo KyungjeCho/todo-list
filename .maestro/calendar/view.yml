@@ -1,0 +1,57 @@
+# Phase 9 [US7] Maestro E2E: 캘린더 조회 흐름
+# 캘린더 탭 진입 → 월별 요약 확인 → 이전/다음 월 이동 → 날짜 선택
+# WHY: 사용자가 캘린더 뷰에서 월별 요약과 날짜별 할 일을 확인하는 핵심 플로우 검증.
+# PREREQ: 인증 완료 상태에서 메인 화면 진입 필요.
+
+appId: com.todolist.app
+
+tags:
+  - calendar
+  - us7
+  - smoke
+
+---
+
+# 캘린더 탭으로 이동
+- tapOn:
+    text: "캘린더"
+
+# 캘린더 그리드 표시 확인
+- assertVisible:
+    id: "calendar-grid"
+
+# 이전 월 이동 버튼 확인
+- assertVisible:
+    id: "calendar-prev-month"
+
+# 다음 월 이동 버튼 확인
+- assertVisible:
+    id: "calendar-next-month"
+
+# 다음 월 버튼 탭
+- tapOn:
+    id: "calendar-next-month"
+
+# 캘린더가 여전히 표시되는지 확인 (월 이동 후)
+- assertVisible:
+    id: "calendar-grid"
+
+# 이전 월 버튼 탭 (원래 월로 복귀)
+- tapOn:
+    id: "calendar-prev-month"
+
+# 캘린더 그리드 확인
+- assertVisible:
+    id: "calendar-grid"
+
+# 날짜 셀이 올바르게 렌더링되는지 확인 (15일)
+- assertVisible:
+    id: "calendar-day-2026-03-15"
+
+# 홈 탭으로 돌아가기
+- tapOn:
+    text: "홈"
+
+# 메인 화면 복원 확인
+- assertVisible:
+    id: "add-todo-input"

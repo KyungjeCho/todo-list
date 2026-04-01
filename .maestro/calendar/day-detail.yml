@@ -1,0 +1,33 @@
+# Phase 9 [US7] Maestro E2E: 날짜 선택 시 할 일 목록 표시
+# 캘린더 탭 진입 → 날짜 셀 탭 → DayDetailView 표시 → 통계 확인
+# WHY: 특정 날짜 선택 시 해당 날짜의 할 일과 통계가 올바르게 표시되는지 검증.
+# PREREQ: 인증 완료 상태, 메인 화면 진입 필요.
+
+appId: com.todolist.app
+
+tags:
+  - calendar
+  - us7
+  - day-detail
+
+---
+
+# 캘린더 탭으로 이동
+- tapOn:
+    text: "캘린더"
+
+# 캘린더 화면 렌더링 확인
+- assertVisible:
+    id: "calendar-grid"
+
+# 캘린더의 15일 셀 탭 (중간 날짜 선택)
+- tapOn:
+    text: "15"
+
+# DayDetailView 렌더링 확인 (날짜가 선택된 경우)
+- assertVisible:
+    id: "day-detail-date"
+
+# 통계 영역 확인
+- assertVisible:
+    id: "day-detail-stats"

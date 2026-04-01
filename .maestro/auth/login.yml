@@ -1,0 +1,54 @@
+# T203 [US1] Maestro E2E: OAuth 소셜 로그인 흐름
+# 로그인 화면에서 소셜 로그인 버튼이 표시되고 탭 가능한지 검증
+# WHY: OAuth는 외부 provider 의존이므로 E2E에서는 UI 렌더링 + 탭 이벤트까지 검증.
+#       실제 OAuth 인증 완료는 provider 의존성으로 인해 mock/stub 기반 통합 테스트에서 커버.
+
+appId: com.todolist.app
+
+tags:
+  - auth
+  - smoke
+
+---
+
+# 로그인 화면 진입 확인
+- assertVisible:
+    id: "login-button-google"
+- assertVisible:
+    id: "login-button-naver"
+- assertVisible:
+    id: "login-button-kakao"
+- assertVisible:
+    id: "login-button-apple"
+
+# 앱 타이틀 표시 확인
+- assertVisible:
+    text: "Todo"
+
+# Google 로그인 버튼 탭 — OAuth 흐름 트리거
+- tapOn:
+    id: "login-button-google"
+
+# OAuth 인증 진행 중 로딩 인디케이터 표시 확인
+- assertVisible:
+    id: "login-loading-indicator"
+    optional: true
+
+# 에러 발생 시 에러 메시지 표시 확인 (네트워크 미연결 등)
+- extendedWaitUntil:
+    visible:
+      id: "login-error-message"
+    timeout: 5000
+    optional: true
+
+# Naver 로그인 버튼 탭 가능 확인
+- tapOn:
+    id: "login-button-naver"
+
+# Kakao 로그인 버튼 탭 가능 확인
+- tapOn:
+    id: "login-button-kakao"
+
+# Apple 로그인 버튼 탭 가능 확인
+- tapOn:
+    id: "login-button-apple"

@@ -1,0 +1,62 @@
+# Phase 11 [US7] Maestro E2E: 캘린더 조회 흐름
+# 캘린더 진입 → 월별 요약 → 날짜 선택 → 할 일 목록
+# WHY: 캘린더 탭 진입부터 특정 날짜 할 일 목록 확인까지의 전체 사용자 여정 검증.
+# PREREQ: 인증 완료 상태, 메인 화면 진입 필요.
+
+appId: com.todolist.app
+
+tags:
+  - calendar
+  - us7
+  - e2e
+
+---
+
+# Step 1: 캘린더 탭으로 이동
+- tapOn:
+    text: "캘린더"
+
+# Step 2: 캘린더 그리드(월별 요약) 표시 확인
+- assertVisible:
+    id: "calendar-grid"
+
+# Step 3: 이전/다음 월 이동 버튼 확인
+- assertVisible:
+    id: "calendar-prev-month"
+
+- assertVisible:
+    id: "calendar-next-month"
+
+# Step 4: 다음 월 이동 → 월별 요약 갱신 확인
+- tapOn:
+    id: "calendar-next-month"
+
+- assertVisible:
+    id: "calendar-grid"
+
+# Step 5: 이전 월 복귀
+- tapOn:
+    id: "calendar-prev-month"
+
+- assertVisible:
+    id: "calendar-grid"
+
+# Step 6: 특정 날짜 셀 탭 (15일 선택)
+- tapOn:
+    text: "15"
+
+# Step 7: DayDetailView 렌더링 확인
+- assertVisible:
+    id: "day-detail-date"
+
+# Step 8: 할 일 목록/통계 영역 확인
+- assertVisible:
+    id: "day-detail-stats"
+
+# Step 9: 홈 탭으로 복귀
+- tapOn:
+    text: "홈"
+
+# Step 10: 메인 화면 복원 확인
+- assertVisible:
+    id: "add-todo-input"
