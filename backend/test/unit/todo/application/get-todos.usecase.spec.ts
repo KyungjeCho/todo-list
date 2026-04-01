@@ -158,8 +158,8 @@ describe('GetTodosUsecase', () => {
         (t: { id: string }) => t.id === 'todo-id-2',
       );
       expect(todoWithMemo).toBeDefined();
-      expect(todoWithMemo.memos).toHaveLength(1);
-      expect(todoWithMemo.memos[0].content).toBe('헬스장 30분');
+      expect(todoWithMemo!.memos).toHaveLength(1);
+      expect(todoWithMemo!.memos[0].content).toBe('헬스장 30분');
     });
 
     it('should return todos in createdAt ascending order', async () => {
@@ -265,12 +265,12 @@ describe('GetTodosUsecase', () => {
       const carriedOverTodo = result.todos.find(
         (t: { id: string }) => t.id === 'todo-id-1',
       );
-      expect(carriedOverTodo.isCarriedOver).toBe(true);
+      expect(carriedOverTodo!.isCarriedOver).toBe(true);
 
       const normalTodo = result.todos.find(
         (t: { id: string }) => t.id === 'todo-id-2',
       );
-      expect(normalTodo.isCarriedOver).toBe(false);
+      expect(normalTodo!.isCarriedOver).toBe(false);
     });
 
     it('should set isCarriedOver true for child todos created by carry-over', async () => {
@@ -285,12 +285,12 @@ describe('GetTodosUsecase', () => {
       const childTodo = result.todos.find(
         (t: { id: string }) => t.id === 'todo-id-1',
       );
-      expect(childTodo.isCarriedOver).toBe(true);
+      expect(childTodo!.isCarriedOver).toBe(true);
 
-      const normalTodo = result.todos.find(
+      const normalTodo2 = result.todos.find(
         (t: { id: string }) => t.id === 'todo-id-2',
       );
-      expect(normalTodo.isCarriedOver).toBe(false);
+      expect(normalTodo2!.isCarriedOver).toBe(false);
     });
   });
 });

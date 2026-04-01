@@ -15,7 +15,8 @@ export class OAuthCallbackUsecase {
   ) {}
 
   async execute(input: OAuthCallbackDto): Promise<OAuthCallbackResponseDto> {
-    const existingOauth = await this.authRepository.findOauthByProviderUserId(
+    const existingOauth = await this.authRepository.findOauthByProvider(
+      input.provider,
       input.providerUserId,
     );
 

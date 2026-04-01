@@ -1,7 +1,22 @@
 import { join } from 'path';
+import { readFileSync } from 'fs';
 import { registerAs } from '@nestjs/config';
 import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { AuditSubscriber } from '../subscribers/audit.subscriber';
+
+function buildSslConfig():
+  | false
+  | { rejectUnauthorized: boolean; ca?: string } {
+  if (process.env.DATABASE_SSL !== 'true') {
+    return false;
+  }
+
+  const caPath = process.env.DATABASE_SSL_CA;
+  return {
+    rejectUnauthorized: process.env.NODE_ENV === 'production',
+    ...(caPath ? { ca: readFileSync(caPath, 'utf8') } : {}),
+  };
+}
 
 export const databaseConfig = registerAs(
   'database',
@@ -18,9 +33,6 @@ export const databaseConfig = registerAs(
     migrations: [join(__dirname, '..', 'migrations', '*{.ts,.js}')],
     migrationsRun: true,
     subscribers: [AuditSubscriber],
-    ssl:
-      process.env.DATABASE_SSL === 'true'
-        ? { rejectUnauthorized: false }
-        : false,
+    ssl: buildSslConfig(),
   }),
 );

@@ -184,7 +184,9 @@ export const TodoItem: React.FC<TodoItemProps> = ({
           todoId={todo.id}
           memos={todo.memos}
           onAddMemo={(content) => onAddMemo?.(todo.id, content)}
-          onUpdateMemo={(memoId, content) => onUpdateMemo?.(todo.id, memoId, content)}
+          onUpdateMemo={(memoId, content) =>
+            onUpdateMemo?.(todo.id, memoId, content)
+          }
           onDeleteMemo={(memoId) => onDeleteMemo?.(todo.id, memoId)}
         />
       )}

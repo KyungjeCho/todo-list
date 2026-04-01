@@ -24,14 +24,6 @@ export class AuthRepository {
   ): Promise<UserAuthOauth | null> {
     return this.oauthRepo.findOne({
       where: { provider, providerUserId },
-    });
-  }
-
-  async findOauthByProviderUserId(
-    providerUserId: string,
-  ): Promise<UserAuthOauth | null> {
-    return this.oauthRepo.findOne({
-      where: { providerUserId },
       relations: ['userAuth'],
     });
   }

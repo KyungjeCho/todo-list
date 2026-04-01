@@ -1,0 +1,117 @@
+# Full Flow E2E: 로그인 → 온보딩 → 할 일 추가 → 회고 → 이월
+# WHY: 사용자 핵심 여정 전체를 단일 시나리오로 검증하여 화면 간 통합 문제를 발견한다.
+# TARGET: iOS 15+ / Android 12+
+
+appId: com.todolist.app
+
+tags:
+  - full-flow
+  - smoke
+  - e2e
+
+---
+
+# ========== Step 1: 로그인 ==========
+
+# 로그인 화면 확인
+- assertVisible:
+    id: "login-screen"
+
+# Google 로그인 버튼 탭
+- tapOn:
+    id: "login-button-google"
+
+# ========== Step 2: 온보딩 ==========
+
+# 온보딩 화면 진입 확인 (신규 사용자 시나리오)
+- assertVisible:
+    id: "onboarding-screen"
+
+# 계획 시간 기본값 확인 (08:00)
+- assertVisible:
+    id: "onboarding-plan-time"
+
+# 회고 시간 기본값 확인 (22:00)
+- assertVisible:
+    id: "onboarding-review-time"
+
+# 온보딩 완료 버튼 탭
+- tapOn:
+    id: "onboarding-complete-button"
+
+# ========== Step 3: 메인 화면 진입 ==========
+
+# 메인 화면 렌더링 확인
+- assertVisible:
+    id: "main-screen"
+
+# 할 일 추가 입력 영역 확인
+- assertVisible:
+    id: "add-todo-input"
+
+# ========== Step 4: 할 일 추가 ==========
+
+# "+" 버튼 탭
+- tapOn:
+    id: "add-todo-button"
+
+# 할 일 내용 입력
+- inputText: "E2E 테스트 할 일"
+
+# 키보드 제출
+- pressKey: Enter
+
+# 할 일 목록에 추가된 항목 확인
+- assertVisible:
+    text: "E2E 테스트 할 일"
+
+# 두 번째 할 일 추가 (미완료 상태로 남김)
+- tapOn:
+    id: "add-todo-button"
+
+- inputText: "이월될 할 일"
+
+- pressKey: Enter
+
+- assertVisible:
+    text: "이월될 할 일"
+
+# ========== Step 5: 할 일 완료 처리 ==========
+
+# 첫 번째 할 일 체크박스 탭 (완료 처리)
+- tapOn:
+    id: "todo-checkbox-0"
+
+# ========== Step 6: Review 모드 전환 ==========
+
+# 모드 전환 토글 탭 (Plan → Review)
+- tapOn:
+    id: "mode-toggle"
+
+# Review 모드 확인
+- assertVisible:
+    id: "review-mode-view"
+
+# 진행률 표시 확인
+- assertVisible:
+    id: "review-progress"
+
+# ========== Step 7: 일정 완료 (회고) ==========
+
+# "오늘의 일정 완료" 버튼 탭
+- tapOn:
+    id: "complete-day-button"
+
+# 이월 결과 표시 확인
+- assertVisible:
+    id: "carryover-result"
+
+# ========== Step 8: 이월 확인 ==========
+
+# 홈 탭으로 돌아가기 (다음 날 확인)
+- tapOn:
+    text: "홈"
+
+# 메인 화면 확인
+- assertVisible:
+    id: "main-screen"

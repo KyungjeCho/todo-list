@@ -50,7 +50,7 @@ describe('AuditSubscriber', () => {
       expect(() => {
         subscriber.beforeInsert({
           entity: undefined,
-        } as InsertEvent<BaseEntity>);
+        } as unknown as InsertEvent<BaseEntity>);
       }).not.toThrow();
     });
   });
@@ -61,7 +61,9 @@ describe('AuditSubscriber', () => {
       const entity = { updatedBy: 'old-user' } as BaseEntity;
 
       RequestContext.run({ currentUserId: userId }, () => {
-        subscriber.beforeUpdate({ entity } as UpdateEvent<BaseEntity>);
+        subscriber.beforeUpdate({
+          entity,
+        } as unknown as UpdateEvent<BaseEntity>);
         expect(entity.updatedBy).toBe(userId);
         done();
       });

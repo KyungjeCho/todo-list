@@ -1,6 +1,12 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { Platform, PermissionsAndroid } from 'react-native';
-import { getMessaging, getToken, requestPermission, onTokenRefresh, onMessage } from '@react-native-firebase/messaging';
+import {
+  getMessaging,
+  getToken,
+  requestPermission,
+  onTokenRefresh,
+  onMessage,
+} from '@react-native-firebase/messaging';
 import type { DeviceType } from '../../types/user';
 
 interface RegisterDeviceParams {
@@ -61,7 +67,8 @@ export function usePushNotification(options: UsePushNotificationOptions) {
         const token = await getToken(msg);
         await registerToken(token);
 
-        unsubscribeTokenRefresh = onTokenRefresh(msg,
+        unsubscribeTokenRefresh = onTokenRefresh(
+          msg,
           async (newToken: string) => {
             await registerToken(newToken);
           },
@@ -71,8 +78,7 @@ export function usePushNotification(options: UsePushNotificationOptions) {
           // WHY: foreground 알림 수신 시 추후 인앱 알림 표시에 사용
         });
       } catch (error) {
-        const err =
-          error instanceof Error ? error : new Error(String(error));
+        const err = error instanceof Error ? error : new Error(String(error));
         onError?.(err);
       }
     };

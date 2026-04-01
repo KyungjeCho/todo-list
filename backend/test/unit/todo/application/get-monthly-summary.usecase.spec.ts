@@ -95,17 +95,17 @@ describe('GetMonthlySummaryUsecase', () => {
         (d: { date: string }) => d.date === '2026-03-01',
       );
       expect(day1).toBeDefined();
-      expect(day1.totalCount).toBe(2);
-      expect(day1.completedCount).toBe(1);
-      expect(day1.activeCount).toBe(1);
+      expect(day1!.totalCount).toBe(2);
+      expect(day1!.completedCount).toBe(1);
+      expect(day1!.activeCount).toBe(1);
 
       const day15 = result.days.find(
         (d: { date: string }) => d.date === '2026-03-15',
       );
       expect(day15).toBeDefined();
-      expect(day15.totalCount).toBe(3);
-      expect(day15.completedCount).toBe(2);
-      expect(day15.activeCount).toBe(1);
+      expect(day15!.totalCount).toBe(3);
+      expect(day15!.completedCount).toBe(2);
+      expect(day15!.activeCount).toBe(1);
     });
 
     it('할 일이 없는 월은 빈 days 배열을 반환한다', async () => {
@@ -186,10 +186,10 @@ describe('GetMonthlySummaryUsecase', () => {
       const day10 = result.days.find(
         (d: { date: string }) => d.date === '2026-03-10',
       );
-      expect(day10.totalCount).toBe(2);
-      expect(day10.completedCount).toBe(0);
-      expect(day10.activeCount).toBe(1);
-      expect(day10.carriedOverCount).toBe(1);
+      expect(day10!.totalCount).toBe(2);
+      expect(day10!.completedCount).toBe(0);
+      expect(day10!.activeCount).toBe(1);
+      expect(day10!.carriedOverCount).toBe(1);
     });
 
     it('모든 할 일이 완료+이월이면 completedCount === totalCount (초록 표시)', async () => {
@@ -220,9 +220,9 @@ describe('GetMonthlySummaryUsecase', () => {
       const day10 = result.days.find(
         (d: { date: string }) => d.date === '2026-03-10',
       );
-      expect(day10.totalCount).toBe(1);
-      expect(day10.completedCount).toBe(1);
-      expect(day10.carriedOverCount).toBe(1);
+      expect(day10!.totalCount).toBe(1);
+      expect(day10!.completedCount).toBe(1);
+      expect(day10!.carriedOverCount).toBe(1);
     });
 
     it('days 배열은 날짜순으로 정렬된다', async () => {

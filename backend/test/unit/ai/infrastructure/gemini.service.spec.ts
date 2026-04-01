@@ -1,5 +1,5 @@
 import { GeminiService } from 'src/ai/infrastructure/gemini.service';
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { HttpException } from '@nestjs/common';
 
 const mockGenerateContent = jest.fn();
 

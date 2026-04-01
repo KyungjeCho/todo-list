@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import request from 'supertest';
 import type { App } from 'supertest/types';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
@@ -13,7 +13,6 @@ import { OAuthProviderService } from 'src/auth/infrastructure/oauth-provider.ser
 import { JwtStrategy } from 'src/auth/infrastructure/jwt.strategy';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { OAuthLoginUsecase } from 'src/auth/application/oauth-login.usecase';
 
 const TEST_JWT_SECRET = 'test-jwt-secret';
 const TEST_STATE_SECRET = 'test-state-secret';
@@ -83,6 +82,13 @@ describe('AuthController (Integration)', () => {
     jwtService = moduleFixture.get(JwtService);
 
     app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    );
     await app.init();
   });
 
@@ -220,6 +226,46 @@ describe('AuthController (Integration)', () => {
       expect(response.status).toBe(302);
       expect(response.headers.location).toContain('todolist://auth/callback');
       expect(response.headers.location).not.toContain('evil.com');
+    });
+
+    it('should reject arbitrary exp:// URI not in whitelist', async () => {
+      mockOAuthCallbackUsecase.execute.mockResolvedValue({
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        isNewUser: false,
+      });
+
+      const stateWithExpUri = signTestState({
+        redirectUri: 'exp://192.168.1.100:8081/auth/callback',
+      });
+
+      const response = await request(app.getHttpServer() as App)
+        .get('/auth/oauth/google/callback')
+        .query({ code: 'auth-code-123', state: stateWithExpUri });
+
+      expect(response.status).toBe(302);
+      expect(response.headers.location).toContain('todolist://auth/callback');
+      expect(response.headers.location).not.toContain('exp://');
+    });
+
+    it('should reject todolist:// URI with unexpected path', async () => {
+      mockOAuthCallbackUsecase.execute.mockResolvedValue({
+        accessToken: 'access-token',
+        refreshToken: 'refresh-token',
+        isNewUser: false,
+      });
+
+      const stateWithBadPath = signTestState({
+        redirectUri: 'todolist://malicious-host/steal',
+      });
+
+      const response = await request(app.getHttpServer() as App)
+        .get('/auth/oauth/google/callback')
+        .query({ code: 'auth-code-123', state: stateWithBadPath });
+
+      expect(response.status).toBe(302);
+      expect(response.headers.location).toContain('todolist://auth/callback');
+      expect(response.headers.location).not.toContain('malicious-host');
     });
 
     it('should include isNewUser=true for new users', async () => {

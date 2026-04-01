@@ -1,9 +1,6 @@
 import { create } from 'zustand';
 import type { UserProfile } from '../types/user';
-import {
-  TokenManager,
-  secureTokenStorage,
-} from '../services/api/tokenManager';
+import { TokenManager, secureTokenStorage } from '../services/api/tokenManager';
 import { userApi } from '../services/api/userApi';
 
 export const tokenManager = new TokenManager(secureTokenStorage);

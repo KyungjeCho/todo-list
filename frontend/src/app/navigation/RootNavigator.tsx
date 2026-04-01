@@ -1,16 +1,7 @@
 import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import type { RootStackParamList } from './types';
+import { AuthNavigator } from './AuthNavigator';
 
-const Stack = createNativeStackNavigator<RootStackParamList>();
-
+// WHY: RootNavigator는 앱 진입점. 인증 상태에 따라 AuthNavigator가 화면을 분기한다.
 export const RootNavigator: React.FC = () => {
-  return (
-    <Stack.Navigator
-      initialRouteName="Auth"
-      screenOptions={{ headerShown: false }}
-    >
-      {/* Screens will be added as they are implemented */}
-    </Stack.Navigator>
-  );
+  return <AuthNavigator />;
 };

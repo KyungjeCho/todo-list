@@ -1,4 +1,3 @@
-import { Platform } from 'react-native';
 import { apiClient } from './client';
 import type { Todo, CreateTodoRequest } from '../../types/todo';
 
@@ -60,10 +59,7 @@ export const todoApi = {
     return response.data;
   },
 
-  async updateTodo(
-    todoId: string,
-    data: { content: string },
-  ): Promise<Todo> {
+  async updateTodo(todoId: string, data: { content: string }): Promise<Todo> {
     const response = await apiClient.patch(`/todos/${todoId}`, data);
     return response.data;
   },
@@ -100,7 +96,9 @@ export const todoApi = {
     };
     const mimeType = mimeTypeMap[extension] ?? 'audio/mp4';
 
-    const uri = audioUri.startsWith('file://') ? audioUri : `file://${audioUri}`;
+    const uri = audioUri.startsWith('file://')
+      ? audioUri
+      : `file://${audioUri}`;
 
     formData.append('audio', {
       uri,

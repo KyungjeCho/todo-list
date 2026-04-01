@@ -71,10 +71,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
       <Text style={styles.title}>루틴 설정</Text>
 
       {isLoading && (
-        <ActivityIndicator
-          testID="onboarding-loading-indicator"
-          size="large"
-        />
+        <ActivityIndicator testID="onboarding-loading-indicator" size="large" />
       )}
 
       {error && (

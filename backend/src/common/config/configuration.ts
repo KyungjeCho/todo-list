@@ -1,7 +1,16 @@
+function getRequiredEnv(key: string): string {
+  const value = process.env[key];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${key}`);
+  }
+  return value;
+}
+
 export default () => ({
   app: {
     port: parseInt(process.env.APP_PORT || '3000', 10),
     deepLinkScheme: process.env.APP_DEEP_LINK_SCHEME || 'todolist',
+    allowedRedirectUris: process.env.APP_ALLOWED_REDIRECT_URIS || '',
   },
   database: {
     host: process.env.DATABASE_HOST || 'localhost',
@@ -11,8 +20,8 @@ export default () => ({
     name: process.env.DATABASE_NAME || 'todolist',
   },
   jwt: {
-    secret: process.env.JWT_SECRET,
-    refreshSecret: process.env.JWT_REFRESH_SECRET,
+    secret: getRequiredEnv('JWT_SECRET'),
+    refreshSecret: getRequiredEnv('JWT_REFRESH_SECRET'),
     accessExpiration: process.env.JWT_ACCESS_EXPIRATION || '15m',
     refreshExpiration: process.env.JWT_REFRESH_EXPIRATION || '7d',
   },

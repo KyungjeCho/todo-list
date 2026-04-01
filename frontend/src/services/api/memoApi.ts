@@ -15,10 +15,7 @@ export const memoApi = {
     todoId: string,
     request: CreateTodoMemoRequest,
   ): Promise<TodoMemo> {
-    const response = await apiClient.post(
-      `/todos/${todoId}/memos`,
-      request,
-    );
+    const response = await apiClient.post(`/todos/${todoId}/memos`, request);
     return response.data;
   },
 
@@ -38,9 +35,7 @@ export const memoApi = {
     todoId: string,
     memoId: string,
   ): Promise<DeleteMemoResponse> {
-    const response = await apiClient.delete(
-      `/todos/${todoId}/memos/${memoId}`,
-    );
+    const response = await apiClient.delete(`/todos/${todoId}/memos/${memoId}`);
     return response.data;
   },
 };

@@ -99,9 +99,7 @@ export const MainScreen: React.FC<MainScreenProps> = ({
         </Text>
         <View style={styles.headerRight}>
           <ShareButton todos={todos} date={date} />
-          {onModeToggle && (
-            <ModeToggle mode={mode} onToggle={onModeToggle} />
-          )}
+          {onModeToggle && <ModeToggle mode={mode} onToggle={onModeToggle} />}
           {onNavigateSettings && (
             <TouchableOpacity
               testID="settings-button"
@@ -137,16 +135,24 @@ export const MainScreen: React.FC<MainScreenProps> = ({
 
       {mode === 'REVIEW' ? (
         <>
-          <ReviewModeView todos={todos} stats={stats} onToggleComplete={onToggleComplete} />
+          <ReviewModeView
+            todos={todos}
+            stats={stats}
+            onToggleComplete={onToggleComplete}
+          />
           {onCompleteDay && (
             <CompleteDayButton
               onComplete={onCompleteDay}
               isLoading={isCompleting}
               isCompleted={isDayCompleted}
-              carriedOverResult={completeDayResult ? {
-                carriedOverCount: completeDayResult.carriedOverCount,
-                carriedOverTodos: completeDayResult.carriedOverTodos,
-              } : undefined}
+              carriedOverResult={
+                completeDayResult
+                  ? {
+                      carriedOverCount: completeDayResult.carriedOverCount,
+                      carriedOverTodos: completeDayResult.carriedOverTodos,
+                    }
+                  : undefined
+              }
               error={completeDayError}
             />
           )}
@@ -155,9 +161,7 @@ export const MainScreen: React.FC<MainScreenProps> = ({
         <>
           {todos.length === 0 && !error ? (
             <View testID="empty-state" style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>
-                오늘의 할 일을 추가해보세요
-              </Text>
+              <Text style={styles.emptyText}>오늘의 할 일을 추가해보세요</Text>
             </View>
           ) : (
             <FlatList

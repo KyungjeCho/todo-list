@@ -2,7 +2,11 @@ import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-export const SUPPORTED_AUDIO_MIME_TYPES = ['audio/wav', 'audio/mp4', 'audio/mpeg'];
+export const SUPPORTED_AUDIO_MIME_TYPES = [
+  'audio/wav',
+  'audio/mp4',
+  'audio/mpeg',
+];
 
 const TRANSCRIBE_PROMPT =
   '이 오디오를 듣고 사용자가 말한 할 일(todo)을 간결한 한국어 문장으로 정리해줘. 부연 설명 없이 할 일 내용만 반환해.';

@@ -19,7 +19,7 @@ export function useVoiceRecording(): UseVoiceRecordingReturn {
   const startRecording = useCallback(async () => {
     try {
       const permission = await Audio.requestPermissionsAsync();
-      if (permission.status !== 'granted') {
+      if (String(permission.status) !== 'granted') {
         setError('마이크 권한이 필요합니다');
         return;
       }

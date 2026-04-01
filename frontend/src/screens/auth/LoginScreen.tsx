@@ -35,10 +35,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = (props) => {
       <Text style={styles.title}>Todo</Text>
 
       {isLoading && (
-        <ActivityIndicator
-          testID="login-loading-indicator"
-          size="large"
-        />
+        <ActivityIndicator testID="login-loading-indicator" size="large" />
       )}
 
       {error && (

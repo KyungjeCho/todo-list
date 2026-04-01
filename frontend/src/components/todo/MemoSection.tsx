@@ -41,7 +41,10 @@ export const MemoSection: React.FC<MemoSectionProps> = ({
 
   const handleConfirmEdit = (memoId: string) => {
     const trimmed = editText.trim();
-    if (trimmed.length === 0 || trimmed === memos.find((m) => m.id === memoId)?.content) {
+    if (
+      trimmed.length === 0 ||
+      trimmed === memos.find((m) => m.id === memoId)?.content
+    ) {
       setEditingId(null);
       return;
     }

@@ -2,7 +2,11 @@ import { useCallback, useState } from 'react';
 import { Platform, PermissionsAndroid } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
-import { getMessaging, getToken, requestPermission } from '@react-native-firebase/messaging';
+import {
+  getMessaging,
+  getToken,
+  requestPermission,
+} from '@react-native-firebase/messaging';
 import { authApi } from '../../services/api/authApi';
 import { userApi } from '../../services/api/userApi';
 import { useAuthStore } from '../../store/authStore';
@@ -43,19 +47,30 @@ export function useAuth() {
 
       try {
         const fcmToken = await getOptionalFcmToken();
-        const deviceType: DeviceType = Platform.OS === 'ios' ? 'IOS' : 'ANDROID';
+        const deviceType: DeviceType =
+          Platform.OS === 'ios' ? 'IOS' : 'ANDROID';
         const redirectUri = Linking.createURL('auth/callback');
-        const url = authApi.getOAuthUrl(provider, fcmToken, deviceType, redirectUri);
+        const url = authApi.getOAuthUrl(
+          provider,
+          fcmToken,
+          deviceType,
+          redirectUri,
+        );
         const result = await WebBrowser.openAuthSessionAsync(url, redirectUri);
 
         if (result.type === 'success') {
-          const parsed = Linking.parse(result.url);
-          const { accessToken, refreshToken, isNewUser } = parsed.queryParams as {
-            accessToken: string;
-            refreshToken: string;
-            isNewUser: string;
-          };
-          await handleAuthCallback(accessToken, refreshToken, isNewUser === 'true');
+          // WHY: 서버가 토큰을 fragment(#)로 전달하므로 URL hash에서 파싱
+          const hashIndex = result.url.indexOf('#');
+          const fragment = hashIndex >= 0 ? result.url.slice(hashIndex + 1) : '';
+          const fragmentParams = new URLSearchParams(fragment);
+          const accessToken = fragmentParams.get('accessToken') ?? '';
+          const refreshToken = fragmentParams.get('refreshToken') ?? '';
+          const isNewUser = fragmentParams.get('isNewUser') ?? 'false';
+          await handleAuthCallback(
+            accessToken,
+            refreshToken,
+            isNewUser === 'true',
+          );
         }
       } catch (err) {
         const message =

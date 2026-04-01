@@ -15,9 +15,7 @@ export const ModeToggle: React.FC<ModeToggleProps> = ({ mode, onToggle }) => {
       accessibilityRole="button"
       style={styles.container}
     >
-      <Text style={styles.text}>
-        {mode === 'PLAN' ? 'Review' : 'Plan'}
-      </Text>
+      <Text style={styles.text}>{mode === 'PLAN' ? 'Review' : 'Plan'}</Text>
     </TouchableOpacity>
   );
 };

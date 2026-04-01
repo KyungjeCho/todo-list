@@ -1,5 +1,9 @@
 import { apiClient } from './client';
-import type { UserProfile, UpdateSettingsRequest, DeviceType } from '../../types/user';
+import type {
+  UserProfile,
+  UpdateSettingsRequest,
+  DeviceType,
+} from '../../types/user';
 
 export const userApi = {
   async getProfile(): Promise<UserProfile> {

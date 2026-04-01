@@ -16,9 +16,11 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Request } from 'express';
 import { CreateTodoDto } from './application/dto/create-todo.dto';
+import { UpdateTodoDto } from './application/dto/update-todo.dto';
 import { ChangeTodoStatusDto } from './application/dto/change-todo-status.dto';
 import { CompleteDayDto } from './application/dto/complete-day.dto';
 import { GetTodosQueryDto } from './application/dto/get-todos-query.dto';
@@ -80,6 +82,10 @@ export class TodoController {
 
   @Post('voice')
   @HttpCode(HttpStatus.CREATED)
+  @Throttle({
+    short: { ttl: 1000, limit: 1 },
+    medium: { ttl: 60000, limit: 5 },
+  })
   @UseInterceptors(
     FileInterceptor('audio', {
       limits: { fileSize: 10 * 1024 * 1024 },
@@ -143,7 +149,7 @@ export class TodoController {
   async updateTodo(
     @Req() req: AuthenticatedRequest,
     @Param('todoId') todoId: string,
-    @Body() body: { content: string },
+    @Body() body: UpdateTodoDto,
   ) {
     return this.updateTodoUsecase.execute({
       userAuthId: req.user.userAuthId,

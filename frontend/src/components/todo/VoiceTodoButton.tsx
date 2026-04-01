@@ -21,13 +21,8 @@ export const VoiceTodoButton: React.FC<VoiceTodoButtonProps> = ({
   processingError,
   disabled = false,
 }) => {
-  const {
-    isRecording,
-    audioUri,
-    error,
-    startRecording,
-    stopRecording,
-  } = useVoiceRecording();
+  const { isRecording, audioUri, error, startRecording, stopRecording } =
+    useVoiceRecording();
 
   useEffect(() => {
     if (audioUri) {
@@ -57,7 +52,10 @@ export const VoiceTodoButton: React.FC<VoiceTodoButtonProps> = ({
   if (isRecording) {
     return (
       <View style={styles.container}>
-        <View testID="voice-recording-indicator" style={styles.recordingIndicator}>
+        <View
+          testID="voice-recording-indicator"
+          style={styles.recordingIndicator}
+        >
           <Text style={styles.recordingText}>녹음 중...</Text>
         </View>
         <TouchableOpacity

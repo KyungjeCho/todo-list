@@ -16,7 +16,7 @@ import { RegisterDeviceUsecase } from '../notification/application/register-devi
 import { UserRepository } from './infrastructure/user.repository';
 import { JwtAuthGuard } from '../auth/infrastructure/jwt-auth.guard';
 import { HttpExceptionFilter } from '../common/filters/http-exception.filter';
-import { UpdateSettingsDto } from './application/dto';
+import { UpdateSettingsDto, RegisterDeviceDto } from './application/dto';
 
 interface AuthenticatedRequest extends Request {
   user: { userAuthId: string };
@@ -54,16 +54,8 @@ export class UserController {
   @Post('me/devices')
   async registerDevice(
     @Req() req: AuthenticatedRequest,
-    @Body()
-    body: {
-      fcmToken: string;
-      deviceType: 'IOS' | 'ANDROID';
-      deviceName?: string;
-    },
+    @Body() body: RegisterDeviceDto,
   ) {
-    if (!body.fcmToken || !body.deviceType) {
-      throw new BadRequestException('fcmToken and deviceType are required');
-    }
     const user = await this.userRepository.findByUserAuthId(
       req.user.userAuthId,
     );

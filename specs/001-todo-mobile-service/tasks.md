@@ -466,14 +466,14 @@
 
 ### 외부 API Key 등록
 
-- [ ] T211 Gemini API key 등록 및 연결 검증 — `backend/.env`, `backend/src/ai/infrastructure/gemini.service.ts`
+- [X] T211 Gemini API key 등록 및 연결 검증 — `backend/.env`, `backend/src/ai/infrastructure/gemini.service.ts`
 
 ### Maestro E2E Tests for P3-P4 ⚠️
 
 > **NOTE: 헌법 X조 — P3-P4 기능은 이 Phase에서 E2E 테스트 작성 (TDD)**
 
 - [X] T213 [US6] Maestro E2E: 음성 인식 할 일 추가 흐름 (마이크 탭 → 녹음 → Gemini 변환 → 목록 추가) — `.maestro/voice/voice_todo.yml`
-- [ ] T214 [US7] Maestro E2E: 캘린더 조회 흐름 (캘린더 진입 → 월별 요약 → 날짜 선택 → 할 일 목록) — `.maestro/calendar/calendar_view.yml`
+- [X] T214 [US7] Maestro E2E: 캘린더 조회 흐름 (캘린더 진입 → 월별 요약 → 날짜 선택 → 할 일 목록) — `.maestro/calendar/calendar_view.yml`
 - [X] T215 [US8] Maestro E2E: TodoList 공유 흐름 (날짜 선택 → 공유 버튼 → 채널 선택) — `.maestro/share/share_todo.yml`
 
 **Checkpoint**: P3-P4 외부 API 연동 완료 및 E2E 검증 통과.
@@ -484,16 +484,16 @@
 
 **Purpose**: 전체 품질 개선 및 배포 준비
 
-- [ ] T193 [P] Backend Health Check 엔드포인트 구현 (GET /health, DB 연결 확인) — `backend/src/app.controller.ts`
-- [ ] T194 [P] Backend Dockerfile 작성 (AWS Lambda Container Image) — `backend/Dockerfile`
-- [ ] T195 [P] Backend Lambda 핸들러 래핑 (@codegenie/serverless-express) — `backend/src/lambda.ts`
-- [ ] T196 [P] GitHub Actions CI 파이프라인 (Backend lint + test) — `.github/workflows/backend-ci.yml`
-- [ ] T197 [P] GitHub Actions CI 파이프라인 (Frontend lint + test) — `.github/workflows/frontend-ci.yml`
-- [ ] T198 Backend E2E 테스트 (온보딩 → 할 일 CRUD → 회고 → 이월 전체 흐름) — `backend/test/e2e/full-flow.e2e-spec.ts`
-- [ ] T199 Maestro E2E 전체 흐름 통합 테스트 (로그인 → 온보딩 → 할 일 추가 → 회고 → 이월, iOS 15+/Android 12+ 대상) — `.maestro/full_flow.yml`
-- [ ] T200 TypeScript 타입 오류 전체 점검 (`npx tsc --noEmit` backend + frontend)
-- [ ] T201 ESLint 전체 점검 및 수정
-- [ ] T202 quickstart.md 기반 전체 설정 검증
+- [X] T193 [P] Backend Health Check 엔드포인트 구현 (GET /health, DB 연결 확인) — `backend/src/app.controller.ts`
+- [X] T194 [P] Backend Dockerfile 작성 (AWS Lambda Container Image) — `backend/Dockerfile`
+- [X] T195 [P] Backend Lambda 핸들러 래핑 (@codegenie/serverless-express) — `backend/src/lambda.ts`
+- [X] T196 [P] GitHub Actions CI 파이프라인 (Backend lint + test) — `.github/workflows/backend-ci.yml`
+- [X] T197 [P] GitHub Actions CI 파이프라인 (Frontend lint + test) — `.github/workflows/frontend-ci.yml`
+- [X] T198 Backend E2E 테스트 (온보딩 → 할 일 CRUD → 회고 → 이월 전체 흐름) — `backend/test/e2e/full-flow.e2e-spec.ts`
+- [X] T199 Maestro E2E 전체 흐름 통합 테스트 (로그인 → 온보딩 → 할 일 추가 → 회고 → 이월, iOS 15+/Android 12+ 대상) — `.maestro/full_flow.yml`
+- [X] T200 TypeScript 타입 오류 전체 점검 (`npx tsc --noEmit` backend + frontend)
+- [X] T201 ESLint 전체 점검 및 수정
+- [X] T202 quickstart.md 기반 전체 설정 검증
 
 ---
 

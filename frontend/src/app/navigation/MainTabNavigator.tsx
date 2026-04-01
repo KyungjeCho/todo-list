@@ -136,7 +136,7 @@ export const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
           tabBarIcon: ({ color }) => (
             <Text style={{ color, fontSize: 20 }}>🏠</Text>
           ),
-          tabBarTestID: 'tab-home',
+          tabBarButtonTestID: 'tab-home',
         }}
       />
       <Tab.Screen
@@ -147,7 +147,7 @@ export const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
           tabBarIcon: ({ color }) => (
             <Text style={{ color, fontSize: 20 }}>📅</Text>
           ),
-          tabBarTestID: 'tab-calendar',
+          tabBarButtonTestID: 'tab-calendar',
         }}
       />
       <Tab.Screen
@@ -158,7 +158,7 @@ export const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
           tabBarIcon: ({ color }) => (
             <Text style={{ color, fontSize: 20 }}>⚙️</Text>
           ),
-          tabBarTestID: 'tab-settings',
+          tabBarButtonTestID: 'tab-settings',
         }}
       />
     </Tab.Navigator>

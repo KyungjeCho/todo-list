@@ -12,12 +12,14 @@ import {
   BadRequestException,
   HttpCode,
 } from '@nestjs/common';
+import { Throttle, SkipThrottle } from '@nestjs/throttler';
 import type { Response, Request } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { OAuthLoginUsecase } from './application/oauth-login.usecase';
 import { OAuthCallbackUsecase } from './application/oauth-callback.usecase';
 import { TokenRefreshUsecase } from './application/token-refresh.usecase';
 import { LogoutUsecase } from './application/logout.usecase';
+import { TokenRefreshDto, LogoutDto } from './application/dto';
 import { JwtAuthGuard } from './infrastructure/jwt-auth.guard';
 import { OAuthProviderService } from './infrastructure/oauth-provider.service';
 import { HttpExceptionFilter } from '../common/filters/http-exception.filter';
@@ -53,7 +55,6 @@ export class AuthController {
     res.redirect(302, result.redirectUrl);
   }
 
-  private static readonly ALLOWED_REDIRECT_SCHEMES = ['todolist://', 'exp://'];
   private static readonly DEFAULT_REDIRECT_URI = 'todolist://auth/callback';
 
   @Get('oauth/:provider/callback')
@@ -105,30 +106,42 @@ export class AuthController {
       refreshToken: result.refreshToken,
       isNewUser: String(result.isNewUser),
     });
-    res.redirect(302, `${clientRedirectUri}?${params.toString()}`);
+    // WHY: query string 대신 fragment(#)로 전달하여 서버/프록시 로그에 토큰 노출 방지
+    res.redirect(302, `${clientRedirectUri}#${params.toString()}`);
   }
 
   private validateRedirectUri(uri: string | undefined): string {
     if (!uri) {
       return AuthController.DEFAULT_REDIRECT_URI;
     }
-    const isAllowed = AuthController.ALLOWED_REDIRECT_SCHEMES.some((scheme) =>
-      uri.startsWith(scheme),
-    );
-    if (!isAllowed) {
+    const allowedUris = this.getAllowedRedirectUris();
+    if (!allowedUris.includes(uri)) {
       return AuthController.DEFAULT_REDIRECT_URI;
     }
     return uri;
   }
 
+  private getAllowedRedirectUris(): string[] {
+    const extra =
+      this.configService.get<string>('app.allowedRedirectUris') || '';
+    const uris = [AuthController.DEFAULT_REDIRECT_URI];
+    if (extra) {
+      uris.push(
+        ...extra.split(',').map((u) => u.trim()).filter(Boolean),
+      );
+    }
+    return uris;
+  }
+
   @Post('token/refresh')
   @HttpCode(200)
+  @Throttle({
+    short: { ttl: 1000, limit: 1 },
+    medium: { ttl: 60000, limit: 10 },
+  })
   async tokenRefresh(
-    @Body() body: { refreshToken?: string },
+    @Body() body: TokenRefreshDto,
   ): Promise<{ accessToken: string; refreshToken: string }> {
-    if (!body.refreshToken) {
-      throw new BadRequestException('BAD_REQUEST');
-    }
     return this.tokenRefreshUsecase.execute({
       refreshToken: body.refreshToken,
     });
@@ -139,7 +152,7 @@ export class AuthController {
   @HttpCode(200)
   async logout(
     @Req() req: Request & { user?: { userAuthId: string } },
-    @Body() body: { refreshToken: string; fcmToken: string },
+    @Body() body: LogoutDto,
   ): Promise<{ message: string }> {
     return this.logoutUsecase.execute({
       userAuthId: req.user!.userAuthId,

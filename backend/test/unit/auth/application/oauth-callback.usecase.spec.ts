@@ -5,7 +5,7 @@ describe('OAuthCallbackUsecase', () => {
   let usecase: OAuthCallbackUsecase;
 
   const mockAuthRepository = {
-    findOauthByProviderUserId: jest.fn(),
+    findOauthByProvider: jest.fn(),
     createUserAuth: jest.fn(),
     createOauthAccount: jest.fn(),
     createSession: jest.fn(),
@@ -53,7 +53,7 @@ describe('OAuthCallbackUsecase', () => {
     };
 
     it('should create new user for first-time OAuth login', async () => {
-      mockAuthRepository.findOauthByProviderUserId.mockResolvedValue(null);
+      mockAuthRepository.findOauthByProvider.mockResolvedValue(null);
       mockAuthRepository.createUserAuth.mockResolvedValue({
         id: 'auth-id-1',
       });
@@ -93,9 +93,7 @@ describe('OAuthCallbackUsecase', () => {
         userAuthId: 'auth-id-1',
         userAuth: { id: 'auth-id-1' },
       };
-      mockAuthRepository.findOauthByProviderUserId.mockResolvedValue(
-        existingOauth,
-      );
+      mockAuthRepository.findOauthByProvider.mockResolvedValue(existingOauth);
       mockUserRepository.findByUserAuthId.mockResolvedValue({
         id: 'user-id-1',
         userAuthId: 'auth-id-1',
@@ -118,7 +116,7 @@ describe('OAuthCallbackUsecase', () => {
     });
 
     it('should register FCM device on login', async () => {
-      mockAuthRepository.findOauthByProviderUserId.mockResolvedValue({
+      mockAuthRepository.findOauthByProvider.mockResolvedValue({
         id: 'oauth-id-1',
         userAuthId: 'auth-id-1',
       });
@@ -144,7 +142,7 @@ describe('OAuthCallbackUsecase', () => {
     });
 
     it('should store hashed refresh token in session', async () => {
-      mockAuthRepository.findOauthByProviderUserId.mockResolvedValue({
+      mockAuthRepository.findOauthByProvider.mockResolvedValue({
         id: 'oauth-id-1',
         userAuthId: 'auth-id-1',
       });
@@ -169,7 +167,7 @@ describe('OAuthCallbackUsecase', () => {
     });
 
     it('should create session with userAgent and ipAddress', async () => {
-      mockAuthRepository.findOauthByProviderUserId.mockResolvedValue({
+      mockAuthRepository.findOauthByProvider.mockResolvedValue({
         id: 'oauth-id-1',
         userAuthId: 'auth-id-1',
       });
@@ -194,7 +192,7 @@ describe('OAuthCallbackUsecase', () => {
     });
 
     it('should create new user with null timezone', async () => {
-      mockAuthRepository.findOauthByProviderUserId.mockResolvedValue(null);
+      mockAuthRepository.findOauthByProvider.mockResolvedValue(null);
       mockAuthRepository.createUserAuth.mockResolvedValue({
         id: 'auth-id-1',
       });
@@ -222,7 +220,7 @@ describe('OAuthCallbackUsecase', () => {
     it('should skip device registration when fcmToken is absent', async () => {
       const dtoWithoutFcm = { ...callbackDto, fcmToken: undefined };
 
-      mockAuthRepository.findOauthByProviderUserId.mockResolvedValue({
+      mockAuthRepository.findOauthByProvider.mockResolvedValue({
         id: 'oauth-id-1',
         userAuthId: 'auth-id-1',
       });
@@ -248,7 +246,7 @@ describe('OAuthCallbackUsecase', () => {
         providerUserName: '',
       };
 
-      mockAuthRepository.findOauthByProviderUserId.mockResolvedValue(null);
+      mockAuthRepository.findOauthByProvider.mockResolvedValue(null);
       mockAuthRepository.createUserAuth.mockResolvedValue({
         id: 'auth-id-1',
       });

@@ -39,7 +39,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   isLoading,
   error,
 }) => {
-  const [timePickerTarget, setTimePickerTarget] = useState<TimePickerTarget>(null);
+  const [timePickerTarget, setTimePickerTarget] =
+    useState<TimePickerTarget>(null);
   const [showTimezonePicker, setShowTimezonePicker] = useState(false);
 
   const handleTimeChange = async (
@@ -158,9 +159,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           mode="time"
           display="spinner"
           value={getDateFromTimeStr(
-            timePickerTarget === 'plan'
-              ? profile.planTime
-              : profile.reviewTime,
+            timePickerTarget === 'plan' ? profile.planTime : profile.reviewTime,
           )}
           onChange={handleTimeChange}
         />
@@ -220,7 +219,12 @@ const styles = StyleSheet.create({
   settingInfo: { flex: 1 },
   settingLabel: { fontSize: 16, color: '#333' },
   settingValue: { fontSize: 14, color: '#666', marginTop: 4 },
-  errorContainer: { padding: 12, backgroundColor: '#ffebee', borderRadius: 8, marginBottom: 16 },
+  errorContainer: {
+    padding: 12,
+    backgroundColor: '#ffebee',
+    borderRadius: 8,
+    marginBottom: 16,
+  },
   errorText: { color: '#c62828' },
   confirmButton: {
     alignSelf: 'center',

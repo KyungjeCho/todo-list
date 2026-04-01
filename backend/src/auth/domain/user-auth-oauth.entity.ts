@@ -1,8 +1,12 @@
-import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, Unique } from 'typeorm';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { UserAuth } from './user-auth.entity';
 
 @Entity('todolist_user_auth_oauth')
+@Unique('ux_userAuthOauth_provider_providerUserId', [
+  'provider',
+  'providerUserId',
+])
 export class UserAuthOauth extends BaseEntity {
   @Column({ name: 'user_auth_id', type: 'uuid' })
   userAuthId!: string;
@@ -14,7 +18,6 @@ export class UserAuthOauth extends BaseEntity {
     name: 'provider_user_id',
     type: 'varchar',
     length: 255,
-    unique: true,
   })
   providerUserId!: string;
 
