@@ -1,5 +1,11 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
-import { Audio } from 'expo-av';
+import { useState, useCallback } from 'react';
+import {
+  useAudioRecorder,
+  useAudioRecorderState,
+  requestRecordingPermissionsAsync,
+  setAudioModeAsync,
+  RecordingPresets,
+} from 'expo-audio';
 
 interface UseVoiceRecordingReturn {
   isRecording: boolean;
@@ -11,71 +17,52 @@ interface UseVoiceRecordingReturn {
 }
 
 export function useVoiceRecording(): UseVoiceRecordingReturn {
-  const [isRecording, setIsRecording] = useState(false);
   const [audioUri, setAudioUri] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const recordingRef = useRef<Audio.Recording | null>(null);
+
+  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const recorderState = useAudioRecorderState(recorder);
 
   const startRecording = useCallback(async () => {
     try {
-      const permission = await Audio.requestPermissionsAsync();
-      if (String(permission.status) !== 'granted') {
+      const permission = await requestRecordingPermissionsAsync();
+      if (!permission.granted) {
         setError('마이크 권한이 필요합니다');
         return;
       }
 
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
+      await setAudioModeAsync({
+        allowsRecording: true,
+        playsInSilentMode: true,
       });
 
-      const recording = new Audio.Recording();
-      await recording.prepareToRecordAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY,
-      );
-      await recording.startAsync();
-
-      recordingRef.current = recording;
-      setIsRecording(true);
+      await recorder.prepareToRecordAsync();
+      recorder.record();
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : '녹음 시작에 실패했습니다');
-      setIsRecording(false);
     }
-  }, []);
+  }, [recorder]);
 
   const stopRecording = useCallback(async () => {
-    if (!recordingRef.current) {
+    if (!recorderState.isRecording) {
       return;
     }
 
     try {
-      await recordingRef.current.stopAndUnloadAsync();
-      const uri = recordingRef.current.getURI();
-      setAudioUri(uri);
-      setIsRecording(false);
-      recordingRef.current = null;
+      await recorder.stop();
+      setAudioUri(recorder.uri);
     } catch (err) {
       setError(err instanceof Error ? err.message : '녹음 중지에 실패했습니다');
-      setIsRecording(false);
-      recordingRef.current = null;
     }
-  }, []);
+  }, [recorder, recorderState.isRecording]);
 
   const resetError = useCallback(() => {
     setError(null);
   }, []);
 
-  useEffect(() => {
-    return () => {
-      if (recordingRef.current) {
-        recordingRef.current.stopAndUnloadAsync();
-      }
-    };
-  }, []);
-
   return {
-    isRecording,
+    isRecording: recorderState.isRecording,
     audioUri,
     error,
     startRecording,

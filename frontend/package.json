@@ -22,7 +22,7 @@
     "@react-navigation/native-stack": "^7.14.9",
     "axios": "^1.13.6",
     "expo": "~55.0.8",
-    "expo-av": "^16.0.8",
+    "expo-audio": "~55.0.9",
     "expo-clipboard": "~55.0.9",
     "expo-dev-client": "~55.0.19",
     "expo-linking": "~55.0.8",

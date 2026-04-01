@@ -1,41 +1,59 @@
 import { renderHook, act } from '@testing-library/react-native';
-import { Audio } from 'expo-av';
+import {
+  useAudioRecorder,
+  useAudioRecorderState,
+  requestRecordingPermissionsAsync,
+  setAudioModeAsync,
+} from 'expo-audio';
 import { useVoiceRecording } from 'src/features/todo/useVoiceRecording';
 
-jest.mock('expo-av');
+jest.mock('expo-audio');
 
-const mockAudio = Audio as jest.Mocked<typeof Audio>;
+const mockUseAudioRecorder = useAudioRecorder as jest.MockedFunction<
+  typeof useAudioRecorder
+>;
+const mockUseAudioRecorderState = useAudioRecorderState as jest.MockedFunction<
+  typeof useAudioRecorderState
+>;
+const mockRequestPermissions =
+  requestRecordingPermissionsAsync as jest.MockedFunction<
+    typeof requestRecordingPermissionsAsync
+  >;
+const mockSetAudioMode = setAudioModeAsync as jest.MockedFunction<
+  typeof setAudioModeAsync
+>;
 
 describe('useVoiceRecording', () => {
-  let mockRecordingInstance: {
+  let mockRecorder: {
     prepareToRecordAsync: jest.Mock;
-    startAsync: jest.Mock;
-    stopAndUnloadAsync: jest.Mock;
-    getURI: jest.Mock;
-    getStatusAsync: jest.Mock;
+    record: jest.Mock;
+    stop: jest.Mock;
+    uri: string | null;
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
 
-    mockRecordingInstance = {
+    mockRecorder = {
       prepareToRecordAsync: jest.fn().mockResolvedValue(undefined),
-      startAsync: jest.fn().mockResolvedValue(undefined),
-      stopAndUnloadAsync: jest.fn().mockResolvedValue(undefined),
-      getURI: jest.fn().mockReturnValue('file:///tmp/recording.m4a'),
-      getStatusAsync: jest.fn().mockResolvedValue({
-        isRecording: false,
-        durationMillis: 0,
-      }),
+      record: jest.fn(),
+      stop: jest.fn().mockResolvedValue(undefined),
+      uri: null,
     };
 
-    (Audio.Recording as unknown as jest.Mock).mockImplementation(
-      () => mockRecordingInstance,
-    );
-    mockAudio.requestPermissionsAsync.mockResolvedValue({
-      status: 'granted',
+    mockUseAudioRecorder.mockReturnValue(mockRecorder as never);
+    mockUseAudioRecorderState.mockReturnValue({
+      isRecording: false,
+      canRecord: true,
+      durationMillis: 0,
     } as never);
-    mockAudio.setAudioModeAsync.mockResolvedValue(undefined as never);
+    mockRequestPermissions.mockResolvedValue({
+      status: 'granted',
+      granted: true,
+      canAskAgain: true,
+      expires: 'never',
+    } as never);
+    mockSetAudioMode.mockResolvedValue(undefined);
   });
 
   describe('초기 상태', () => {
@@ -66,24 +84,32 @@ describe('useVoiceRecording', () => {
         await result.current.startRecording();
       });
 
-      expect(mockAudio.requestPermissionsAsync).toHaveBeenCalled();
+      expect(mockRequestPermissions).toHaveBeenCalled();
     });
 
     it('권한 허용 후 녹음을 시작한다', async () => {
+      mockUseAudioRecorderState.mockReturnValue({
+        isRecording: true,
+        canRecord: true,
+        durationMillis: 0,
+      } as never);
+
       const { result } = renderHook(() => useVoiceRecording());
 
       await act(async () => {
         await result.current.startRecording();
       });
 
-      expect(result.current.isRecording).toBe(true);
-      expect(mockRecordingInstance.prepareToRecordAsync).toHaveBeenCalled();
-      expect(mockRecordingInstance.startAsync).toHaveBeenCalled();
+      expect(mockRecorder.prepareToRecordAsync).toHaveBeenCalled();
+      expect(mockRecorder.record).toHaveBeenCalled();
     });
 
     it('권한 거부 시 에러를 설정하고 녹음을 시작하지 않는다', async () => {
-      mockAudio.requestPermissionsAsync.mockResolvedValue({
+      mockRequestPermissions.mockResolvedValue({
         status: 'denied',
+        granted: false,
+        canAskAgain: true,
+        expires: 'never',
       } as never);
 
       const { result } = renderHook(() => useVoiceRecording());
@@ -103,24 +129,26 @@ describe('useVoiceRecording', () => {
         await result.current.startRecording();
       });
 
-      expect(mockAudio.setAudioModeAsync).toHaveBeenCalled();
+      expect(mockSetAudioMode).toHaveBeenCalled();
     });
   });
 
   describe('녹음 중지', () => {
     it('stopRecording 호출 시 녹음을 중지하고 URI를 반환한다', async () => {
-      const { result } = renderHook(() => useVoiceRecording());
+      mockUseAudioRecorderState.mockReturnValue({
+        isRecording: true,
+        canRecord: true,
+        durationMillis: 1000,
+      } as never);
+      mockRecorder.uri = 'file:///tmp/recording.m4a';
 
-      await act(async () => {
-        await result.current.startRecording();
-      });
+      const { result } = renderHook(() => useVoiceRecording());
 
       await act(async () => {
         await result.current.stopRecording();
       });
 
-      expect(result.current.isRecording).toBe(false);
-      expect(mockRecordingInstance.stopAndUnloadAsync).toHaveBeenCalled();
+      expect(mockRecorder.stop).toHaveBeenCalled();
       expect(result.current.audioUri).toBe('file:///tmp/recording.m4a');
     });
 
@@ -136,13 +164,16 @@ describe('useVoiceRecording', () => {
     });
   });
 
-  describe('���디오 데이터 반환', () => {
-    it('녹음 완료 후 audioUri를 제공��다', async () => {
-      const { result } = renderHook(() => useVoiceRecording());
+  describe('오디오 데이터 반환', () => {
+    it('녹음 완료 후 audioUri를 제공한다', async () => {
+      mockUseAudioRecorderState.mockReturnValue({
+        isRecording: true,
+        canRecord: true,
+        durationMillis: 1000,
+      } as never);
+      mockRecorder.uri = 'file:///tmp/recording.m4a';
 
-      await act(async () => {
-        await result.current.startRecording();
-      });
+      const { result } = renderHook(() => useVoiceRecording());
 
       await act(async () => {
         await result.current.stopRecording();
@@ -151,14 +182,15 @@ describe('useVoiceRecording', () => {
       expect(result.current.audioUri).toBe('file:///tmp/recording.m4a');
     });
 
-    it('getURI가 null을 반환하면 audioUri가 null이다', async () => {
-      mockRecordingInstance.getURI.mockReturnValue(null);
+    it('uri가 null이면 audioUri가 null이다', async () => {
+      mockUseAudioRecorderState.mockReturnValue({
+        isRecording: true,
+        canRecord: true,
+        durationMillis: 1000,
+      } as never);
+      mockRecorder.uri = null;
 
       const { result } = renderHook(() => useVoiceRecording());
-
-      await act(async () => {
-        await result.current.startRecording();
-      });
 
       await act(async () => {
         await result.current.stopRecording();
@@ -170,9 +202,9 @@ describe('useVoiceRecording', () => {
 
   describe('에러 처리', () => {
     it('녹음 시작 중 에러가 발생하면 error 상태를 설정한다', async () => {
-      mockRecordingInstance.startAsync.mockRejectedValue(
-        new Error('녹음 시작 실패'),
-      );
+      mockRecorder.record.mockImplementation(() => {
+        throw new Error('녹음 시작 실패');
+      });
 
       const { result } = renderHook(() => useVoiceRecording());
 
@@ -181,19 +213,17 @@ describe('useVoiceRecording', () => {
       });
 
       expect(result.current.error).toBeTruthy();
-      expect(result.current.isRecording).toBe(false);
     });
 
     it('녹음 중지 중 에러가 발생하면 error 상태를 설정한다', async () => {
-      mockRecordingInstance.stopAndUnloadAsync.mockRejectedValue(
-        new Error('녹음 중지 실패'),
-      );
+      mockUseAudioRecorderState.mockReturnValue({
+        isRecording: true,
+        canRecord: true,
+        durationMillis: 1000,
+      } as never);
+      mockRecorder.stop.mockRejectedValue(new Error('녹음 중지 실패'));
 
       const { result } = renderHook(() => useVoiceRecording());
-
-      await act(async () => {
-        await result.current.startRecording();
-      });
 
       await act(async () => {
         await result.current.stopRecording();
@@ -203,8 +233,11 @@ describe('useVoiceRecording', () => {
     });
 
     it('resetError 호출 시 에러를 초기화한다', async () => {
-      mockAudio.requestPermissionsAsync.mockResolvedValue({
+      mockRequestPermissions.mockResolvedValue({
         status: 'denied',
+        granted: false,
+        canAskAgain: true,
+        expires: 'never',
       } as never);
 
       const { result } = renderHook(() => useVoiceRecording());
@@ -220,20 +253,6 @@ describe('useVoiceRecording', () => {
       });
 
       expect(result.current.error).toBeNull();
-    });
-  });
-
-  describe('정리 (cleanup)', () => {
-    it('언마운트 시 진행 중인 녹음을 정리한다', async () => {
-      const { result, unmount } = renderHook(() => useVoiceRecording());
-
-      await act(async () => {
-        await result.current.startRecording();
-      });
-
-      unmount();
-
-      expect(mockRecordingInstance.stopAndUnloadAsync).toHaveBeenCalled();
     });
   });
 });
