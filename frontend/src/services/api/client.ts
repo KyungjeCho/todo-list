@@ -50,21 +50,33 @@ interface ErrorResponseData {
   message?: string;
 }
 
-let isRefreshing = false;
-let pendingRequests: Array<{
-  resolve: (token: string) => void;
-  reject: (error: unknown) => void;
-}> = [];
+// WHY: Promise-based lock으로 동시 refresh 요청을 직렬화.
+// 첫 요청만 실제 refresh를 수행하고, 나머지는 같은 Promise를 공유.
+let refreshPromise: Promise<string> | null = null;
 
-function processQueue(error: unknown, token: string | null): void {
-  for (const req of pendingRequests) {
-    if (error) {
-      req.reject(error);
-    } else {
-      req.resolve(token!);
-    }
+async function refreshAccessToken(): Promise<string> {
+  const { refreshToken, setTokens, clearAuth } = getAuthStore().getState();
+
+  if (!refreshToken) {
+    clearAuth();
+    throw new ApiError(401, 'UNAUTHORIZED', 'No refresh token');
   }
-  pendingRequests = [];
+
+  try {
+    const response = await axios.post(
+      `${config.apiBaseUrl}/auth/token/refresh`,
+      { refreshToken },
+    );
+    const { accessToken: newAccess, refreshToken: newRefresh } =
+      response.data as { accessToken: string; refreshToken: string };
+    await setTokens(newAccess, newRefresh);
+    return newAccess;
+  } catch (refreshError) {
+    clearAuth();
+    throw refreshError instanceof Error
+      ? refreshError
+      : new Error(String(refreshError));
+  }
 }
 
 apiClient.interceptors.response.use(
@@ -78,47 +90,15 @@ apiClient.interceptors.response.use(
       originalRequest &&
       !originalRequest.url?.includes('/auth/token/refresh')
     ) {
-      const { refreshToken, setTokens, clearAuth } = getAuthStore().getState();
-
-      if (!refreshToken) {
-        clearAuth();
-        return Promise.reject(
-          new ApiError(401, 'UNAUTHORIZED', 'No refresh token'),
-        );
-      }
-
-      if (isRefreshing) {
-        return new Promise<string>((resolve, reject) => {
-          pendingRequests.push({ resolve, reject });
-        }).then((token) => {
-          originalRequest.headers.Authorization = `Bearer ${token}`;
-          return apiClient(originalRequest);
+      if (!refreshPromise) {
+        refreshPromise = refreshAccessToken().finally(() => {
+          refreshPromise = null;
         });
       }
 
-      isRefreshing = true;
-      try {
-        const response = await axios.post(
-          `${config.apiBaseUrl}/auth/token/refresh`,
-          { refreshToken },
-        );
-        const { accessToken: newAccess, refreshToken: newRefresh } =
-          response.data as { accessToken: string; refreshToken: string };
-        setTokens(newAccess, newRefresh);
-        processQueue(null, newAccess);
-        originalRequest.headers.Authorization = `Bearer ${newAccess}`;
-        return apiClient(originalRequest);
-      } catch (refreshError) {
-        processQueue(refreshError, null);
-        clearAuth();
-        return Promise.reject(
-          refreshError instanceof Error
-            ? refreshError
-            : new Error(String(refreshError)),
-        );
-      } finally {
-        isRefreshing = false;
-      }
+      const newAccessToken = await refreshPromise;
+      originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+      return apiClient(originalRequest);
     }
 
     const data = error.response?.data;

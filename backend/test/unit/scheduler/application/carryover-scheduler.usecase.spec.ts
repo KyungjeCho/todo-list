@@ -15,6 +15,7 @@ describe('CarryoverSchedulerUsecase', () => {
   };
 
   const mockTxTodoRepo = {
+    find: jest.fn(),
     save: jest.fn(),
     create: jest.fn(),
   };
@@ -64,14 +65,15 @@ describe('CarryoverSchedulerUsecase', () => {
         };
 
         mockUserRepository.findAllWithTimezone.mockResolvedValue([seoulUser]);
-        mockTodoRepository.findByUserIdAndDate.mockResolvedValue([]);
+        mockTxTodoRepo.find.mockResolvedValue([]);
 
         await usecase.execute(now);
 
-        // Seoul 사용자의 어제 날짜(2026-03-28 KST) 기준으로 조회
-        expect(mockTodoRepository.findByUserIdAndDate).toHaveBeenCalledWith(
-          'user-seoul',
-          '2026-03-28',
+        // Seoul 사용자의 어제 날짜(2026-03-28 KST) 기준으로 조회 (트랜잭션 내 pessimistic lock)
+        expect(mockTxTodoRepo.find).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: { userId: 'user-seoul', todoDate: '2026-03-28' },
+          }),
         );
       });
 
@@ -88,7 +90,7 @@ describe('CarryoverSchedulerUsecase', () => {
 
         await usecase.execute(now);
 
-        expect(mockTodoRepository.findByUserIdAndDate).not.toHaveBeenCalled();
+        expect(mockDataSource.transaction).not.toHaveBeenCalled();
       });
 
       it('should handle multiple timezones simultaneously', async () => {
@@ -101,15 +103,16 @@ describe('CarryoverSchedulerUsecase', () => {
         ];
 
         mockUserRepository.findAllWithTimezone.mockResolvedValue(users);
-        mockTodoRepository.findByUserIdAndDate.mockResolvedValue([]);
+        mockTxTodoRepo.find.mockResolvedValue([]);
 
         await usecase.execute(now);
 
         // Seoul만 자정이므로 Seoul 사용자만 처리
-        expect(mockTodoRepository.findByUserIdAndDate).toHaveBeenCalledTimes(1);
-        expect(mockTodoRepository.findByUserIdAndDate).toHaveBeenCalledWith(
-          'user-seoul',
-          '2026-03-28',
+        expect(mockDataSource.transaction).toHaveBeenCalledTimes(1);
+        expect(mockTxTodoRepo.find).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: { userId: 'user-seoul', todoDate: '2026-03-28' },
+          }),
         );
       });
     });
@@ -128,14 +131,13 @@ describe('CarryoverSchedulerUsecase', () => {
         };
 
         mockUserRepository.findAllWithTimezone.mockResolvedValue([user]);
-        mockTodoRepository.findByUserIdAndDate.mockResolvedValue([
-          alreadyCarriedOver,
-        ]);
+        mockTxTodoRepo.find.mockResolvedValue([alreadyCarriedOver]);
 
         await usecase.execute(now);
 
-        // ACTIVE가 없으므로 트랜잭션 시작하지 않음
-        expect(mockDataSource.transaction).not.toHaveBeenCalled();
+        // ACTIVE가 없으므로 save/create 호출 없음
+        expect(mockTxTodoRepo.save).not.toHaveBeenCalled();
+        expect(mockTxTodoRepo.create).not.toHaveBeenCalled();
       });
 
       it('should check carry-over history to prevent double carry-over', async () => {
@@ -151,7 +153,7 @@ describe('CarryoverSchedulerUsecase', () => {
         };
 
         mockUserRepository.findAllWithTimezone.mockResolvedValue([user]);
-        mockTodoRepository.findByUserIdAndDate.mockResolvedValue([activeTodo]);
+        mockTxTodoRepo.find.mockResolvedValue([activeTodo]);
         // 이미 이월 이력이 존재함
         mockTxHistoryRepo.findOne.mockResolvedValue({
           id: 'history-1',
@@ -181,7 +183,7 @@ describe('CarryoverSchedulerUsecase', () => {
         };
 
         mockUserRepository.findAllWithTimezone.mockResolvedValue([user]);
-        mockTodoRepository.findByUserIdAndDate.mockResolvedValue([activeTodo]);
+        mockTxTodoRepo.find.mockResolvedValue([activeTodo]);
         mockTxTodoRepo.save.mockImplementation((todo) =>
           Promise.resolve({ id: todo.id ?? 'new-todo-1', ...todo }),
         );
@@ -241,14 +243,15 @@ describe('CarryoverSchedulerUsecase', () => {
         mockUserRepository.findAllWithTimezone.mockResolvedValue([
           userChangedTz,
         ]);
-        mockTodoRepository.findByUserIdAndDate.mockResolvedValue([]);
+        mockTxTodoRepo.find.mockResolvedValue([]);
 
         await usecase.execute(now);
 
         // NY 자정 기준이므로 2026-03-28 (NY 날짜) 기준으로 조회
-        expect(mockTodoRepository.findByUserIdAndDate).toHaveBeenCalledWith(
-          'user-1',
-          '2026-03-28',
+        expect(mockTxTodoRepo.find).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: { userId: 'user-1', todoDate: '2026-03-28' },
+          }),
         );
       });
     });
@@ -260,7 +263,7 @@ describe('CarryoverSchedulerUsecase', () => {
 
         await usecase.execute(now);
 
-        expect(mockTodoRepository.findByUserIdAndDate).not.toHaveBeenCalled();
+        expect(mockDataSource.transaction).not.toHaveBeenCalled();
       });
 
       it('should not carry over COMPLETED or INACTIVE todos', async () => {
@@ -283,14 +286,13 @@ describe('CarryoverSchedulerUsecase', () => {
         };
 
         mockUserRepository.findAllWithTimezone.mockResolvedValue([user]);
-        mockTodoRepository.findByUserIdAndDate.mockResolvedValue([
-          completedTodo,
-          inactiveTodo,
-        ]);
+        mockTxTodoRepo.find.mockResolvedValue([completedTodo, inactiveTodo]);
 
         await usecase.execute(now);
 
-        expect(mockDataSource.transaction).not.toHaveBeenCalled();
+        // ACTIVE가 없으므로 save/create 호출 없음
+        expect(mockTxTodoRepo.save).not.toHaveBeenCalled();
+        expect(mockTxTodoRepo.create).not.toHaveBeenCalled();
       });
     });
   });

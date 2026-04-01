@@ -77,12 +77,21 @@ export class AuthController {
       throw new BadRequestException('INVALID_STATE');
     }
 
-    const stateData = verified as {
-      fcmToken?: string;
-      deviceType?: string;
-      deviceName?: string;
-      redirectUri?: string;
-    };
+    // WHY: state 디코딩 후 필수 필드 타입 검증 — 악의적 state로 undefined 캐스팅 방지
+    const stateData = verified;
+    if (
+      typeof stateData !== 'object' ||
+      stateData === null ||
+      (stateData.deviceType !== undefined &&
+        typeof stateData.deviceType !== 'string')
+    ) {
+      throw new BadRequestException('INVALID_STATE_FORMAT');
+    }
+
+    const deviceType = stateData.deviceType;
+    if (deviceType && deviceType !== 'IOS' && deviceType !== 'ANDROID') {
+      throw new BadRequestException('INVALID_DEVICE_TYPE');
+    }
 
     const userProfile = await this.oauthProviderService.exchangeCodeForProfile(
       provider,
@@ -94,14 +103,16 @@ export class AuthController {
       providerUserId: userProfile.providerUserId,
       providerUserEmail: userProfile.providerUserEmail,
       providerUserName: userProfile.providerUserName,
-      fcmToken: stateData.fcmToken || undefined,
-      deviceType: (stateData.deviceType as 'IOS' | 'ANDROID') || 'IOS',
-      deviceName: stateData.deviceName,
+      fcmToken: (stateData.fcmToken as string) || undefined,
+      deviceType: (deviceType as 'IOS' | 'ANDROID') || 'IOS',
+      deviceName: stateData.deviceName as string | undefined,
       userAgent: req.headers['user-agent'] ?? undefined,
       ipAddress: req.ip ?? undefined,
     });
 
-    const clientRedirectUri = this.validateRedirectUri(stateData.redirectUri);
+    const clientRedirectUri = this.validateRedirectUri(
+      stateData.redirectUri as string | undefined,
+    );
     const params = new URLSearchParams({
       accessToken: result.accessToken,
       refreshToken: result.refreshToken,

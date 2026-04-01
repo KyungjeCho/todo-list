@@ -5,6 +5,7 @@ describe('UpdateMemoUsecase', () => {
 
   const mockMemoRepository = {
     findById: jest.fn(),
+    findByIdAndTodoId: jest.fn(),
     update: jest.fn(),
   };
 
@@ -61,7 +62,7 @@ describe('UpdateMemoUsecase', () => {
     it('should update memo content and return MemoResponse', async () => {
       mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
       mockTodoRepository.findById.mockResolvedValue(mockTodo);
-      mockMemoRepository.findById.mockResolvedValue(mockExistingMemo);
+      mockMemoRepository.findByIdAndTodoId.mockResolvedValue(mockExistingMemo);
       mockMemoRepository.update.mockResolvedValue({
         ...mockExistingMemo,
         content: '수정된 메모',
@@ -78,7 +79,7 @@ describe('UpdateMemoUsecase', () => {
     it('should call repository with correct update data', async () => {
       mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
       mockTodoRepository.findById.mockResolvedValue(mockTodo);
-      mockMemoRepository.findById.mockResolvedValue(mockExistingMemo);
+      mockMemoRepository.findByIdAndTodoId.mockResolvedValue(mockExistingMemo);
       mockMemoRepository.update.mockResolvedValue({
         ...mockExistingMemo,
         content: '수정된 메모',
@@ -107,10 +108,11 @@ describe('UpdateMemoUsecase', () => {
       await expect(usecase.execute(updateDto)).rejects.toThrow();
     });
 
-    it('should throw error when memo not found', async () => {
+    it('should throw error when memo not found or does not belong to todo', async () => {
       mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
       mockTodoRepository.findById.mockResolvedValue(mockTodo);
-      mockMemoRepository.findById.mockResolvedValue(null);
+      // findByIdAndTodoId returns null when memoId+todoId pair doesn't match
+      mockMemoRepository.findByIdAndTodoId.mockResolvedValue(null);
 
       await expect(usecase.execute(updateDto)).rejects.toThrow();
     });
@@ -123,22 +125,10 @@ describe('UpdateMemoUsecase', () => {
       await expect(usecase.execute(updateDto)).rejects.toThrow();
     });
 
-    it('should throw error when memo does not belong to the todo', async () => {
-      const memoFromDifferentTodo = {
-        ...mockExistingMemo,
-        todoId: 'todo-id-999',
-      };
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-      mockTodoRepository.findById.mockResolvedValue(mockTodo);
-      mockMemoRepository.findById.mockResolvedValue(memoFromDifferentTodo);
-
-      await expect(usecase.execute(updateDto)).rejects.toThrow();
-    });
-
     it('should throw error for empty content', async () => {
       mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
       mockTodoRepository.findById.mockResolvedValue(mockTodo);
-      mockMemoRepository.findById.mockResolvedValue(mockExistingMemo);
+      mockMemoRepository.findByIdAndTodoId.mockResolvedValue(mockExistingMemo);
 
       await expect(
         usecase.execute({ ...updateDto, content: '' }),
@@ -148,7 +138,7 @@ describe('UpdateMemoUsecase', () => {
     it('should set updatedBy from the user id', async () => {
       mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
       mockTodoRepository.findById.mockResolvedValue(mockTodo);
-      mockMemoRepository.findById.mockResolvedValue(mockExistingMemo);
+      mockMemoRepository.findByIdAndTodoId.mockResolvedValue(mockExistingMemo);
       mockMemoRepository.update.mockResolvedValue({
         ...mockExistingMemo,
         content: '수정된 메모',

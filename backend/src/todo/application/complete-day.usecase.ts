@@ -36,59 +36,62 @@ export class CompleteDayUsecase {
       throw new NotFoundException('USER_NOT_FOUND');
     }
 
-    const todos = await this.todoRepository.findByUserIdAndDate(
-      user.id,
-      input.date,
-    );
-
-    const activeTodos = todos.filter((t) => t.status === TodoStatus.ACTIVE);
     const carriedOverTodos: CarriedOverTodoDto[] = [];
 
-    if (activeTodos.length > 0) {
-      await this.dataSource.transaction(async (manager) => {
-        const txTodoRepo = manager.getRepository(Todo);
-        const txHistoryRepo = manager.getRepository(CarriedOverHistory);
+    // WHY: todo 조회를 트랜잭션 내부에서 pessimistic lock과 함께 수행하여
+    // 동시 요청 시 중복 이월(TOCTOU) 방지
+    const todos = await this.dataSource.transaction(async (manager) => {
+      const txTodoRepo = manager.getRepository(Todo);
+      const txHistoryRepo = manager.getRepository(CarriedOverHistory);
 
-        for (const todo of activeTodos) {
-          const existingHistory = await txHistoryRepo.findOne({
-            where: { fromTodoId: todo.id },
-          });
-          if (existingHistory) {
-            continue;
-          }
-
-          const nextDate = this.getNextDate(input.date);
-
-          // WHY: ACTIVE → CARRIED_OVER 전이는 canTransitionTo에 없음 (시스템 전용)
-          todo.status = TodoStatus.CARRIED_OVER;
-          await txTodoRepo.save(todo);
-
-          const newTodo = txTodoRepo.create({
-            userId: user.id,
-            content: todo.content,
-            status: TodoStatus.ACTIVE,
-            todoDate: nextDate,
-            createdBy: user.id,
-            updatedBy: user.id,
-          });
-          const savedNewTodo = await txTodoRepo.save(newTodo);
-
-          const history = txHistoryRepo.create({
-            fromTodoId: todo.id,
-            toTodoId: savedNewTodo.id,
-            createdBy: user.id,
-            updatedBy: user.id,
-          });
-          await txHistoryRepo.save(history);
-
-          carriedOverTodos.push({
-            fromTodoId: todo.id,
-            toTodoId: savedNewTodo.id,
-            content: todo.content,
-          });
-        }
+      const txTodos = await txTodoRepo.find({
+        where: { userId: user.id, todoDate: input.date },
+        lock: { mode: 'pessimistic_write' },
       });
-    }
+
+      const activeTodos = txTodos.filter((t) => t.status === TodoStatus.ACTIVE);
+
+      for (const todo of activeTodos) {
+        const existingHistory = await txHistoryRepo.findOne({
+          where: { fromTodoId: todo.id },
+        });
+        if (existingHistory) {
+          continue;
+        }
+
+        const nextDate = this.getNextDate(input.date);
+
+        // WHY: ACTIVE → CARRIED_OVER 전이는 canTransitionTo에 없음 (시스템 전용)
+        todo.status = TodoStatus.CARRIED_OVER;
+        await txTodoRepo.save(todo);
+
+        const newTodo = txTodoRepo.create({
+          userId: user.id,
+          content: todo.content,
+          status: TodoStatus.ACTIVE,
+          todoDate: nextDate,
+          createdBy: user.id,
+          updatedBy: user.id,
+        });
+        const savedNewTodo = await txTodoRepo.save(newTodo);
+
+        const history = txHistoryRepo.create({
+          fromTodoId: todo.id,
+          toTodoId: savedNewTodo.id,
+          createdBy: user.id,
+          updatedBy: user.id,
+        });
+        await txHistoryRepo.save(history);
+
+        carriedOverTodos.push({
+          fromTodoId: todo.id,
+          toTodoId: savedNewTodo.id,
+          content: todo.content,
+        });
+      }
+
+      return txTodos;
+    });
 
     const completedCount = todos.filter(
       (t) => t.status === TodoStatus.COMPLETED,

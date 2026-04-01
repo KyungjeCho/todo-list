@@ -14,6 +14,13 @@ export class MemoRepository {
     return this.memoRepo.findOne({ where: { id } });
   }
 
+  async findByIdAndTodoId(
+    id: string,
+    todoId: string,
+  ): Promise<TodoMemo | null> {
+    return this.memoRepo.findOne({ where: { id, todoId } });
+  }
+
   async create(data: Partial<TodoMemo>): Promise<TodoMemo> {
     const entity = this.memoRepo.create(data);
     return this.memoRepo.save(entity);

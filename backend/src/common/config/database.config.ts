@@ -4,6 +4,17 @@ import { registerAs } from '@nestjs/config';
 import type { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { AuditSubscriber } from '../subscribers/audit.subscriber';
 
+function requireInProduction(key: string, fallback: string): string {
+  if (process.env.NODE_ENV === 'production') {
+    const value = process.env[key];
+    if (!value) {
+      throw new Error(`Missing required environment variable: ${key}`);
+    }
+    return value;
+  }
+  return process.env[key] || fallback;
+}
+
 function buildSslConfig():
   | false
   | { rejectUnauthorized: boolean; ca?: string } {
@@ -24,8 +35,8 @@ export const databaseConfig = registerAs(
     type: 'postgres',
     host: process.env.DATABASE_HOST || 'localhost',
     port: parseInt(process.env.DATABASE_PORT || '5432', 10),
-    username: process.env.DATABASE_USERNAME || 'postgres',
-    password: process.env.DATABASE_PASSWORD || 'postgres',
+    username: requireInProduction('DATABASE_USERNAME', 'postgres'),
+    password: requireInProduction('DATABASE_PASSWORD', 'postgres'),
     database: process.env.DATABASE_NAME || 'todolist',
     autoLoadEntities: true,
     synchronize: false,

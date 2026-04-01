@@ -39,13 +39,13 @@ export class UpdateMemoUsecase {
       throw new ForbiddenException('FORBIDDEN');
     }
 
-    const memo = await this.memoRepository.findById(input.memoId);
+    // WHY: 단일 쿼리로 memoId+todoId를 동시에 검증하여 IDOR 방어
+    const memo = await this.memoRepository.findByIdAndTodoId(
+      input.memoId,
+      input.todoId,
+    );
     if (!memo) {
       throw new NotFoundException('MEMO_NOT_FOUND');
-    }
-
-    if (memo.todoId !== input.todoId) {
-      throw new ForbiddenException('FORBIDDEN');
     }
 
     if (!input.content || input.content.trim().length === 0) {

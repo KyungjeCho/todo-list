@@ -15,6 +15,7 @@ describe('CompleteDayUsecase', () => {
   };
 
   const mockTxTodoRepo = {
+    find: jest.fn(),
     save: jest.fn(),
     create: jest.fn(),
     findOne: jest.fn(),
@@ -27,7 +28,7 @@ describe('CompleteDayUsecase', () => {
   };
 
   const mockDataSource = {
-    transaction: jest.fn(async (cb: (manager: unknown) => Promise<void>) => {
+    transaction: jest.fn(async (cb: (manager: unknown) => Promise<unknown>) => {
       const manager = {
         getRepository: jest.fn((entity: unknown) => {
           const entityName = typeof entity === 'function' ? entity.name : '';
@@ -35,7 +36,7 @@ describe('CompleteDayUsecase', () => {
           return mockTxHistoryRepo;
         }),
       };
-      await cb(manager);
+      return cb(manager);
     }),
   };
 
@@ -89,10 +90,7 @@ describe('CompleteDayUsecase', () => {
         );
 
         mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-        mockTodoRepository.findByUserIdAndDate.mockResolvedValue([
-          activeTodo,
-          completedTodo,
-        ]);
+        mockTxTodoRepo.find.mockResolvedValue([activeTodo, completedTodo]);
         mockTxTodoRepo.save.mockImplementation((todo) =>
           Promise.resolve({ id: todo.id ?? 'new-todo-1', ...todo }),
         );
@@ -156,9 +154,7 @@ describe('CompleteDayUsecase', () => {
         );
 
         mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-        mockTodoRepository.findByUserIdAndDate.mockResolvedValue([
-          completedTodo,
-        ]);
+        mockTxTodoRepo.find.mockResolvedValue([completedTodo]);
 
         const result = await usecase.execute({
           userAuthId: 'auth-id-1',
@@ -167,7 +163,7 @@ describe('CompleteDayUsecase', () => {
 
         expect(result.carriedOverCount).toBe(0);
         expect(result.carriedOverTodos).toHaveLength(0);
-        expect(mockDataSource.transaction).not.toHaveBeenCalled();
+        expect(mockTxTodoRepo.save).not.toHaveBeenCalled();
       });
 
       it('should not carry over INACTIVE todos', async () => {
@@ -178,9 +174,7 @@ describe('CompleteDayUsecase', () => {
         );
 
         mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-        mockTodoRepository.findByUserIdAndDate.mockResolvedValue([
-          inactiveTodo,
-        ]);
+        mockTxTodoRepo.find.mockResolvedValue([inactiveTodo]);
 
         const result = await usecase.execute({
           userAuthId: 'auth-id-1',
@@ -188,7 +182,7 @@ describe('CompleteDayUsecase', () => {
         });
 
         expect(result.carriedOverCount).toBe(0);
-        expect(mockDataSource.transaction).not.toHaveBeenCalled();
+        expect(mockTxTodoRepo.save).not.toHaveBeenCalled();
       });
     });
 
@@ -206,10 +200,7 @@ describe('CompleteDayUsecase', () => {
         );
 
         mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-        mockTodoRepository.findByUserIdAndDate.mockResolvedValue([
-          carriedOverTodo,
-          activeTodo,
-        ]);
+        mockTxTodoRepo.find.mockResolvedValue([carriedOverTodo, activeTodo]);
         mockTxTodoRepo.save.mockImplementation((todo) =>
           Promise.resolve({ id: todo.id ?? 'new-todo-1', ...todo }),
         );
@@ -241,7 +232,7 @@ describe('CompleteDayUsecase', () => {
         ];
 
         mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-        mockTodoRepository.findByUserIdAndDate.mockResolvedValue(todos);
+        mockTxTodoRepo.find.mockResolvedValue(todos);
         mockTxTodoRepo.save.mockImplementation((todo) =>
           Promise.resolve({ id: todo.id ?? `new-${todo.content}`, ...todo }),
         );
@@ -270,7 +261,7 @@ describe('CompleteDayUsecase', () => {
         ];
 
         mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-        mockTodoRepository.findByUserIdAndDate.mockResolvedValue(todos);
+        mockTxTodoRepo.find.mockResolvedValue(todos);
         mockTxTodoRepo.save.mockImplementation((todo) =>
           Promise.resolve({ id: todo.id ?? 'new-todo', ...todo }),
         );
@@ -301,7 +292,7 @@ describe('CompleteDayUsecase', () => {
         );
 
         mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-        mockTodoRepository.findByUserIdAndDate.mockResolvedValue([activeTodo]);
+        mockTxTodoRepo.find.mockResolvedValue([activeTodo]);
         mockTxHistoryRepo.findOne.mockResolvedValue({
           id: 'history-1',
           fromTodoId: 'todo-1',
@@ -323,7 +314,7 @@ describe('CompleteDayUsecase', () => {
         const activeTodo = createMockTodo('todo-1', TodoStatus.ACTIVE, '할 일');
 
         mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-        mockTodoRepository.findByUserIdAndDate.mockResolvedValue([activeTodo]);
+        mockTxTodoRepo.find.mockResolvedValue([activeTodo]);
         mockTxTodoRepo.save.mockImplementation((todo) =>
           Promise.resolve({ id: todo.id ?? 'new-todo-1', ...todo }),
         );
@@ -342,7 +333,7 @@ describe('CompleteDayUsecase', () => {
         expect(mockDataSource.transaction).toHaveBeenCalledTimes(1);
       });
 
-      it('should not start transaction when no ACTIVE todos exist', async () => {
+      it('should not modify todos when no ACTIVE todos exist', async () => {
         const completedTodo = createMockTodo(
           'todo-1',
           TodoStatus.COMPLETED,
@@ -350,23 +341,21 @@ describe('CompleteDayUsecase', () => {
         );
 
         mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-        mockTodoRepository.findByUserIdAndDate.mockResolvedValue([
-          completedTodo,
-        ]);
+        mockTxTodoRepo.find.mockResolvedValue([completedTodo]);
 
         await usecase.execute({
           userAuthId: 'auth-id-1',
           date: '2026-03-28',
         });
 
-        expect(mockDataSource.transaction).not.toHaveBeenCalled();
+        expect(mockTxTodoRepo.save).not.toHaveBeenCalled();
       });
     });
 
     describe('empty day', () => {
       it('should handle day with no todos', async () => {
         mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-        mockTodoRepository.findByUserIdAndDate.mockResolvedValue([]);
+        mockTxTodoRepo.find.mockResolvedValue([]);
 
         const result = await usecase.execute({
           userAuthId: 'auth-id-1',

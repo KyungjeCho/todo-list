@@ -5,6 +5,7 @@ describe('DeleteMemoUsecase', () => {
 
   const mockMemoRepository = {
     findById: jest.fn(),
+    findByIdAndTodoId: jest.fn(),
     softDelete: jest.fn(),
   };
 
@@ -61,7 +62,7 @@ describe('DeleteMemoUsecase', () => {
     it('should soft-delete memo and return DeleteMemoResponse', async () => {
       mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
       mockTodoRepository.findById.mockResolvedValue(mockTodo);
-      mockMemoRepository.findById.mockResolvedValue(mockExistingMemo);
+      mockMemoRepository.findByIdAndTodoId.mockResolvedValue(mockExistingMemo);
       const deletedAt = new Date('2026-03-31T15:00:00Z');
       mockMemoRepository.softDelete.mockResolvedValue({
         id: 'memo-id-1',
@@ -78,7 +79,7 @@ describe('DeleteMemoUsecase', () => {
     it('should call repository softDelete with memo id', async () => {
       mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
       mockTodoRepository.findById.mockResolvedValue(mockTodo);
-      mockMemoRepository.findById.mockResolvedValue(mockExistingMemo);
+      mockMemoRepository.findByIdAndTodoId.mockResolvedValue(mockExistingMemo);
       mockMemoRepository.softDelete.mockResolvedValue({
         id: 'memo-id-1',
         deletedAt: new Date(),
@@ -102,10 +103,10 @@ describe('DeleteMemoUsecase', () => {
       await expect(usecase.execute(deleteDto)).rejects.toThrow();
     });
 
-    it('should throw error when memo not found', async () => {
+    it('should throw error when memo not found or does not belong to todo', async () => {
       mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
       mockTodoRepository.findById.mockResolvedValue(mockTodo);
-      mockMemoRepository.findById.mockResolvedValue(null);
+      mockMemoRepository.findByIdAndTodoId.mockResolvedValue(null);
 
       await expect(usecase.execute(deleteDto)).rejects.toThrow();
     });
@@ -118,22 +119,10 @@ describe('DeleteMemoUsecase', () => {
       await expect(usecase.execute(deleteDto)).rejects.toThrow();
     });
 
-    it('should throw error when memo does not belong to the todo', async () => {
-      const memoFromDifferentTodo = {
-        ...mockExistingMemo,
-        todoId: 'todo-id-999',
-      };
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-      mockTodoRepository.findById.mockResolvedValue(mockTodo);
-      mockMemoRepository.findById.mockResolvedValue(memoFromDifferentTodo);
-
-      await expect(usecase.execute(deleteDto)).rejects.toThrow();
-    });
-
     it('should propagate error when softDelete fails', async () => {
       mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
       mockTodoRepository.findById.mockResolvedValue(mockTodo);
-      mockMemoRepository.findById.mockResolvedValue(mockExistingMemo);
+      mockMemoRepository.findByIdAndTodoId.mockResolvedValue(mockExistingMemo);
       mockMemoRepository.softDelete.mockRejectedValue(
         new Error('Database connection failed'),
       );

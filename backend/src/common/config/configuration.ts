@@ -15,8 +15,15 @@ export default () => ({
   database: {
     host: process.env.DATABASE_HOST || 'localhost',
     port: parseInt(process.env.DATABASE_PORT || '5432', 10),
-    username: process.env.DATABASE_USERNAME || 'postgres',
-    password: process.env.DATABASE_PASSWORD || 'postgres',
+    // WHY: 프로덕션에서 기본값 폴백 방지 — 환경변수 누락 시 즉시 실패
+    username:
+      process.env.NODE_ENV === 'production'
+        ? getRequiredEnv('DATABASE_USERNAME')
+        : process.env.DATABASE_USERNAME || 'postgres',
+    password:
+      process.env.NODE_ENV === 'production'
+        ? getRequiredEnv('DATABASE_PASSWORD')
+        : process.env.DATABASE_PASSWORD || 'postgres',
     name: process.env.DATABASE_NAME || 'todolist',
   },
   jwt: {

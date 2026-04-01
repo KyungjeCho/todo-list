@@ -22,19 +22,22 @@ export class CarryoverSchedulerUsecase {
       }
 
       const yesterday = this.getYesterdayDate(now, user.timezone);
-      const todos = await this.todoRepository.findByUserIdAndDate(
-        user.id,
-        yesterday,
-      );
 
-      const activeTodos = todos.filter((t) => t.status === TodoStatus.ACTIVE);
-      if (activeTodos.length === 0) {
-        continue;
-      }
-
+      // WHY: todo 조회를 트랜잭션 내부에서 pessimistic lock과 함께 수행하여
+      // 동시 실행 시 중복 이월(TOCTOU) 방지
       await this.dataSource.transaction(async (manager) => {
         const txTodoRepo = manager.getRepository(Todo);
         const txHistoryRepo = manager.getRepository(CarriedOverHistory);
+
+        const todos = await txTodoRepo.find({
+          where: { userId: user.id, todoDate: yesterday },
+          lock: { mode: 'pessimistic_write' },
+        });
+
+        const activeTodos = todos.filter((t) => t.status === TodoStatus.ACTIVE);
+        if (activeTodos.length === 0) {
+          return;
+        }
 
         for (const todo of activeTodos) {
           const existingHistory = await txHistoryRepo.findOne({
