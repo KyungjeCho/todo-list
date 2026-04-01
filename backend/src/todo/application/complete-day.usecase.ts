@@ -4,7 +4,6 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { TodoRepository } from '../infrastructure/todo.repository';
 import { UserRepository } from '../../user/infrastructure/user.repository';
 import { Todo, TodoStatus } from '../domain/todo.entity';
 import { CarriedOverHistory } from '../domain/carried-over-history.entity';
@@ -21,7 +20,6 @@ interface CompleteDayInput {
 @Injectable()
 export class CompleteDayUsecase {
   constructor(
-    private readonly todoRepository: TodoRepository,
     private readonly userRepository: UserRepository,
     private readonly dataSource: DataSource,
   ) {}

@@ -4,12 +4,6 @@ import { TodoStatus } from 'src/todo/domain/todo.entity';
 describe('CompleteDayUsecase', () => {
   let usecase: CompleteDayUsecase;
 
-  const mockTodoRepository = {
-    findByUserIdAndDate: jest.fn(),
-    update: jest.fn(),
-    create: jest.fn(),
-  };
-
   const mockUserRepository = {
     findByUserAuthId: jest.fn(),
   };
@@ -44,7 +38,6 @@ describe('CompleteDayUsecase', () => {
     jest.clearAllMocks();
     mockTxHistoryRepo.findOne.mockResolvedValue(null);
     usecase = new CompleteDayUsecase(
-      mockTodoRepository as never,
       mockUserRepository as never,
       mockDataSource as never,
     );

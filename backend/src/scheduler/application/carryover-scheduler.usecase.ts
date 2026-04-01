@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { TodoRepository } from '../../todo/infrastructure/todo.repository';
 import { UserRepository } from '../../user/infrastructure/user.repository';
 import { Todo, TodoStatus } from '../../todo/domain/todo.entity';
 import { CarriedOverHistory } from '../../todo/domain/carried-over-history.entity';
@@ -9,7 +8,6 @@ import { CarriedOverHistory } from '../../todo/domain/carried-over-history.entit
 export class CarryoverSchedulerUsecase {
   constructor(
     private readonly userRepository: UserRepository,
-    private readonly todoRepository: TodoRepository,
     private readonly dataSource: DataSource,
   ) {}
 

@@ -8,12 +8,6 @@ describe('CarryoverSchedulerUsecase', () => {
     findAllWithTimezone: jest.fn(),
   };
 
-  const mockTodoRepository = {
-    findByUserIdAndDate: jest.fn(),
-    update: jest.fn(),
-    create: jest.fn(),
-  };
-
   const mockTxTodoRepo = {
     find: jest.fn(),
     save: jest.fn(),
@@ -44,7 +38,6 @@ describe('CarryoverSchedulerUsecase', () => {
     mockTxHistoryRepo.findOne.mockResolvedValue(null);
     usecase = new CarryoverSchedulerUsecase(
       mockUserRepository as never,
-      mockTodoRepository as never,
       mockDataSource as never,
     );
   });

@@ -61,7 +61,8 @@ export function useAuth() {
         if (result.type === 'success') {
           // WHY: 서버가 토큰을 fragment(#)로 전달하므로 URL hash에서 파싱
           const hashIndex = result.url.indexOf('#');
-          const fragment = hashIndex >= 0 ? result.url.slice(hashIndex + 1) : '';
+          const fragment =
+            hashIndex >= 0 ? result.url.slice(hashIndex + 1) : '';
           const fragmentParams = new URLSearchParams(fragment);
           const accessToken = fragmentParams.get('accessToken') ?? '';
           const refreshToken = fragmentParams.get('refreshToken') ?? '';
