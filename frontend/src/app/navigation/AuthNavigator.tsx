@@ -70,8 +70,7 @@ const MainWrapper: React.FC = () => {
 
   // WHY: 로그인 후 토큰 갱신(onTokenRefresh)·앱 재실행 시 서버에 FCM 토큰 재등록
   usePushNotification({
-    onRegisterDevice: (token: string, deviceType: string) =>
-      userApi.registerDevice(token, deviceType),
+    onRegisterDevice: (params) => userApi.registerDevice(params),
   });
   const [data, setData] = useState<TodoListResponse | null>(null);
   const [modeOverride, setModeOverride] = useState<'PLAN' | 'REVIEW' | null>(

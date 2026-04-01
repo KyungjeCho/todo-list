@@ -75,7 +75,7 @@ export class CarryoverSchedulerUsecase {
     const localTime = new Intl.DateTimeFormat('en-US', {
       timeZone: timezone,
       hour: 'numeric',
-      hour12: false,
+      hourCycle: 'h23',
     }).format(now);
     return parseInt(localTime, 10) === 0;
   }
