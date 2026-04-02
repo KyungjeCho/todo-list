@@ -74,7 +74,12 @@ describe('TodoItem', () => {
   describe('체크박스 탭 (완료 토글)', () => {
     it('ACTIVE 할 일 체크박스 탭 시 onToggleComplete 콜백이 호출된다', () => {
       const mockOnToggleComplete = jest.fn();
-      render(<TodoItem todo={mockActiveTodo} onToggleComplete={mockOnToggleComplete} />);
+      render(
+        <TodoItem
+          todo={mockActiveTodo}
+          onToggleComplete={mockOnToggleComplete}
+        />,
+      );
 
       fireEvent.press(screen.getByTestId('todo-checkbox-todo-1'));
 
@@ -83,7 +88,12 @@ describe('TodoItem', () => {
 
     it('COMPLETED 할 일 체크박스 탭 시 onToggleComplete 콜백이 호출된다 (완료 취소)', () => {
       const mockOnToggleComplete = jest.fn();
-      render(<TodoItem todo={mockCompletedTodo} onToggleComplete={mockOnToggleComplete} />);
+      render(
+        <TodoItem
+          todo={mockCompletedTodo}
+          onToggleComplete={mockOnToggleComplete}
+        />,
+      );
 
       fireEvent.press(screen.getByTestId('todo-checkbox-todo-2'));
 
@@ -91,20 +101,44 @@ describe('TodoItem', () => {
     });
   });
 
-  describe('탭 수정', () => {
-    it('할 일 내용을 탭하면 편집 모드로 전환된다', () => {
-      render(<TodoItem todo={mockActiveTodo} onEdit={jest.fn()} />);
-
-      fireEvent.press(screen.getByText('회의 준비'));
+  describe('확장 시 수정', () => {
+    it('확장 상태에서 편집 입력 필드가 표시된다', () => {
+      render(
+        <TodoItem
+          todo={mockActiveTodo}
+          isExpanded={true}
+          onExpand={jest.fn()}
+          onEdit={jest.fn()}
+        />,
+      );
 
       expect(screen.getByTestId('todo-edit-input-todo-1')).toBeTruthy();
     });
 
-    it('편집 후 onEdit 콜백이 호출된다', () => {
-      const mockOnEdit = jest.fn();
-      render(<TodoItem todo={mockActiveTodo} onEdit={mockOnEdit} />);
+    it('접힌 상태에서는 편집 입력 필드가 표시되지 않는다', () => {
+      render(
+        <TodoItem
+          todo={mockActiveTodo}
+          isExpanded={false}
+          onExpand={jest.fn()}
+          onEdit={jest.fn()}
+        />,
+      );
 
-      fireEvent.press(screen.getByText('회의 준비'));
+      expect(screen.queryByTestId('todo-edit-input-todo-1')).toBeNull();
+    });
+
+    it('편집 후 submit 시 onEdit 콜백이 호출된다', () => {
+      const mockOnEdit = jest.fn();
+      render(
+        <TodoItem
+          todo={mockActiveTodo}
+          isExpanded={true}
+          onExpand={jest.fn()}
+          onEdit={mockOnEdit}
+        />,
+      );
+
       const input = screen.getByTestId('todo-edit-input-todo-1');
       fireEvent.changeText(input, '수정된 내용');
       fireEvent(input, 'submitEditing');
@@ -112,32 +146,35 @@ describe('TodoItem', () => {
       expect(mockOnEdit).toHaveBeenCalledWith('todo-1', '수정된 내용');
     });
 
-    it('INACTIVE 상태에서는 탭해도 편집 모드로 전환되지 않는다', () => {
-      render(<TodoItem todo={mockInactiveTodo} onEdit={jest.fn()} />);
-
-      fireEvent.press(screen.getByText('운동하기'));
-
-      expect(screen.queryByTestId('todo-edit-input-todo-3')).toBeNull();
-    });
-
-    it('편집 모드에서 blur 시 편집이 취소되고 원래 텍스트로 복원된다', () => {
+    it('편집 후 blur 시 onEdit 콜백이 호출된다', () => {
       const mockOnEdit = jest.fn();
-      render(<TodoItem todo={mockActiveTodo} onEdit={mockOnEdit} />);
+      render(
+        <TodoItem
+          todo={mockActiveTodo}
+          isExpanded={true}
+          onExpand={jest.fn()}
+          onEdit={mockOnEdit}
+        />,
+      );
 
-      fireEvent.press(screen.getByText('회의 준비'));
       const input = screen.getByTestId('todo-edit-input-todo-1');
-      fireEvent.changeText(input, '취소될 내용');
+      fireEvent.changeText(input, '수정된 내용');
       fireEvent(input, 'blur');
 
-      expect(mockOnEdit).not.toHaveBeenCalled();
-      expect(screen.getByText('회의 준비')).toBeTruthy();
+      expect(mockOnEdit).toHaveBeenCalledWith('todo-1', '수정된 내용');
     });
 
     it('빈 문자열로 수정 제출 시 onEdit이 호출되지 않는다', () => {
       const mockOnEdit = jest.fn();
-      render(<TodoItem todo={mockActiveTodo} onEdit={mockOnEdit} />);
+      render(
+        <TodoItem
+          todo={mockActiveTodo}
+          isExpanded={true}
+          onExpand={jest.fn()}
+          onEdit={mockOnEdit}
+        />,
+      );
 
-      fireEvent.press(screen.getByText('회의 준비'));
       const input = screen.getByTestId('todo-edit-input-todo-1');
       fireEvent.changeText(input, '');
       fireEvent(input, 'submitEditing');
@@ -147,9 +184,15 @@ describe('TodoItem', () => {
 
     it('동일 텍스트로 제출 시 onEdit이 호출되지 않는다', () => {
       const mockOnEdit = jest.fn();
-      render(<TodoItem todo={mockActiveTodo} onEdit={mockOnEdit} />);
+      render(
+        <TodoItem
+          todo={mockActiveTodo}
+          isExpanded={true}
+          onExpand={jest.fn()}
+          onEdit={mockOnEdit}
+        />,
+      );
 
-      fireEvent.press(screen.getByText('회의 준비'));
       const input = screen.getByTestId('todo-edit-input-todo-1');
       fireEvent.changeText(input, '회의 준비');
       fireEvent(input, 'submitEditing');
@@ -158,15 +201,20 @@ describe('TodoItem', () => {
     });
   });
 
-  describe('더블 탭 비활성화', () => {
-    it('ACTIVE 할 일을 길게 누르면 onDeactivate 콜백이 호출된다', () => {
-      const mockOnDeactivate = jest.fn();
-      render(<TodoItem todo={mockActiveTodo} onDeactivate={mockOnDeactivate} />);
+  describe('확장 토글', () => {
+    it('아이템 탭 시 onExpand가 todo.id와 함께 호출된다', () => {
+      const mockOnExpand = jest.fn();
+      render(
+        <TodoItem
+          todo={mockActiveTodo}
+          isExpanded={false}
+          onExpand={mockOnExpand}
+        />,
+      );
 
-      const item = screen.getByTestId('todo-item-todo-1');
-      fireEvent(item, 'longPress');
+      fireEvent.press(screen.getByTestId('todo-item-todo-1'));
 
-      expect(mockOnDeactivate).toHaveBeenCalledWith('todo-1');
+      expect(mockOnExpand).toHaveBeenCalledWith('todo-1');
     });
   });
 
@@ -175,7 +223,9 @@ describe('TodoItem', () => {
       render(<TodoItem todo={mockActiveTodo} />);
 
       const item = screen.getByTestId('todo-item-todo-1');
-      expect(item.props.accessibilityLabel || item.props['aria-label']).toBeTruthy();
+      expect(
+        item.props.accessibilityLabel || item.props['aria-label'],
+      ).toBeTruthy();
     });
 
     it('체크박스에 접근성 역할이 설정되어 있다', () => {
@@ -183,7 +233,8 @@ describe('TodoItem', () => {
 
       const checkbox = screen.getByTestId('todo-checkbox-todo-1');
       expect(
-        checkbox.props.accessibilityRole === 'checkbox' || checkbox.props.role === 'checkbox',
+        checkbox.props.accessibilityRole === 'checkbox' ||
+          checkbox.props.role === 'checkbox',
       ).toBe(true);
     });
   });

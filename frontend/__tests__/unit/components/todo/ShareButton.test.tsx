@@ -1,12 +1,16 @@
 import { render, fireEvent, screen } from '@testing-library/react-native';
+import { Alert } from 'react-native';
 import { ShareButton } from 'src/components/todo/ShareButton';
 import { useShareTodo } from 'src/features/share/useShareTodo';
+import { colors, typography, radius } from 'src/theme';
 
 jest.mock('src/features/share/useShareTodo');
 
 const mockShareTodos = jest.fn().mockResolvedValue(undefined);
 const mockShareToSelf = jest.fn().mockResolvedValue(undefined);
-const mockUseShareTodo = useShareTodo as jest.MockedFunction<typeof useShareTodo>;
+const mockUseShareTodo = useShareTodo as jest.MockedFunction<
+  typeof useShareTodo
+>;
 
 function setupHook(overrides: Partial<ReturnType<typeof useShareTodo>> = {}) {
   mockUseShareTodo.mockReturnValue({
@@ -110,12 +114,58 @@ describe('ShareButton', () => {
     });
   });
 
+  describe('Ghost 버튼 스타일', () => {
+    it('투명 배경과 border 스타일이 적용된다', () => {
+      render(<ShareButton todos={mockTodos} date="2026-03-31" />);
+
+      const button = screen.getByTestId('share-button');
+      const flatStyle = Array.isArray(button.props.style)
+        ? Object.assign({}, ...button.props.style)
+        : button.props.style;
+
+      expect(flatStyle.backgroundColor).toBe('transparent');
+      expect(flatStyle.borderWidth).toBe(1);
+      expect(flatStyle.borderColor).toBe(colors.border);
+      expect(flatStyle.borderRadius).toBe(radius.md);
+    });
+
+    it('버튼 텍스트가 primary 색상과 caption 스타일을 사용한다', () => {
+      render(<ShareButton todos={mockTodos} date="2026-03-31" />);
+
+      const text = screen.getByText('공유');
+      const flatStyle = Array.isArray(text.props.style)
+        ? Object.assign({}, ...text.props.style)
+        : text.props.style;
+
+      expect(flatStyle.color).toBe(colors.primary);
+      expect(flatStyle.fontSize).toBe(typography.caption.fontSize);
+      expect(flatStyle.fontWeight).toBe(typography.caption.fontWeight);
+    });
+  });
+
   describe('비활성 상태', () => {
-    it('할 일 목록이 비어있으면 공유 버튼이 비활성화된다', () => {
+    it('할 일 목록이 비어있으면 공유 버튼 스타일이 비활성화된다', () => {
       render(<ShareButton todos={[]} date="2026-03-31" />);
 
       const button = screen.getByTestId('share-button');
-      expect(button.props.accessibilityState?.disabled || button.props.disabled).toBe(true);
+      const flatStyle = Array.isArray(button.props.style)
+        ? Object.assign({}, ...button.props.style)
+        : button.props.style;
+
+      expect(flatStyle.borderColor).toBe(colors.borderLight);
+    });
+
+    it('빈 상태에서 공유 버튼 누르면 "공유할 할 일이 없습니다" 안내를 표시한다', () => {
+      const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+      render(<ShareButton todos={[]} date="2026-03-31" />);
+
+      fireEvent.press(screen.getByTestId('share-button'));
+
+      expect(alertSpy).toHaveBeenCalledWith(
+        expect.any(String),
+        '공유할 할 일이 없습니다',
+      );
+      alertSpy.mockRestore();
     });
   });
 

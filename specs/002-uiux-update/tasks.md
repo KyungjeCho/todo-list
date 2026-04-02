@@ -77,17 +77,17 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T017 [P] [US2] TodoActionButtons 단위 테스트 작성 in `frontend/__tests__/components/todo/TodoActionButtons.test.tsx` — 3개 버튼 렌더링(삭제/비활성화/메모), 각 버튼 스타일 검증(흰 배경, #E2E8F0 border, r8), 삭제 탭 → onDelete, 비활성화 탭 → onDeactivate, 메모 탭 → onAddMemo 호출
-- [ ] T018 [P] [US2] TodoItem 확장 상태 단위 테스트 작성 in `frontend/__tests__/components/todo/TodoItem.expanded.test.tsx` — 탭 → 확장(Indigo 50 배경+3px border), 확장 시 액션 버튼+메모 카드 표시, chevron-up 탭 → 접기, 다른 아이템 탭 → 이전 접기+새 아이템 확장
-- [ ] T019 [P] [US2] Maestro E2E 테스트 작성 in `.maestro/plan/item-expanded.yml` — 아이템 탭 → 확장 확인 → 삭제 버튼 탭 → 아이템 삭제 확인 → 비활성화 확인 → 메모 추가 확인
+- [X] T017 [P] [US2] TodoActionButtons 단위 테스트 작성 in `frontend/__tests__/unit/components/todo/TodoActionButtons.test.tsx` — 3개 버튼 렌더링(삭제/비활성화/메모), 각 버튼 스타일 검증(흰 배경, #E2E8F0 border, r8), 삭제 탭 → onDelete, 비활성화 탭 → onDeactivate, 메모 탭 → onAddMemo 호출
+- [X] T018 [P] [US2] TodoItem 확장 상태 단위 테스트 작성 in `frontend/__tests__/unit/components/todo/TodoItem.expanded.test.tsx` — 탭 → 확장(Indigo 50 배경+3px border), 확장 시 액션 버튼+메모 카드 표시, chevron-up 탭 → 접기, 다른 아이템 탭 → 이전 접기+새 아이템 확장
+- [X] T019 [P] [US2] Maestro E2E 테스트 작성 in `.maestro/plan/item-expanded.yml` — 아이템 탭 → 확장 확인 → 삭제 버튼 탭 → 아이템 삭제 확인 → 비활성화 확인 → 메모 추가 확인
 
 ### Implementation for User Story 2
 
-- [ ] T020 [P] [US2] TodoActionButtons 컴포넌트 생성 in `frontend/src/components/todo/TodoActionButtons.tsx` — 3개 버튼 행(gap 8px, paddingLeft 55px): [삭제](#EF4444 텍스트, trash SVG), [비활성화](#64748B 텍스트), [+ 메모](#6366F1 텍스트, plus SVG). 공통: 흰 배경, 1px #E2E8F0 border, r8, padding 6/12, 12px font
-- [ ] T021 [US2] TodoItem에 확장 UI 구현 — Swipeable/LongPressGestureHandler 제거, onPress → expandedTodoId 토글, 확장 시: #EEF2FF 배경 + 3px #6366F1 좌측 border + TodoActionButtons + MemoSection + chevron-up(16x16) in `frontend/src/components/todo/TodoItem.tsx`
-- [ ] T022 [US2] MemoSection 카드 스타일 업데이트 in `frontend/src/components/todo/MemoSection.tsx` — 메모 카드: 흰 배경, r8, padding 8/12, note SVG 14px, 13px #334155 텍스트. 메모 리스트: paddingLeft 55px, gap 6px. 기존 이모지(📝) → SVG 아이콘 교체
-- [ ] T023 [US2] MainScreen에 expandedTodoId 상태 관리 통합 in `frontend/src/screens/main/MainScreen.tsx` — expandedTodoId state 추가, TodoItem에 isExpanded/onExpand props 전달, 하나만 동시 확장 로직, +메모 버튼 → InputOverlay(mode='memo') 연동
-- [ ] T024 [US2] todoStore에 expandedTodoId UI 상태 추가 (선택) in `frontend/src/store/todoStore.ts` — expandedTodoId: string | null, setExpandedTodoId action (MainScreen 로컬 state로도 충분하면 skip)
+- [X] T020 [P] [US2] TodoActionButtons 컴포넌트 생성 in `frontend/src/components/todo/TodoActionButtons.tsx` — 3개 버튼 행(gap 8px, paddingLeft 55px): [삭제](#EF4444 텍스트, trash SVG), [비활성화](#64748B 텍스트), [+ 메모](#6366F1 텍스트, plus SVG). 공통: 흰 배경, 1px #E2E8F0 border, r8, padding 6/12, 12px font
+- [X] T021 [US2] TodoItem에 확장 UI 구현 — Swipeable/LongPressGestureHandler 제거, onPress → expandedTodoId 토글, 확장 시: #EEF2FF 배경 + 3px #6366F1 좌측 border + TodoActionButtons + MemoSection + chevron-up(16x16) in `frontend/src/components/todo/TodoItem.tsx`
+- [X] T022 [US2] MemoSection 카드 스타일 업데이트 in `frontend/src/components/todo/MemoSection.tsx` — 메모 카드: 흰 배경, r8, padding 8/12, note SVG 14px, 13px #334155 텍스트. 메모 리스트: paddingLeft 55px, gap 6px. 기존 이모지(📝) → SVG 아이콘 교체
+- [X] T023 [US2] MainScreen에 expandedTodoId 상태 관리 통합 in `frontend/src/screens/main/MainScreen.tsx` — expandedTodoId state 추가, TodoItem에 isExpanded/onExpand props 전달, 하나만 동시 확장 로직, +메모 버튼 → InputOverlay(mode='memo') 연동
+- [X] T024 [US2] todoStore에 expandedTodoId UI 상태 추가 (선택) in `frontend/src/store/todoStore.ts` — SKIP: MainScreen 로컬 state로 충분
 
 **Checkpoint**: 아이템 탭 → 확장+액션 버튼+메모 흐름 완성. 기존 스와이프/롱프레스 제거됨.
 
@@ -101,13 +101,13 @@
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T025 [P] [US3] EmptyState 컴포넌트 단위 테스트 작성 in `frontend/__tests__/components/todo/EmptyState.test.tsx` — Checkmark SVG 렌더링, H2 "오늘의 할 일이 없어요" 텍스트, Caption 안내 문구 렌더링, Indigo 50 라운드 컨테이너 스타일 검증
-- [ ] T026 [P] [US3] Maestro E2E 테스트 작성 in `.maestro/plan/empty-state.yml` — 할 일 없는 상태에서 Plan 진입 → 빈 상태 UI 표시 확인 → FAB 버튼 존재 확인
+- [X] T025 [P] [US3] EmptyState 컴포넌트 단위 테스트 작성 in `frontend/__tests__/unit/components/todo/EmptyState.test.tsx` — Checkmark 렌더링, H2 "오늘의 할 일이 없어요" 텍스트, Caption 안내 문구 렌더링, Indigo 50 라운드 컨테이너 스타일 검증
+- [X] T026 [P] [US3] Maestro E2E 테스트 작성 in `.maestro/plan/empty-state.yml` — 할 일 없는 상태에서 Plan 진입 → 빈 상태 UI 표시 확인 → FAB 버튼 존재 확인
 
 ### Implementation for User Story 3
 
-- [ ] T027 [US3] EmptyState 컴포넌트 생성 in `frontend/src/components/todo/EmptyState.tsx` — 중앙 정렬 레이아웃, Indigo 50(#EEF2FF) 라운드 컨테이너(r9999), Checkmark SVG(docs/designs/icons/checkmark.svg 기반), "오늘의 할 일이 없어요" H2(18px/SemiBold), "우측 하단의 + 버튼을 눌러\n오늘의 계획을 추가해보세요" Caption(13px/Medium), testID: empty-state
-- [ ] T028 [US3] MainScreen에서 기존 빈 상태 텍스트를 EmptyState 컴포넌트로 교체 in `frontend/src/screens/main/MainScreen.tsx` — `todos.length === 0` 조건에서 기존 단순 Text → EmptyState 컴포넌트 렌더링
+- [X] T027 [US3] EmptyState 컴포넌트 생성 in `frontend/src/components/todo/EmptyState.tsx` — 중앙 정렬 레이아웃, Indigo 50(#EEF2FF) 라운드 컨테이너(r9999), Checkmark 아이콘, "오늘의 할 일이 없어요" H2(18px/SemiBold), "우측 하단의 + 버튼을 눌러\n오늘의 계획을 추가해보세요" Caption(13px/Medium), testID: empty-state
+- [X] T028 [US3] MainScreen에서 기존 빈 상태 텍스트를 EmptyState 컴포넌트로 교체 in `frontend/src/screens/main/MainScreen.tsx` — `todos.length === 0` 조건에서 기존 단순 Text → EmptyState 컴포넌트 렌더링
 
 **Checkpoint**: 빈 상태 화면이 Paper 디자인(Screen 3-3)과 일치.
 
@@ -121,13 +121,13 @@
 
 ### Tests for User Story 6 ⚠️
 
-- [ ] T029 [P] [US6] ShareButton 스타일 업데이트 테스트 작성 in `frontend/__tests__/components/todo/ShareButton.test.tsx` — Ghost 버튼 스타일 검증(transparent 배경, 1px #E2E8F0 border, r8, #6366F1 텍스트), 빈 상태 시 "공유할 할 일이 없습니다" 메시지 확인
-- [ ] T030 [P] [US6] Maestro E2E 테스트 작성 in `.maestro/plan/share.yml` — 공유 버튼 탭 → Share Sheet 또는 모달 표시 확인
+- [X] T029 [P] [US6] ShareButton 스타일 업데이트 테스트 작성 in `frontend/__tests__/components/todo/ShareButton.test.tsx` — Ghost 버튼 스타일 검증(transparent 배경, 1px #E2E8F0 border, r8, #6366F1 텍스트), 빈 상태 시 "공유할 할 일이 없습니다" 메시지 확인
+- [X] T030 [P] [US6] Maestro E2E 테스트 작성 in `.maestro/plan/share.yml` — 공유 버튼 탭 → Share Sheet 또는 모달 표시 확인
 
 ### Implementation for User Story 6
 
-- [ ] T031 [US6] ShareButton 스타일을 디자인 토큰으로 교체 in `frontend/src/components/todo/ShareButton.tsx` — Ghost 버튼 스타일 적용(transparent bg, 1px #E2E8F0 border, r8, 13px/Medium #6366F1 텍스트), "공유" 텍스트 유지
-- [ ] T032 [US6] 빈 상태 공유 처리 추가 in `frontend/src/features/share/useShareTodo.ts` — todos.length === 0일 때 "공유할 할 일이 없습니다" 안내 표시 (Alert 또는 Toast)
+- [X] T031 [US6] ShareButton 스타일을 디자인 토큰으로 교체 in `frontend/src/components/todo/ShareButton.tsx` — Ghost 버튼 스타일 적용(transparent bg, 1px #E2E8F0 border, r8, 13px/Medium #6366F1 텍스트), "공유" 텍스트 유지
+- [X] T032 [US6] 빈 상태 공유 처리 추가 in `frontend/src/components/todo/ShareButton.tsx` — todos.length === 0일 때 "공유할 할 일이 없습니다" Alert 표시
 
 **Checkpoint**: 공유 기능 — 기존 기능 유지 + Ghost 스타일 적용 + 빈 상태 처리.
 
@@ -141,16 +141,16 @@
 
 ### Tests for User Story 5 ⚠️
 
-- [ ] T033 [P] [US5] 디자인 토큰 적용 검증 테스트 작성 in `frontend/__tests__/theme/design-consistency.test.tsx` — 주요 컴포넌트(TodoItem, MainScreen, ModeToggle, CompleteDayButton)의 스타일이 디자인 토큰 참조인지 검증
+- [X] T033 [P] [US5] 디자인 토큰 적용 검증 테스트 작성 in `frontend/__tests__/theme/design-consistency.test.tsx` — 주요 컴포넌트(TodoItem, MainScreen, ModeToggle, CompleteDayButton)의 스타일이 디자인 토큰 참조인지 검증
 
 ### Implementation for User Story 5
 
-- [ ] T034 [P] [US5] MainScreen 스타일을 디자인 토큰으로 교체 in `frontend/src/screens/main/MainScreen.tsx` — 배경색 #f0f0f0→surfaceDim, 헤더 텍스트→h1, 진행률→caption, 구분선→border 등
-- [ ] T035 [P] [US5] TodoItem 기본 스타일을 디자인 토큰으로 교체 in `frontend/src/components/todo/TodoItem.tsx` — 체크박스(22px, r6, #4ADE80), 텍스트(body), 완료 텍스트(#94A3B8+line-through), 이월 뱃지(#FEF3C7 bg, #D97706 text), 구분선(#F1F5F9)
-- [ ] T036 [P] [US5] ModeToggle 스타일을 디자인 토큰으로 교체 in `frontend/src/components/todo/ModeToggle.tsx` — Secondary Pill 스타일(#F1F5F9 bg, r16, 13px/Medium)
-- [ ] T037 [P] [US5] CompleteDayButton 스타일을 디자인 토큰으로 교체 in `frontend/src/components/todo/CompleteDayButton.tsx` — Primary 버튼(#6366F1, r14, 52px, 15px/SemiBold 흰 텍스트)
-- [ ] T038 [P] [US5] ReviewModeView 스타일을 디자인 토큰으로 교체 in `frontend/src/screens/main/ReviewModeView.tsx` — 진행 바(#22C55E/#E2E8F0), 완료 섹션(Green overline), 미완료 섹션(Amber overline)
-- [ ] T039 [P] [US5] TabBar 스타일을 디자인 토큰으로 교체 (TabBar 컴포넌트 또는 MainTabNavigator) — active: #6366F1, inactive: #94A3B8, bg: #FFFFFF, border-top: #E2E8F0, label: 10px/SemiBold
+- [X] T034 [P] [US5] MainScreen 스타일을 디자인 토큰으로 교체 in `frontend/src/screens/main/MainScreen.tsx` — 배경색 #f0f0f0→surfaceDim, 헤더 텍스트→h1, 진행률→caption, 구분선→border 등
+- [X] T035 [P] [US5] TodoItem 기본 스타일을 디자인 토큰으로 교체 in `frontend/src/components/todo/TodoItem.tsx` — 체크박스(22px, r6, #4ADE80), 텍스트(body), 완료 텍스트(#94A3B8+line-through), 이월 뱃지(#FEF3C7 bg, #D97706 text), 구분선(#F1F5F9)
+- [X] T036 [P] [US5] ModeToggle 스타일을 디자인 토큰으로 교체 in `frontend/src/components/todo/ModeToggle.tsx` — Secondary Pill 스타일(#F1F5F9 bg, r16, 13px/Medium)
+- [X] T037 [P] [US5] CompleteDayButton 스타일을 디자인 토큰으로 교체 in `frontend/src/components/todo/CompleteDayButton.tsx` — Primary 버튼(#6366F1, r14, 52px, 15px/SemiBold 흰 텍스트)
+- [X] T038 [P] [US5] ReviewModeView 스타일을 디자인 토큰으로 교체 in `frontend/src/screens/main/ReviewModeView.tsx` — 진행 바(#22C55E/#E2E8F0), 완료 섹션(Green overline), 미완료 섹션(Amber overline)
+- [X] T039 [P] [US5] TabBar 스타일을 디자인 토큰으로 교체 (TabBar 컴포넌트 또는 MainTabNavigator) — active: #6366F1, inactive: #94A3B8, bg: #FFFFFF, border-top: #E2E8F0, label: 10px/SemiBold
 
 **Checkpoint**: 모든 기존 하드코딩 색상이 디자인 토큰으로 교체됨.
 
@@ -177,8 +177,8 @@
 
 **Purpose**: 전체 정합성 확인 및 최종 검증
 
-- [ ] T044 전체 Frontend lint 통과 확인 — `cd frontend && npm run lint`
-- [ ] T045 전체 Frontend 테스트 통과 확인 — `cd frontend && npm test`
+- [X] T044 전체 Frontend lint 통과 확인 — `cd frontend && npm run lint`
+- [X] T045 전체 Frontend 테스트 통과 확인 — `cd frontend && npm test`
 - [ ] T046 전체 Maestro E2E 테스트 실행 — `maestro test .maestro/plan/`
 - [ ] T047 [P] DESIGN_SYSTEM.md와 구현 코드 색상 값 최종 교차 검증
 - [ ] T048 [P] SCREENS.md와 실제 화면 시각적 비교 검증 (Paper 원본 대조)

@@ -167,8 +167,12 @@ describe('AuthStore', () => {
   describe('restoreTokens', () => {
     it('토큰 복원 성공 시 사용자 프로필도 함께 복원한다', async () => {
       const { tokenManager } = await import('src/store/authStore');
-      jest.spyOn(tokenManager, 'getAccessToken').mockResolvedValue('saved-access');
-      jest.spyOn(tokenManager, 'getRefreshToken').mockResolvedValue('saved-refresh');
+      jest
+        .spyOn(tokenManager, 'getAccessToken')
+        .mockResolvedValue('saved-access');
+      jest
+        .spyOn(tokenManager, 'getRefreshToken')
+        .mockResolvedValue('saved-refresh');
       mockedUserApi.getProfile.mockResolvedValue(mockUser);
 
       await useAuthStore.getState().restoreTokens();
@@ -181,9 +185,15 @@ describe('AuthStore', () => {
 
     it('프로필 조회 실패 시 인증 상태를 초기화한다', async () => {
       const { tokenManager } = await import('src/store/authStore');
-      jest.spyOn(tokenManager, 'getAccessToken').mockResolvedValue('saved-access');
-      jest.spyOn(tokenManager, 'getRefreshToken').mockResolvedValue('saved-refresh');
-      const clearSpy = jest.spyOn(tokenManager, 'clearTokens').mockResolvedValue();
+      jest
+        .spyOn(tokenManager, 'getAccessToken')
+        .mockResolvedValue('saved-access');
+      jest
+        .spyOn(tokenManager, 'getRefreshToken')
+        .mockResolvedValue('saved-refresh');
+      const clearSpy = jest
+        .spyOn(tokenManager, 'clearTokens')
+        .mockResolvedValue();
       mockedUserApi.getProfile.mockRejectedValue(new Error('Network error'));
 
       await useAuthStore.getState().restoreTokens();

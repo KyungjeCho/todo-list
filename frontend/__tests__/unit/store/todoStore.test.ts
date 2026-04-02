@@ -111,29 +111,41 @@ describe('TodoStore', () => {
     });
 
     it('특정 할 일의 content를 수정한다', () => {
-      useTodoStore.getState().updateTodo('todo-uuid-1', { content: '수정된 내용' });
+      useTodoStore
+        .getState()
+        .updateTodo('todo-uuid-1', { content: '수정된 내용' });
 
-      const updated = useTodoStore.getState().todos.find((t) => t.id === 'todo-uuid-1');
+      const updated = useTodoStore
+        .getState()
+        .todos.find((t) => t.id === 'todo-uuid-1');
       expect(updated?.content).toBe('수정된 내용');
     });
 
     it('특정 할 일의 status를 변경한다', () => {
-      useTodoStore.getState().updateTodo('todo-uuid-1', { status: 'COMPLETED' });
+      useTodoStore
+        .getState()
+        .updateTodo('todo-uuid-1', { status: 'COMPLETED' });
 
-      const updated = useTodoStore.getState().todos.find((t) => t.id === 'todo-uuid-1');
+      const updated = useTodoStore
+        .getState()
+        .todos.find((t) => t.id === 'todo-uuid-1');
       expect(updated?.status).toBe('COMPLETED');
     });
 
     it('다른 할 일에 영향을 주지 않는다', () => {
       useTodoStore.getState().updateTodo('todo-uuid-1', { content: '수정됨' });
 
-      const other = useTodoStore.getState().todos.find((t) => t.id === 'todo-uuid-2');
+      const other = useTodoStore
+        .getState()
+        .todos.find((t) => t.id === 'todo-uuid-2');
       expect(other?.content).toBe('코드 리뷰');
     });
 
     it('존재하지 않는 ID로 호출하면 목록이 변경되지 않는다', () => {
       const before = useTodoStore.getState().todos;
-      useTodoStore.getState().updateTodo('non-existent', { content: '없는 항목' });
+      useTodoStore
+        .getState()
+        .updateTodo('non-existent', { content: '없는 항목' });
 
       expect(useTodoStore.getState().todos).toEqual(before);
     });
@@ -144,7 +156,9 @@ describe('TodoStore', () => {
         status: 'COMPLETED',
       });
 
-      const updated = useTodoStore.getState().todos.find((t) => t.id === 'todo-uuid-1');
+      const updated = useTodoStore
+        .getState()
+        .todos.find((t) => t.id === 'todo-uuid-1');
       expect(updated?.content).toBe('수정된 내용');
       expect(updated?.status).toBe('COMPLETED');
     });
@@ -233,7 +247,9 @@ describe('TodoStore', () => {
   describe('상태 전이 시나리오', () => {
     it('ACTIVE → COMPLETED 상태 전이', () => {
       useTodoStore.getState().addTodo(mockTodo);
-      useTodoStore.getState().updateTodo('todo-uuid-1', { status: 'COMPLETED' });
+      useTodoStore
+        .getState()
+        .updateTodo('todo-uuid-1', { status: 'COMPLETED' });
 
       const todo = useTodoStore.getState().todos[0];
       expect(todo.status).toBe('COMPLETED');
@@ -278,7 +294,9 @@ describe('TodoStore', () => {
     it('할 일 상태 변경 후 원래 상태로 되돌릴 수 있다', () => {
       useTodoStore.getState().addTodo(mockTodo);
 
-      useTodoStore.getState().updateTodo('todo-uuid-1', { status: 'COMPLETED' });
+      useTodoStore
+        .getState()
+        .updateTodo('todo-uuid-1', { status: 'COMPLETED' });
       expect(useTodoStore.getState().todos[0].status).toBe('COMPLETED');
 
       useTodoStore.getState().updateTodo('todo-uuid-1', { status: 'ACTIVE' });

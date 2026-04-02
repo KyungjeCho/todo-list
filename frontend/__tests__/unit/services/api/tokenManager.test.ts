@@ -24,8 +24,14 @@ describe('TokenManager', () => {
     it('accessToken과 refreshToken을 저장한다', async () => {
       await tokenManager.saveTokens('access-123', 'refresh-456');
 
-      expect(mockStorage.setItem).toHaveBeenCalledWith('accessToken', 'access-123');
-      expect(mockStorage.setItem).toHaveBeenCalledWith('refreshToken', 'refresh-456');
+      expect(mockStorage.setItem).toHaveBeenCalledWith(
+        'accessToken',
+        'access-123',
+      );
+      expect(mockStorage.setItem).toHaveBeenCalledWith(
+        'refreshToken',
+        'refresh-456',
+      );
     });
   });
 
@@ -94,8 +100,14 @@ describe('TokenManager', () => {
 
       await tokenManager.refreshTokens(mockRefreshFn);
 
-      expect(mockStorage.setItem).toHaveBeenCalledWith('accessToken', 'new-access');
-      expect(mockStorage.setItem).toHaveBeenCalledWith('refreshToken', 'new-refresh');
+      expect(mockStorage.setItem).toHaveBeenCalledWith(
+        'accessToken',
+        'new-access',
+      );
+      expect(mockStorage.setItem).toHaveBeenCalledWith(
+        'refreshToken',
+        'new-refresh',
+      );
     });
 
     it('refreshToken이 없으면 null을 반환한다', async () => {
@@ -109,16 +121,22 @@ describe('TokenManager', () => {
     });
 
     it('갱신 실패 시 에러를 throw한다', async () => {
-      const mockRefreshFn = jest.fn().mockRejectedValue(new Error('Token expired'));
+      const mockRefreshFn = jest
+        .fn()
+        .mockRejectedValue(new Error('Token expired'));
       mockStorage.getItem.mockResolvedValueOnce('old-refresh');
 
-      await expect(tokenManager.refreshTokens(mockRefreshFn)).rejects.toThrow('Token expired');
+      await expect(tokenManager.refreshTokens(mockRefreshFn)).rejects.toThrow(
+        'Token expired',
+      );
     });
   });
 
   describe('만료 처리', () => {
     it('갱신 실패 시 저장된 토큰을 삭제한다', async () => {
-      const mockRefreshFn = jest.fn().mockRejectedValue(new Error('Token expired'));
+      const mockRefreshFn = jest
+        .fn()
+        .mockRejectedValue(new Error('Token expired'));
       mockStorage.getItem.mockResolvedValueOnce('old-refresh');
 
       try {

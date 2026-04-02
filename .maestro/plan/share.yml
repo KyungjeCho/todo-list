@@ -1,0 +1,28 @@
+appId: ${APP_ID}
+name: "Share - 공유 버튼 동작 확인"
+tags:
+  - plan
+  - share
+---
+
+# 공유 버튼이 표시되는지 확인
+- assertVisible:
+    id: "share-button"
+
+# 공유 버튼 탭 → Share Sheet 또는 메뉴 표시 확인
+- tapOn:
+    id: "share-button"
+
+- assertVisible:
+    id: "share-menu"
+
+# 메뉴에 나에게 전송, 공유하기 옵션 확인
+- assertVisible:
+    id: "share-to-self"
+
+- assertVisible:
+    id: "share-to-others"
+
+# 메뉴 닫기
+- tapOn:
+    id: "share-backdrop"

@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
+import { colors, typography, spacing, radius } from '../../theme';
 
 interface DaySummary {
   date: string;
@@ -43,6 +44,25 @@ function formatDate(year: number, month: number, day: number): string {
 }
 
 const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
+const DAY_CELL_SIZE = 40;
+
+function getWeekdayColor(index: number): string {
+  if (index === 0) return colors.error;
+  if (index === 6) return colors.primary;
+  return colors.disabled;
+}
+
+function getDayTextColor(dayOfWeek: number, isSelected: boolean): string {
+  if (isSelected) return colors.surface;
+  if (dayOfWeek === 0) return colors.error;
+  if (dayOfWeek === 6) return colors.primary;
+  return colors.onSurface;
+}
+
+function getTodayDate(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
 
 export const CalendarScreen: React.FC<CalendarScreenProps> = ({
   monthlySummary,
@@ -53,6 +73,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
   onDateSelect,
 }) => {
   const { year, month, days } = monthlySummary;
+  const todayDate = getTodayDate();
 
   const dayMap = new Map<string, DaySummary>();
   for (const day of days) {
@@ -82,26 +103,39 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
     const cells: React.ReactNode[] = [];
 
     for (let i = 0; i < firstDayOfWeek; i++) {
-      cells.push(<View key={`empty-${i}`} style={styles.dayCell} />);
+      cells.push(<View key={`empty-${i}`} style={styles.dayCellWrapper} />);
     }
 
     for (let day = 1; day <= daysInMonth; day++) {
       const date = formatDate(year, month, day);
       const summary = dayMap.get(date);
       const isSelected = selectedDate === date;
+      const isToday = date === todayDate;
+      const dayOfWeek = (firstDayOfWeek + day - 1) % 7;
 
       cells.push(
-        <TouchableOpacity
-          key={date}
-          testID={`calendar-day-${date}`}
-          style={[styles.dayCell, isSelected && styles.selectedDay]}
-          accessibilityLabel={`${month}월 ${day}일${summary ? `, 할 일 ${summary.totalCount}개` : ''}`}
-          accessibilityState={{ selected: isSelected }}
-          onPress={() => onDateSelect?.(date)}
-        >
-          <Text style={[styles.dayText, isSelected && styles.selectedDayText]}>
-            {day}
-          </Text>
+        <View key={date} style={styles.dayCellWrapper}>
+          <TouchableOpacity
+            testID={`calendar-day-${date}`}
+            style={[
+              styles.dayCell,
+              isToday && !isSelected && styles.todayDay,
+              isSelected && styles.selectedDay,
+            ]}
+            accessibilityLabel={`${month}월 ${day}일${summary ? `, 할 일 ${summary.totalCount}개` : ''}`}
+            accessibilityState={{ selected: isSelected }}
+            onPress={() => onDateSelect?.(date)}
+          >
+            <Text
+              style={[
+                styles.dayText,
+                { color: getDayTextColor(dayOfWeek, isSelected) },
+                isToday && !isSelected && styles.todayText,
+              ]}
+            >
+              {day}
+            </Text>
+          </TouchableOpacity>
           {summary && (
             <View
               testID={`day-indicator-${date}`}
@@ -109,11 +143,13 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
                 styles.indicator,
                 summary.completedCount === summary.totalCount
                   ? styles.indicatorComplete
-                  : styles.indicatorPartial,
+                  : summary.completedCount > 0
+                    ? styles.indicatorPartial
+                    : styles.indicatorIncomplete,
               ]}
             />
           )}
-        </TouchableOpacity>,
+        </View>,
       );
     }
 
@@ -130,6 +166,8 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
 
   return (
     <View style={styles.container}>
+      <Text style={styles.screenTitle}>캘린더</Text>
+
       {error && (
         <View testID="calendar-error-message" style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
@@ -159,8 +197,11 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
       </View>
 
       <View style={styles.weekdayRow}>
-        {WEEKDAY_LABELS.map((label) => (
-          <Text key={label} style={styles.weekdayText}>
+        {WEEKDAY_LABELS.map((label, index) => (
+          <Text
+            key={label}
+            style={[styles.weekdayText, { color: getWeekdayColor(index) }]}
+          >
             {label}
           </Text>
         ))}
@@ -184,60 +225,63 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    padding: 16,
+    backgroundColor: colors.surfaceDim,
+    padding: spacing.lg,
+  },
+  screenTitle: {
+    ...typography.h1,
+    color: colors.onSurface,
+    marginBottom: spacing.lg,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: spacing.lg,
   },
   yearMonth: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1A1A1A',
+    ...typography.h2,
+    color: colors.onSurface,
   },
   navButton: {
     fontSize: 24,
-    color: '#4A90D9',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
+    color: colors.disabled,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
   },
   weekdayRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
   weekdayText: {
     width: '14.28%',
     textAlign: 'center',
-    fontSize: 12,
-    color: '#888888',
-    fontWeight: '500',
+    ...typography.overline,
+    color: colors.secondaryText,
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
-  dayCell: {
+  dayCellWrapper: {
     width: '14.28%',
-    aspectRatio: 1,
+    height: DAY_CELL_SIZE + 14,
+    alignItems: 'center',
+  },
+  dayCell: {
+    width: DAY_CELL_SIZE,
+    height: DAY_CELL_SIZE,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 4,
+    borderRadius: radius.lg,
   },
   selectedDay: {
-    backgroundColor: '#E8F0FE',
-    borderRadius: 8,
+    backgroundColor: colors.primary,
   },
   dayText: {
-    fontSize: 14,
-    color: '#1A1A1A',
-  },
-  selectedDayText: {
-    color: '#4A90D9',
-    fontWeight: '600',
+    ...typography.body,
+    color: colors.onSurface,
   },
   indicator: {
     width: 6,
@@ -246,27 +290,39 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   indicatorComplete: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: colors.success,
   },
   indicatorPartial: {
-    backgroundColor: '#FF9800',
+    backgroundColor: colors.warning,
+  },
+  indicatorIncomplete: {
+    backgroundColor: colors.error,
+  },
+  todayDay: {
+    borderWidth: 2,
+    borderColor: colors.primary,
+    borderRadius: radius.lg,
+  },
+  todayText: {
+    color: colors.primary,
+    fontWeight: '700',
   },
   emptyState: {
     alignItems: 'center',
-    paddingVertical: 24,
+    paddingVertical: spacing.xl,
   },
   emptyText: {
-    fontSize: 14,
-    color: '#888888',
+    ...typography.body,
+    color: colors.secondaryText,
   },
   errorContainer: {
-    backgroundColor: '#FFF3F0',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 12,
+    backgroundColor: colors.primaryLight,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    marginBottom: spacing.md,
   },
   errorText: {
-    color: '#D32F2F',
-    fontSize: 14,
+    color: colors.error,
+    ...typography.body,
   },
 });

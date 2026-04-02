@@ -32,13 +32,17 @@ describe('CompleteDayButton', () => {
     });
 
     it('로딩 중일 때 로딩 인디케이터를 표시한다', () => {
-      render(<CompleteDayButton onComplete={mockOnComplete} isLoading={true} />);
+      render(
+        <CompleteDayButton onComplete={mockOnComplete} isLoading={true} />,
+      );
 
       expect(screen.getByTestId('complete-day-loading')).toBeTruthy();
     });
 
     it('로딩 중일 때 버튼이 비활성화된다', () => {
-      render(<CompleteDayButton onComplete={mockOnComplete} isLoading={true} />);
+      render(
+        <CompleteDayButton onComplete={mockOnComplete} isLoading={true} />,
+      );
 
       fireEvent.press(screen.getByTestId('complete-day-button'));
 
@@ -106,10 +110,7 @@ describe('CompleteDayButton', () => {
   describe('중복 완료 방지', () => {
     it('이미 완료된 상태이면 버튼이 비활성화된다', () => {
       render(
-        <CompleteDayButton
-          onComplete={mockOnComplete}
-          isCompleted={true}
-        />,
+        <CompleteDayButton onComplete={mockOnComplete} isCompleted={true} />,
       );
 
       fireEvent.press(screen.getByTestId('complete-day-button'));
@@ -119,10 +120,7 @@ describe('CompleteDayButton', () => {
 
     it('이미 완료된 상태이면 완료 안내 텍스트를 표시한다', () => {
       render(
-        <CompleteDayButton
-          onComplete={mockOnComplete}
-          isCompleted={true}
-        />,
+        <CompleteDayButton onComplete={mockOnComplete} isCompleted={true} />,
       );
 
       expect(screen.getByTestId('already-completed-text')).toBeTruthy();
@@ -145,7 +143,9 @@ describe('CompleteDayButton', () => {
       render(<CompleteDayButton onComplete={mockOnComplete} />);
 
       const button = screen.getByTestId('complete-day-button');
-      expect(button.props.accessibilityLabel || button.props['aria-label']).toBeTruthy();
+      expect(
+        button.props.accessibilityLabel || button.props['aria-label'],
+      ).toBeTruthy();
     });
 
     it('비활성화 상태에서 접근성 상태가 반영된다', () => {

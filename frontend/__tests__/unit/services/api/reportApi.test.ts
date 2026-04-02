@@ -31,9 +31,27 @@ const mockMonthlySummaryResponse = {
   year: 2026,
   month: 3,
   days: [
-    { date: '2026-03-01', totalCount: 3, completedCount: 2, activeCount: 1, carriedOverCount: 0 },
-    { date: '2026-03-05', totalCount: 1, completedCount: 1, activeCount: 0, carriedOverCount: 0 },
-    { date: '2026-03-15', totalCount: 5, completedCount: 3, activeCount: 2, carriedOverCount: 0 },
+    {
+      date: '2026-03-01',
+      totalCount: 3,
+      completedCount: 2,
+      activeCount: 1,
+      carriedOverCount: 0,
+    },
+    {
+      date: '2026-03-05',
+      totalCount: 1,
+      completedCount: 1,
+      activeCount: 0,
+      carriedOverCount: 0,
+    },
+    {
+      date: '2026-03-15',
+      totalCount: 5,
+      completedCount: 3,
+      activeCount: 2,
+      carriedOverCount: 0,
+    },
   ],
 };
 

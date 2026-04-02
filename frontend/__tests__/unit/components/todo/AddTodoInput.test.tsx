@@ -174,14 +174,18 @@ describe('AddTodoInput', () => {
       render(<AddTodoInput onAdd={jest.fn()} />);
 
       const button = screen.getByTestId('add-todo-button');
-      expect(button.props.accessibilityLabel || button.props['aria-label']).toBeTruthy();
+      expect(
+        button.props.accessibilityLabel || button.props['aria-label'],
+      ).toBeTruthy();
     });
 
     it('입력 필드에 접근성 라벨이 있다', () => {
       render(<AddTodoInput onAdd={jest.fn()} />);
 
       const input = screen.getByTestId('add-todo-input');
-      expect(input.props.accessibilityLabel || input.props['aria-label']).toBeTruthy();
+      expect(
+        input.props.accessibilityLabel || input.props['aria-label'],
+      ).toBeTruthy();
     });
   });
 });

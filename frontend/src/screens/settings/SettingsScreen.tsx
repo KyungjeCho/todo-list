@@ -8,6 +8,8 @@ import {
   ScrollView,
   Switch,
 } from 'react-native';
+import Svg, { Path, Circle, Line, Rect, Polyline } from 'react-native-svg';
+import { colors, typography, spacing, radius } from '../../theme';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import type { UserProfile, UpdateSettingsRequest } from '../../types/user';
 
@@ -27,15 +29,182 @@ const TIMEZONE_OPTIONS = [
 interface SettingsScreenProps {
   profile: UserProfile;
   onUpdateSettings: (data: UpdateSettingsRequest) => Promise<UserProfile>;
+  onNavigateContact?: () => void;
   isLoading?: boolean;
   error?: string;
 }
 
 type TimePickerTarget = 'plan' | 'review' | null;
 
+function BellIcon({ muted }: { muted?: boolean }) {
+  if (muted) {
+    return (
+      <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+        <Path
+          d="M13.73 21a2 2 0 01-3.46 0"
+          stroke={colors.disabled}
+          strokeWidth={1.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <Path
+          d="M18.63 13A17.89 17.89 0 0118 8"
+          stroke={colors.disabled}
+          strokeWidth={1.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <Path
+          d="M6.26 6.26A5.86 5.86 0 006 8c0 7-3 9-3 9h14"
+          stroke={colors.disabled}
+          strokeWidth={1.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <Path
+          d="M18 8a6 6 0 00-9.33-5"
+          stroke={colors.disabled}
+          strokeWidth={1.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <Line
+          x1={1}
+          y1={1}
+          x2={23}
+          y2={23}
+          stroke={colors.disabled}
+          strokeWidth={1.5}
+          strokeLinecap="round"
+        />
+      </Svg>
+    );
+  }
+  return (
+    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"
+        stroke={colors.onSurface}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M13.73 21a2 2 0 01-3.46 0"
+        stroke={colors.onSurface}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function GlobeIcon() {
+  return (
+    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+      <Circle
+        cx={12}
+        cy={12}
+        r={10}
+        stroke={colors.onSurface}
+        strokeWidth={1.5}
+      />
+      <Path
+        d="M2 12h20"
+        stroke={colors.onSurface}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+      />
+      <Path
+        d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"
+        stroke={colors.onSurface}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function DocumentIcon() {
+  return (
+    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"
+        stroke={colors.onSurface}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Polyline
+        points="14 2 14 8 20 8"
+        stroke={colors.onSurface}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function ShieldIcon() {
+  return (
+    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
+        stroke={colors.onSurface}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function MailIcon() {
+  return (
+    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+      <Rect
+        x={2}
+        y={4}
+        width={20}
+        height={16}
+        rx={2}
+        stroke={colors.onSurface}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Polyline
+        points="22 7 12 13 2 7"
+        stroke={colors.onSurface}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function ChevronRightIcon() {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M9 18l6-6-6-6"
+        stroke={colors.disabled}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   profile,
   onUpdateSettings,
+  onNavigateContact,
   isLoading,
   error,
 }) => {
@@ -103,6 +272,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
   return (
     <ScrollView style={styles.container} testID="settings-screen">
+      <Text style={styles.screenTitle}>설정</Text>
+
       {error && (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
@@ -113,6 +284,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         <Text style={styles.sectionTitle}>알림 설정</Text>
 
         <View style={styles.settingRow}>
+          <View style={styles.iconContainer}>
+            <BellIcon />
+          </View>
           <View style={styles.settingInfo}>
             <Text style={styles.settingLabel}>계획 알림</Text>
             <TouchableOpacity
@@ -120,7 +294,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               onPress={() => setTimePickerTarget('plan')}
               disabled={profile.planTime === null}
             >
-              <Text testID="plan-time-value" style={styles.settingValue}>
+              <Text
+                testID="plan-time-value"
+                style={[
+                  styles.settingValue,
+                  profile.planTime === null && styles.settingValueDisabled,
+                ]}
+              >
                 {profile.planTime ?? '해제됨'}
               </Text>
             </TouchableOpacity>
@@ -129,10 +309,15 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             testID="plan-notification-toggle"
             value={profile.planTime !== null}
             onValueChange={handleTogglePlanNotification}
+            trackColor={{ false: colors.border, true: colors.primary }}
+            thumbColor={colors.surface}
           />
         </View>
 
         <View style={styles.settingRow}>
+          <View style={styles.iconContainer}>
+            <BellIcon muted={profile.reviewTime === null} />
+          </View>
           <View style={styles.settingInfo}>
             <Text style={styles.settingLabel}>회고 알림</Text>
             <TouchableOpacity
@@ -140,7 +325,13 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               onPress={() => setTimePickerTarget('review')}
               disabled={profile.reviewTime === null}
             >
-              <Text testID="review-time-value" style={styles.settingValue}>
+              <Text
+                testID="review-time-value"
+                style={[
+                  styles.settingValue,
+                  profile.reviewTime === null && styles.settingValueDisabled,
+                ]}
+              >
                 {profile.reviewTime ?? '해제됨'}
               </Text>
             </TouchableOpacity>
@@ -149,6 +340,8 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             testID="review-notification-toggle"
             value={profile.reviewTime !== null}
             onValueChange={handleToggleReviewNotification}
+            trackColor={{ false: colors.border, true: colors.primary }}
+            thumbColor={colors.surface}
           />
         </View>
       </View>
@@ -173,10 +366,16 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           style={styles.settingRow}
           onPress={() => setShowTimezonePicker(!showTimezonePicker)}
         >
-          <Text style={styles.settingLabel}>타임존</Text>
-          <Text testID="timezone-value" style={styles.settingValue}>
-            {profile.timezone}
+          <View style={styles.iconContainer}>
+            <GlobeIcon />
+          </View>
+          <Text style={[styles.settingLabel, styles.settingLabelFlex]}>
+            타임존
           </Text>
+          <Text testID="timezone-value" style={styles.settingValue}>
+            {(profile.timezone ?? '').split('/').pop() ?? profile.timezone}
+          </Text>
+          <ChevronRightIcon />
         </TouchableOpacity>
 
         {showTimezonePicker && (
@@ -200,42 +399,106 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           </View>
         )}
       </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>정보</Text>
+
+        <TouchableOpacity style={styles.settingRow}>
+          <View style={styles.iconContainer}>
+            <DocumentIcon />
+          </View>
+          <Text style={[styles.settingLabel, styles.settingLabelFlex]}>
+            오픈소스 라이센스
+          </Text>
+          <ChevronRightIcon />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.settingRow}>
+          <View style={styles.iconContainer}>
+            <ShieldIcon />
+          </View>
+          <Text style={[styles.settingLabel, styles.settingLabelFlex]}>
+            개인정보 처리방침
+          </Text>
+          <ChevronRightIcon />
+        </TouchableOpacity>
+      </View>
+
+      <TouchableOpacity style={styles.settingRow} onPress={onNavigateContact}>
+        <View style={styles.iconContainer}>
+          <MailIcon />
+        </View>
+        <Text style={[styles.settingLabel, styles.settingLabelFlex]}>
+          연락처
+        </Text>
+        <ChevronRightIcon />
+      </TouchableOpacity>
+
+      <Text style={styles.versionText}>TodoList v1.0.0</Text>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
-  section: { marginBottom: 24 },
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 12 },
+  container: {
+    flex: 1,
+    padding: spacing.lg,
+    backgroundColor: colors.surfaceDim,
+  },
+  screenTitle: {
+    ...typography.h1,
+    color: colors.onSurface,
+    marginBottom: spacing.xl,
+  },
+  section: { marginBottom: spacing.xl },
+  sectionTitle: {
+    ...typography.overline,
+    fontWeight: '700',
+    color: colors.primary,
+    marginBottom: spacing.md,
+  },
   settingRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: spacing.lg,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: colors.borderLight,
+  },
+  iconContainer: {
+    marginRight: spacing.md,
   },
   settingInfo: { flex: 1 },
-  settingLabel: { fontSize: 16, color: '#333' },
-  settingValue: { fontSize: 14, color: '#666', marginTop: 4 },
+  settingLabel: {
+    ...typography.body,
+    color: colors.onSurface,
+  },
+  settingLabelFlex: { flex: 1 },
+  settingValue: {
+    ...typography.caption,
+    color: colors.primary,
+    marginTop: 2,
+  },
+  settingValueDisabled: {
+    color: colors.disabled,
+  },
   errorContainer: {
-    padding: 12,
-    backgroundColor: '#ffebee',
-    borderRadius: 8,
-    marginBottom: 16,
+    padding: spacing.md,
+    backgroundColor: colors.primaryLight,
+    borderRadius: radius.md,
+    marginBottom: spacing.lg,
   },
-  errorText: { color: '#c62828' },
-  confirmButton: {
-    alignSelf: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 24,
-    backgroundColor: '#2196F3',
-    borderRadius: 4,
-    marginTop: 8,
+  errorText: { color: colors.error },
+  timezoneOption: {
+    paddingVertical: 10,
+    paddingHorizontal: spacing.lg,
   },
-  confirmText: { color: '#fff', fontWeight: 'bold' },
-  timezoneOption: { paddingVertical: 10, paddingHorizontal: 16 },
-  timezoneText: { fontSize: 14 },
-  timezoneSelected: { fontWeight: 'bold', color: '#2196F3' },
+  timezoneText: { ...typography.body, color: colors.onSurface },
+  timezoneSelected: { fontWeight: '700', color: colors.primary },
+  versionText: {
+    ...typography.caption,
+    color: colors.muted,
+    textAlign: 'center',
+    marginTop: spacing.xxl,
+    marginBottom: spacing.xl,
+  },
 });

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { colors, typography } from '../../theme';
 
 interface TodoDragDeleteProps {
   isActive: boolean;
@@ -27,11 +28,15 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 80,
-    backgroundColor: '#FF5252',
+    backgroundColor: colors.error,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
   },
   icon: { fontSize: 24, marginRight: 8 },
-  text: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  text: {
+    color: colors.surface,
+    ...typography.body,
+    fontWeight: '700',
+  },
 });

@@ -10,7 +10,7 @@ import {
   KeyboardAvoidingView,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { colors, spacing } from '../../theme';
+import { colors, typography, spacing, radius } from '../../theme';
 
 interface InputOverlayProps {
   visible: boolean;
@@ -120,10 +120,10 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     height: 42,
-    borderRadius: 10,
+    borderRadius: radius.lg,
     backgroundColor: colors.borderLight,
     paddingHorizontal: spacing.md,
-    fontSize: 15,
+    ...typography.body,
     color: colors.onSurface,
   },
   submitButton: {

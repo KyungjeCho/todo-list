@@ -10,9 +10,27 @@ interface DaySummary {
 }
 
 const mockDays: DaySummary[] = [
-  { date: '2026-03-01', totalCount: 3, completedCount: 2, activeCount: 1, carriedOverCount: 0 },
-  { date: '2026-03-05', totalCount: 1, completedCount: 1, activeCount: 0, carriedOverCount: 0 },
-  { date: '2026-03-15', totalCount: 5, completedCount: 3, activeCount: 2, carriedOverCount: 0 },
+  {
+    date: '2026-03-01',
+    totalCount: 3,
+    completedCount: 2,
+    activeCount: 1,
+    carriedOverCount: 0,
+  },
+  {
+    date: '2026-03-05',
+    totalCount: 1,
+    completedCount: 1,
+    activeCount: 0,
+    carriedOverCount: 0,
+  },
+  {
+    date: '2026-03-15',
+    totalCount: 5,
+    completedCount: 3,
+    activeCount: 2,
+    carriedOverCount: 0,
+  },
 ];
 
 const mockMonthlySummary = {
@@ -28,31 +46,19 @@ describe('CalendarScreen', () => {
 
   describe('월별 뷰 렌더링', () => {
     it('현재 연월 표시를 렌더링한다', () => {
-      render(
-        <CalendarScreen
-          monthlySummary={mockMonthlySummary}
-        />,
-      );
+      render(<CalendarScreen monthlySummary={mockMonthlySummary} />);
 
       expect(screen.getByTestId('calendar-year-month')).toBeTruthy();
     });
 
     it('캘린더 그리드를 렌더링한다', () => {
-      render(
-        <CalendarScreen
-          monthlySummary={mockMonthlySummary}
-        />,
-      );
+      render(<CalendarScreen monthlySummary={mockMonthlySummary} />);
 
       expect(screen.getByTestId('calendar-grid')).toBeTruthy();
     });
 
     it('이전/다음 월 이동 버튼이 존재한다', () => {
-      render(
-        <CalendarScreen
-          monthlySummary={mockMonthlySummary}
-        />,
-      );
+      render(<CalendarScreen monthlySummary={mockMonthlySummary} />);
 
       expect(screen.getByTestId('calendar-prev-month')).toBeTruthy();
       expect(screen.getByTestId('calendar-next-month')).toBeTruthy();
@@ -89,22 +95,14 @@ describe('CalendarScreen', () => {
 
   describe('날짜별 요약 표시', () => {
     it('할 일이 있는 날짜에 요약 정보가 표시된다', () => {
-      render(
-        <CalendarScreen
-          monthlySummary={mockMonthlySummary}
-        />,
-      );
+      render(<CalendarScreen monthlySummary={mockMonthlySummary} />);
 
       expect(screen.getByTestId('calendar-day-2026-03-01')).toBeTruthy();
       expect(screen.getByTestId('calendar-day-2026-03-15')).toBeTruthy();
     });
 
     it('날짜 셀에 완료율 표시기가 렌더링된다', () => {
-      render(
-        <CalendarScreen
-          monthlySummary={mockMonthlySummary}
-        />,
-      );
+      render(<CalendarScreen monthlySummary={mockMonthlySummary} />);
 
       expect(screen.getByTestId('day-indicator-2026-03-01')).toBeTruthy();
     });
@@ -144,21 +142,13 @@ describe('CalendarScreen', () => {
     };
 
     it('할 일이 없는 월에도 캘린더 그리드가 렌더링된다', () => {
-      render(
-        <CalendarScreen
-          monthlySummary={emptyMonthlySummary}
-        />,
-      );
+      render(<CalendarScreen monthlySummary={emptyMonthlySummary} />);
 
       expect(screen.getByTestId('calendar-grid')).toBeTruthy();
     });
 
     it('할 일이 없는 월에서 빈 상태 메시지를 표시한다', () => {
-      render(
-        <CalendarScreen
-          monthlySummary={emptyMonthlySummary}
-        />,
-      );
+      render(<CalendarScreen monthlySummary={emptyMonthlySummary} />);
 
       expect(screen.getByTestId('calendar-empty-state')).toBeTruthy();
     });
@@ -167,10 +157,7 @@ describe('CalendarScreen', () => {
   describe('로딩 상태', () => {
     it('로딩 중일 때 로딩 인디케이터를 표시한다', () => {
       render(
-        <CalendarScreen
-          monthlySummary={mockMonthlySummary}
-          isLoading={true}
-        />,
+        <CalendarScreen monthlySummary={mockMonthlySummary} isLoading={true} />,
       );
 
       expect(screen.getByTestId('calendar-loading-indicator')).toBeTruthy();
@@ -203,11 +190,7 @@ describe('CalendarScreen', () => {
     });
 
     it('에러가 없을 때 에러 메시지를 표시하지 않는다', () => {
-      render(
-        <CalendarScreen
-          monthlySummary={mockMonthlySummary}
-        />,
-      );
+      render(<CalendarScreen monthlySummary={mockMonthlySummary} />);
 
       expect(screen.queryByTestId('calendar-error-message')).toBeNull();
     });
@@ -215,11 +198,7 @@ describe('CalendarScreen', () => {
 
   describe('접근성', () => {
     it('이전 월 버튼에 접근성 라벨이 있다', () => {
-      render(
-        <CalendarScreen
-          monthlySummary={mockMonthlySummary}
-        />,
-      );
+      render(<CalendarScreen monthlySummary={mockMonthlySummary} />);
 
       const prevButton = screen.getByTestId('calendar-prev-month');
       expect(
@@ -228,11 +207,7 @@ describe('CalendarScreen', () => {
     });
 
     it('다음 월 버튼에 접근성 라벨이 있다', () => {
-      render(
-        <CalendarScreen
-          monthlySummary={mockMonthlySummary}
-        />,
-      );
+      render(<CalendarScreen monthlySummary={mockMonthlySummary} />);
 
       const nextButton = screen.getByTestId('calendar-next-month');
       expect(
@@ -241,11 +216,7 @@ describe('CalendarScreen', () => {
     });
 
     it('날짜 셀에 접근성 라벨이 있다', () => {
-      render(
-        <CalendarScreen
-          monthlySummary={mockMonthlySummary}
-        />,
-      );
+      render(<CalendarScreen monthlySummary={mockMonthlySummary} />);
 
       const dayCell = screen.getByTestId('calendar-day-2026-03-01');
       expect(

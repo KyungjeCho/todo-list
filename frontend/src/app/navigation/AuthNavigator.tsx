@@ -74,7 +74,7 @@ const MainWrapper: React.FC = () => {
   });
   const [data, setData] = useState<TodoListResponse | null>(null);
   const [modeOverride, setModeOverride] = useState<'PLAN' | 'REVIEW' | null>(
-    null,
+    'PLAN',
   );
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
@@ -271,7 +271,7 @@ const MainWrapper: React.FC = () => {
   }, [modeOverride, data?.mode]);
 
   useEffect(() => {
-    setModeOverride(null);
+    setModeOverride('PLAN');
     setIsDayCompleted(false);
     setCompleteDayResult(null);
     setCompleteDayError(undefined);
@@ -317,15 +317,20 @@ const MainTabScreen: React.FC = () => {
 };
 
 export const AuthNavigator: React.FC = () => {
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, isLoading, user } = useAuthStore();
 
   // WHY: 신규 유저는 timezone이 null로 내려옴. undefined와 null 모두 체크해야 온보딩을 건너뛰지 않음
   const isOnboarded = user?.timezone != null;
 
+  // WHY: 로그인 직후 프로필 로딩 중에는 user가 null이므로 온보딩으로 잘못 리다이렉트됨.
+  // 프로필 로딩이 완료될 때까지 Auth 화면을 유지하여 플리커 방지
+  const showOnboarding = isAuthenticated && !isLoading && !isOnboarded;
+  const showMain = isAuthenticated && (isLoading || isOnboarded);
+
   const getInitialRoute = (): keyof RootStackParamList => {
     if (!isAuthenticated) return 'Auth';
-    if (!isOnboarded) return 'Onboarding';
-    return 'Main';
+    if (showMain) return 'Main';
+    return 'Onboarding';
   };
 
   return (
@@ -335,7 +340,7 @@ export const AuthNavigator: React.FC = () => {
     >
       {!isAuthenticated ? (
         <Stack.Screen name="Auth" component={LoginScreen} />
-      ) : !isOnboarded ? (
+      ) : showOnboarding ? (
         <Stack.Screen name="Onboarding" component={OnboardingWrapper} />
       ) : (
         <Stack.Screen name="Main" component={MainTabScreen} />

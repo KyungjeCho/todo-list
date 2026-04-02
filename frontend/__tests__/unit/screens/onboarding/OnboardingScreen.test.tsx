@@ -55,13 +55,13 @@ describe('OnboardingScreen', () => {
     it('계획 시간 라벨을 표시한다', () => {
       render(<OnboardingScreen />);
 
-      expect(screen.getByText(/계획/)).toBeTruthy();
+      expect(screen.getByText('계획 시간')).toBeTruthy();
     });
 
     it('회고 시간 라벨을 표시한다', () => {
       render(<OnboardingScreen />);
 
-      expect(screen.getByText(/회고/)).toBeTruthy();
+      expect(screen.getByText('회고 시간')).toBeTruthy();
     });
   });
 
@@ -153,7 +153,10 @@ describe('OnboardingScreen', () => {
       render(<OnboardingScreen isLoading={true} />);
 
       const completeButton = screen.getByTestId('onboarding-complete-button');
-      expect(completeButton.props.accessibilityState?.disabled ?? completeButton.props.disabled).toBe(true);
+      expect(
+        completeButton.props.accessibilityState?.disabled ??
+          completeButton.props.disabled,
+      ).toBe(true);
     });
 
     it('로딩 중일 때 로딩 인디케이터를 표시한다', () => {

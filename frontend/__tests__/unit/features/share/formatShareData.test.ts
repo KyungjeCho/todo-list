@@ -1,4 +1,7 @@
-import { formatShareData, formatShareTitle } from 'src/features/share/formatShareData';
+import {
+  formatShareData,
+  formatShareTitle,
+} from 'src/features/share/formatShareData';
 import type { Todo } from 'src/types/todo';
 
 const mockTodos: Todo[] = [
@@ -54,7 +57,9 @@ describe('formatShareData', () => {
       const result = formatShareData(mockTodos, '2026-03-31');
 
       const lines = result.split('\n');
-      const completedLine = lines.find((line: string) => line.includes('운동하기'));
+      const completedLine = lines.find((line: string) =>
+        line.includes('운동하기'),
+      );
       expect(completedLine).toBeDefined();
       expect(completedLine).toMatch(/[✓✅☑\[x\]\[X\]]/);
     });
@@ -72,7 +77,9 @@ describe('formatShareData', () => {
       const result = formatShareData(mockTodos, '2026-03-31');
 
       const lines = result.split('\n');
-      const carriedOverLine = lines.find((line: string) => line.includes('이월된 할 일'));
+      const carriedOverLine = lines.find((line: string) =>
+        line.includes('이월된 할 일'),
+      );
       expect(carriedOverLine).toBeDefined();
       expect(carriedOverLine).toMatch(/[→➡↪🔄]/);
     });

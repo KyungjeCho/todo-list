@@ -6,6 +6,9 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Path } from 'react-native-svg';
+import { colors, typography, spacing, radius } from '../../theme';
 import { useAuth } from '../../features/auth/useAuth';
 import { useAuthStore } from '../../store/authStore';
 import type { OAuthProvider } from '../../types/user';
@@ -16,12 +19,62 @@ interface LoginScreenProps {
   error?: string;
 }
 
-const PROVIDERS: Array<{ key: OAuthProvider; label: string }> = [
-  { key: 'google', label: 'Google로 로그인' },
-  { key: 'naver', label: 'Naver로 로그인' },
-  { key: 'kakao', label: 'Kakao로 로그인' },
-  { key: 'apple', label: 'Apple로 로그인' },
+interface ProviderConfig {
+  key: OAuthProvider;
+  label: string;
+  backgroundColor: string;
+  textColor: string;
+  borderColor?: string;
+}
+
+const PROVIDERS: ProviderConfig[] = [
+  {
+    key: 'google',
+    label: 'Google로 계속하기',
+    backgroundColor: colors.surface,
+    textColor: colors.onSurface,
+    borderColor: colors.border,
+  },
+  {
+    key: 'naver',
+    label: '네이버로 계속하기',
+    backgroundColor: '#03C75A',
+    textColor: colors.surface,
+  },
+  {
+    key: 'kakao',
+    label: '카카오로 계속하기',
+    backgroundColor: '#FEE500',
+    textColor: colors.onSurface,
+  },
+  {
+    key: 'apple',
+    label: 'Apple로 계속하기',
+    backgroundColor: colors.onSurface,
+    textColor: colors.surface,
+  },
 ];
+
+function CheckSquareIcon() {
+  return (
+    <Svg width={48} height={48} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M9 11l3 3L22 4"
+        stroke={colors.primary}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"
+        stroke={colors.primary}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
 
 export const LoginScreen: React.FC<LoginScreenProps> = (props) => {
   const auth = useAuth();
@@ -31,8 +84,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = (props) => {
   const isLoading = props.isLoading ?? storeLoading;
   const error = props.error ?? auth.error ?? undefined;
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Todo</Text>
+    <LinearGradient
+      colors={[colors.primaryLight, colors.surface]}
+      style={styles.container}
+    >
+      <View style={styles.brandSection}>
+        <CheckSquareIcon />
+        <Text style={styles.title}>TodoList</Text>
+        <Text style={styles.subtitle}>하루를 계획하고 돌아보세요</Text>
+      </View>
 
       {isLoading && (
         <ActivityIndicator testID="login-loading-indicator" size="large" />
@@ -45,22 +105,30 @@ export const LoginScreen: React.FC<LoginScreenProps> = (props) => {
       )}
 
       <View style={styles.buttonContainer}>
-        {PROVIDERS.map(({ key, label }) => (
-          <TouchableOpacity
-            key={key}
-            testID={`login-button-${key}`}
-            accessibilityLabel={label}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: isLoading }}
-            disabled={isLoading}
-            style={styles.button}
-            onPress={() => onLogin?.(key)}
-          >
-            <Text style={styles.buttonText}>{label}</Text>
-          </TouchableOpacity>
-        ))}
+        {PROVIDERS.map(
+          ({ key, label, backgroundColor, textColor, borderColor }) => (
+            <TouchableOpacity
+              key={key}
+              testID={`login-button-${key}`}
+              accessibilityLabel={label}
+              accessibilityRole="button"
+              accessibilityState={{ disabled: isLoading }}
+              disabled={isLoading}
+              style={[
+                styles.button,
+                { backgroundColor },
+                borderColor ? { borderWidth: 1, borderColor } : undefined,
+              ]}
+              onPress={() => onLogin?.(key)}
+            >
+              <Text style={[styles.buttonText, { color: textColor }]}>
+                {label}
+              </Text>
+            </TouchableOpacity>
+          ),
+        )}
       </View>
-    </View>
+    </LinearGradient>
   );
 };
 
@@ -70,30 +138,39 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#FFFFFF',
+  },
+  brandSection: {
+    alignItems: 'center',
+    gap: spacing.md,
+    marginBottom: 60,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 40,
+    fontSize: 40,
+    fontWeight: '700',
+    color: colors.primary,
+    letterSpacing: -1,
+  },
+  subtitle: {
+    ...typography.body,
+    color: colors.secondaryText,
   },
   buttonContainer: {
-    width: '100%',
-    gap: 12,
+    width: 310,
+    gap: spacing.md,
   },
   button: {
-    backgroundColor: '#F5F5F5',
-    padding: 16,
-    borderRadius: 8,
+    height: 54,
+    borderRadius: radius.lg,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   buttonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    ...typography.body,
+    fontSize: 14,
   },
   error: {
-    color: '#FF3B30',
-    marginBottom: 16,
+    color: colors.error,
+    marginBottom: spacing.lg,
     textAlign: 'center',
   },
 });

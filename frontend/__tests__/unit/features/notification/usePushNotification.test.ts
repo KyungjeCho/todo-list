@@ -39,8 +39,12 @@ describe('usePushNotification', () => {
     jest.clearAllMocks();
     mockRequestPermissions.mockResolvedValue(1); // AUTHORIZED
     mockGetToken.mockResolvedValue('mock-fcm-token-abc123');
-    mockOnTokenRefresh.mockImplementation((_msg: unknown, _cb: unknown) => mockRemoveTokenRefreshListener);
-    mockOnMessage.mockImplementation((_msg: unknown, _cb: unknown) => mockRemoveMessageListener);
+    mockOnTokenRefresh.mockImplementation(
+      (_msg: unknown, _cb: unknown) => mockRemoveTokenRefreshListener,
+    );
+    mockOnMessage.mockImplementation(
+      (_msg: unknown, _cb: unknown) => mockRemoveMessageListener,
+    );
   });
 
   describe('FCM 토큰 등록', () => {

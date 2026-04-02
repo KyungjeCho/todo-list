@@ -84,13 +84,21 @@ describe('ReviewModeView', () => {
         { ...completedTodo, id: 'todo-5', content: '다른 완료 항목' },
       ];
 
-      render(<ReviewModeView todos={completedTodos} stats={allCompletedStats} />);
+      render(
+        <ReviewModeView todos={completedTodos} stats={allCompletedStats} />,
+      );
 
       expect(screen.getByText(/100%/)).toBeTruthy();
     });
 
     it('0% 진행률(할 일 없음)일 때 빈 상태를 표시한다', () => {
-      const emptyStats = { total: 0, completed: 0, active: 0, inactive: 0, progressRate: 0 };
+      const emptyStats = {
+        total: 0,
+        completed: 0,
+        active: 0,
+        inactive: 0,
+        progressRate: 0,
+      };
 
       render(<ReviewModeView todos={[]} stats={emptyStats} />);
 
@@ -149,11 +157,26 @@ describe('ReviewModeView', () => {
 
     it('todos 변경 시 섹션 내용이 업데이트된다', () => {
       const { rerender } = render(
-        <ReviewModeView todos={[baseTodo]} stats={{ total: 1, completed: 0, active: 1, inactive: 0, progressRate: 0 }} />,
+        <ReviewModeView
+          todos={[baseTodo]}
+          stats={{
+            total: 1,
+            completed: 0,
+            active: 1,
+            inactive: 0,
+            progressRate: 0,
+          }}
+        />,
       );
 
       const updatedTodos = [{ ...baseTodo, status: 'COMPLETED' as const }];
-      const updatedStats = { total: 1, completed: 1, active: 0, inactive: 0, progressRate: 100 };
+      const updatedStats = {
+        total: 1,
+        completed: 1,
+        active: 0,
+        inactive: 0,
+        progressRate: 100,
+      };
       rerender(<ReviewModeView todos={updatedTodos} stats={updatedStats} />);
 
       expect(screen.getByText(/100%/)).toBeTruthy();
@@ -167,8 +190,8 @@ describe('ReviewModeView', () => {
       const progressBar = screen.getByTestId('review-progress-bar');
       expect(
         progressBar.props.accessibilityLabel ||
-        progressBar.props['aria-label'] ||
-        progressBar.props.accessibilityRole,
+          progressBar.props['aria-label'] ||
+          progressBar.props.accessibilityRole,
       ).toBeTruthy();
     });
   });

@@ -7,9 +7,11 @@ import {
   Pressable,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import type { Todo } from '../../types/todo';
 import { useShareTodo } from '../../features/share/useShareTodo';
+import { colors, typography, spacing, radius } from '../../theme';
 
 interface ShareButtonProps {
   todos: Todo[];
@@ -33,9 +35,11 @@ export function ShareButton({
   }
 
   const handlePress = () => {
-    if (!disabled) {
-      setMenuVisible(true);
+    if (disabled) {
+      Alert.alert('알림', '공유할 할 일이 없습니다');
+      return;
     }
+    setMenuVisible(true);
   };
 
   const handleDismiss = () => {
@@ -56,13 +60,15 @@ export function ShareButton({
     <View>
       <TouchableOpacity
         testID="share-button"
-        style={styles.button}
+        style={[styles.button, disabled && styles.buttonDisabled]}
         onPress={handlePress}
-        disabled={disabled}
-        accessibilityState={{ disabled }}
         accessibilityLabel="공유"
       >
-        <Text style={styles.buttonText}>공유</Text>
+        <Text
+          style={[styles.buttonText, disabled && styles.buttonTextDisabled]}
+        >
+          공유
+        </Text>
       </TouchableOpacity>
 
       {copied && (
@@ -112,26 +118,37 @@ export function ShareButton({
 
 const styles = StyleSheet.create({
   button: {
-    padding: 8,
-    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: 'transparent',
     alignItems: 'center',
     justifyContent: 'center',
   },
+  buttonDisabled: {
+    borderColor: colors.borderLight,
+  },
   buttonText: {
-    fontSize: 14,
-    color: '#007AFF',
+    fontSize: typography.caption.fontSize,
+    fontWeight: typography.caption.fontWeight,
+    color: colors.primary,
+  },
+  buttonTextDisabled: {
+    color: colors.disabled,
   },
   backdrop: {
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'flex-end',
     paddingTop: 80,
-    paddingRight: 16,
+    paddingRight: spacing.lg,
   },
   menu: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
-    shadowColor: '#000',
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    shadowColor: colors.onSurface,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 4,
@@ -139,34 +156,34 @@ const styles = StyleSheet.create({
     minWidth: 150,
   },
   menuItem: {
-    padding: 12,
+    padding: spacing.md,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5E5E5',
+    borderBottomColor: colors.border,
   },
   menuText: {
-    fontSize: 14,
-    color: '#333333',
+    ...typography.body,
+    color: colors.onSurface,
   },
   toast: {
     position: 'absolute',
     bottom: -36,
     right: 0,
-    backgroundColor: '#333333',
-    borderRadius: 6,
-    paddingHorizontal: 12,
+    backgroundColor: colors.onSurface,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.md,
     paddingVertical: 6,
   },
   toastText: {
     fontSize: 12,
-    color: '#FFFFFF',
+    color: colors.surface,
   },
   errorToast: {
     position: 'absolute',
     bottom: -36,
     right: 0,
-    backgroundColor: '#FF3B30',
-    borderRadius: 6,
-    paddingHorizontal: 12,
+    backgroundColor: colors.error,
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.md,
     paddingVertical: 6,
   },
 });

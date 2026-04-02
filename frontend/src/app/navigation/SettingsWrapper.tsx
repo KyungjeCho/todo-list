@@ -1,7 +1,10 @@
 import React, { useState, useCallback } from 'react';
+import { StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../store/authStore';
 import { userApi } from '../../services/api/userApi';
 import { SettingsScreen } from '../../screens/settings/SettingsScreen';
+import { colors } from '../../theme';
 import type { UpdateSettingsRequest } from '../../types/user';
 
 export const SettingsWrapper: React.FC = () => {
@@ -32,11 +35,20 @@ export const SettingsWrapper: React.FC = () => {
   if (!user) return null;
 
   return (
-    <SettingsScreen
-      profile={user}
-      onUpdateSettings={handleUpdateSettings}
-      isLoading={isLoading}
-      error={error}
-    />
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <SettingsScreen
+        profile={user}
+        onUpdateSettings={handleUpdateSettings}
+        isLoading={isLoading}
+        error={error}
+      />
+    </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.surfaceDim,
+  },
+});

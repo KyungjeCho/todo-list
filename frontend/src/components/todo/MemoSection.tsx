@@ -7,11 +7,11 @@ import {
   StyleSheet,
 } from 'react-native';
 import type { TodoMemo } from '../../types/todo';
+import { colors, typography, spacing, radius } from '../../theme';
 
 interface MemoSectionProps {
   todoId: string;
   memos: TodoMemo[];
-  onAddMemo?: (content: string) => void;
   onUpdateMemo?: (memoId: string, content: string) => void;
   onDeleteMemo?: (memoId: string) => void;
 }
@@ -19,20 +19,11 @@ interface MemoSectionProps {
 export const MemoSection: React.FC<MemoSectionProps> = ({
   todoId,
   memos,
-  onAddMemo,
   onUpdateMemo,
   onDeleteMemo,
 }) => {
-  const [inputText, setInputText] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
-
-  const handleAdd = () => {
-    const trimmed = inputText.trim();
-    if (trimmed.length === 0) return;
-    onAddMemo?.(trimmed);
-    setInputText('');
-  };
 
   const handleStartEdit = (memo: TodoMemo) => {
     setEditingId(memo.id);
@@ -60,7 +51,7 @@ export const MemoSection: React.FC<MemoSectionProps> = ({
           testID={`memo-item-${memo.id}`}
           onPress={() => handleStartEdit(memo)}
           activeOpacity={0.7}
-          style={styles.memoItem}
+          style={styles.memoCard}
         >
           {editingId === memo.id ? (
             <View style={styles.editRow}>
@@ -82,6 +73,7 @@ export const MemoSection: React.FC<MemoSectionProps> = ({
             </View>
           ) : (
             <View style={styles.memoContent}>
+              <Text style={styles.noteIcon}>📄</Text>
               <Text style={styles.memoText}>{memo.content}</Text>
             </View>
           )}
@@ -96,74 +88,50 @@ export const MemoSection: React.FC<MemoSectionProps> = ({
           </TouchableOpacity>
         </TouchableOpacity>
       ))}
-
-      <View style={styles.inputRow}>
-        <TextInput
-          testID="memo-input"
-          value={inputText}
-          onChangeText={setInputText}
-          onSubmitEditing={handleAdd}
-          placeholder="메모 추가"
-          accessibilityLabel="메모 입력"
-          style={styles.input}
-        />
-        <TouchableOpacity
-          testID="memo-add-button"
-          onPress={handleAdd}
-          accessibilityLabel="메모 추가"
-          accessibilityRole="button"
-          style={styles.addButton}
-        >
-          <Text style={styles.addText}>+</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    paddingLeft: 36,
-    paddingRight: 12,
-    paddingBottom: 8,
+    paddingLeft: 55,
+    paddingRight: spacing.md,
+    paddingBottom: spacing.sm,
+    gap: 6,
+    marginTop: spacing.sm,
   },
-  memoItem: {
+  memoCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 4,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
   },
-  memoContent: { flex: 1 },
-  memoText: { fontSize: 13, color: '#666' },
+  memoContent: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  noteIcon: {
+    fontSize: 14,
+  },
+  memoText: {
+    ...typography.caption,
+    color: colors.onSurface,
+  },
   editRow: { flex: 1, flexDirection: 'row', alignItems: 'center' },
   editInput: {
     flex: 1,
-    fontSize: 13,
+    ...typography.caption,
     borderBottomWidth: 1,
-    borderBottomColor: '#2196F3',
+    borderBottomColor: colors.primary,
     padding: 0,
+    color: colors.onSurface,
   },
-  confirmButton: { marginLeft: 8, padding: 4 },
-  confirmText: { fontSize: 14, color: '#4CAF50' },
-  deleteButton: { marginLeft: 8, padding: 4 },
-  deleteText: { fontSize: 12, color: '#F44336' },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  input: {
-    flex: 1,
-    fontSize: 13,
-    padding: 4,
-    color: '#888',
-  },
-  addButton: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#E3F2FD',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  addText: { fontSize: 14, color: '#2196F3' },
+  confirmButton: { marginLeft: spacing.sm, padding: spacing.xs },
+  confirmText: { fontSize: 14, color: colors.success },
+  deleteButton: { marginLeft: spacing.sm, padding: spacing.xs },
+  deleteText: { fontSize: 12, color: colors.error },
 });

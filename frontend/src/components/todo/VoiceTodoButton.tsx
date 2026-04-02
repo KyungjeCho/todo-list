@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
+import Svg, { Path, Line, Rect } from 'react-native-svg';
 import { useVoiceRecording } from '../../features/todo/useVoiceRecording';
 import { colors } from '../../theme';
 
@@ -14,6 +15,57 @@ interface VoiceTodoButtonProps {
   isProcessing?: boolean;
   processingError?: string;
   disabled?: boolean;
+}
+
+function MicIcon() {
+  return (
+    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+      <Rect
+        x={9}
+        y={1}
+        width={6}
+        height={12}
+        rx={3}
+        stroke={colors.surface}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M19 10v2a7 7 0 01-14 0v-2"
+        stroke={colors.surface}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Line
+        x1={12}
+        y1={19}
+        x2={12}
+        y2={23}
+        stroke={colors.surface}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+      />
+      <Line
+        x1={8}
+        y1={23}
+        x2={16}
+        y2={23}
+        stroke={colors.surface}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
+
+function StopIcon() {
+  return (
+    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+      <Rect x={4} y={4} width={16} height={16} rx={2} fill={colors.surface} />
+    </Svg>
+  );
 }
 
 export const VoiceTodoButton: React.FC<VoiceTodoButtonProps> = ({
@@ -43,7 +95,7 @@ export const VoiceTodoButton: React.FC<VoiceTodoButtonProps> = ({
           disabled={true}
           style={[styles.button, styles.disabledButton]}
         >
-          <Text style={styles.micIcon}>🎙</Text>
+          <MicIcon />
         </TouchableOpacity>
         <ActivityIndicator testID="voice-loading" style={styles.loading} />
       </View>
@@ -65,7 +117,7 @@ export const VoiceTodoButton: React.FC<VoiceTodoButtonProps> = ({
           onPress={stopRecording}
           style={[styles.button, styles.stopButton]}
         >
-          <Text style={styles.stopIcon}>⏹</Text>
+          <StopIcon />
         </TouchableOpacity>
         <TouchableOpacity
           testID="voice-todo-button"
@@ -73,7 +125,7 @@ export const VoiceTodoButton: React.FC<VoiceTodoButtonProps> = ({
           onPress={startRecording}
           style={[styles.button, { display: 'none' }]}
         >
-          <Text style={styles.micIcon}>🎙</Text>
+          <MicIcon />
         </TouchableOpacity>
       </View>
     );
@@ -89,7 +141,7 @@ export const VoiceTodoButton: React.FC<VoiceTodoButtonProps> = ({
         onPress={startRecording}
         style={[styles.button, isDisabled && styles.disabledButton]}
       >
-        <Text style={styles.micIcon}>🎙</Text>
+        <MicIcon />
       </TouchableOpacity>
       {(error || processingError) && (
         <View testID="voice-error" style={styles.errorContainer}>
@@ -122,12 +174,6 @@ const styles = StyleSheet.create({
   },
   stopButton: {
     backgroundColor: colors.error,
-  },
-  micIcon: {
-    fontSize: 22,
-  },
-  stopIcon: {
-    fontSize: 22,
   },
   recordingIndicator: {
     marginBottom: 8,

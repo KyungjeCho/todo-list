@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
+import { colors, typography, spacing, radius } from '../../theme';
 
 interface CarriedOverResult {
   carriedOverCount: number;
@@ -52,7 +53,7 @@ export const CompleteDayButton: React.FC<CompleteDayButtonProps> = ({
         {isLoading ? (
           <ActivityIndicator
             testID="complete-day-loading"
-            color="#fff"
+            color={colors.surface}
             size="small"
           />
         ) : (
@@ -83,38 +84,47 @@ export const CompleteDayButton: React.FC<CompleteDayButtonProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: { padding: 16 },
+  container: { padding: spacing.lg },
   button: {
-    backgroundColor: '#2196F3',
-    paddingVertical: 14,
-    borderRadius: 8,
+    backgroundColor: colors.primary,
+    height: 52,
+    borderRadius: radius.xl,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  buttonDisabled: { backgroundColor: '#B0BEC5' },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  buttonDisabled: { backgroundColor: colors.disabled },
+  buttonText: {
+    color: colors.surface,
+    fontSize: typography.body.fontSize,
+    fontWeight: typography.h2.fontWeight,
+  },
   completedText: {
-    marginTop: 8,
-    color: '#4CAF50',
-    fontSize: 14,
+    marginTop: spacing.sm,
+    color: colors.success,
+    ...typography.body,
     textAlign: 'center',
   },
   errorText: {
-    marginTop: 8,
-    color: '#F44336',
-    fontSize: 14,
+    marginTop: spacing.sm,
+    color: colors.error,
+    ...typography.body,
     textAlign: 'center',
   },
   resultContainer: {
-    marginTop: 12,
-    padding: 12,
-    backgroundColor: '#FFF3E0',
-    borderRadius: 8,
+    marginTop: spacing.md,
+    padding: spacing.md,
+    backgroundColor: colors.warningLight,
+    borderRadius: radius.md,
   },
   resultTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#FF9800',
-    marginBottom: 8,
+    ...typography.body,
+    fontWeight: '700',
+    color: colors.warning,
+    marginBottom: spacing.sm,
   },
-  resultItem: { fontSize: 13, color: '#795548', paddingVertical: 2 },
+  resultItem: {
+    ...typography.caption,
+    color: colors.warningDark,
+    paddingVertical: 2,
+  },
 });
