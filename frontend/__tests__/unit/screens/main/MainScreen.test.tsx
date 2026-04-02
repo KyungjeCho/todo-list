@@ -2,6 +2,13 @@ import { render, fireEvent, screen } from '@testing-library/react-native';
 import { MainScreen } from 'src/screens/main/MainScreen';
 import type { Todo } from 'src/types/todo';
 
+jest.mock('expo-blur', () => {
+  const { View } = require('react-native');
+  return {
+    BlurView: (props: Record<string, unknown>) => <View {...props} />,
+  };
+});
+
 const mockTodos: Todo[] = [
   {
     id: 'todo-1',

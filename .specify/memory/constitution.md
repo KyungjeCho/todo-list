@@ -94,6 +94,7 @@ Follow-up TODOs: none
 - `@ARCHITECTURE_DIAGRAM.md` — 아키텍처 다이어그램
 - `@DDL.sql` — 데이터베이스 스키마
 - `@API_SPEC.md` — API 명세
+- `@UIUX.md` — UI UX 디자인 
 
 **근거**: 명세서를 단일 진실 공급원(Single Source of Truth)으로
 유지하여 구현과 문서 간 불일치를 방지한다.

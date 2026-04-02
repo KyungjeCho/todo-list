@@ -1,6 +1,73 @@
-# UI/UX 구현 현황
+# UI/UX 설계 및 구현 현황
 
-**Branch**: `feature/001-todo-mobile-service` | **Last Updated**: 2026-03-30
+**Branch**: `feature/001-todo-mobile-service` | **Last Updated**: 2026-04-02
+
+## 디자인 리소스
+
+| 리소스 | 경로 | 설명 |
+|--------|------|------|
+| Design System | [`docs/designs/DESIGN_SYSTEM.md`](designs/DESIGN_SYSTEM.md) | 컬러, 타이포, 컴포넌트 토큰 |
+| Screen Spec | [`docs/designs/SCREENS.md`](designs/SCREENS.md) | 전체 화면 흐름 및 상세 스펙 |
+| SVG Icons | [`docs/designs/icons/`](designs/icons/) | Style A 아이콘 (24x24, 1.5px stroke) |
+| Paper 원본 | Paper "Scratchpad" → Page 1 | 디자인 원본 파일 |
+
+---
+
+## 화면 목록
+
+| # | 화면 | 상태 | 설명 |
+|---|------|------|------|
+| 1 | Login | 디자인 완료 | OAuth 로그인 (Google/Naver/Kakao/Apple) |
+| 2 | Onboarding | 디자인 완료 | 루틴 시간 설정 (계획/회고) |
+| 3 | Plan Mode | 디자인 완료 | 오늘의 할 일 목록 + FAB |
+| 3-1 | Plan — Input Active | 디자인 완료 | 블러 오버레이 + 키보드 입력 |
+| 3-2 | Plan — Item Expanded | 디자인 완료 | 삭제/비활성화/메모 액션 |
+| 3-3 | Plan — Empty State | 디자인 완료 | 할 일 없음 안내 |
+| 4 | Review Mode | 디자인 완료 | 완료/미완료 분류 + 일정 완료 |
+| 4-1 | Review — 일정 완료 | 디자인 완료 | 성공 요약 (달성률) |
+| 4-2 | Review — 회고 완료 | 디자인 완료 | 읽기 전용 + 이월 표시 |
+| 5 | Calendar | 디자인 완료 | 월간 캘린더 + 일별 상세 (통합) |
+| 7 | Settings | 디자인 완료 | 알림/지역/정보/연락처 |
+| 7-1 | Contact | 디자인 완료 | 개발자 연락처 + 후원 링크 |
+
+---
+
+## 화면 흐름
+
+```
+Login → Onboarding → Plan Mode ←→ Review Mode
+                         │                │
+                    Input Active      일정 완료
+                    Item Expanded     회고 완료
+                    Empty State
+                         │
+              Tab Bar: 홈 / 캘린더 / 설정
+                              │         │
+                          Calendar   Settings → Contact
+```
+
+---
+
+## Design System 요약
+
+### Colors
+- **Primary**: `#6366F1` (Indigo) — 브랜드, 인터랙션
+- **Surface**: `#F8FAFC` (Slate 50) — 화면 배경
+- **Success**: `#22C55E` (Green) — 완료 상태
+- **Warning**: `#F59E0B` (Amber) — 이월 표시
+- **Error**: `#EF4444` (Red) — 삭제, 위험
+
+### Typography
+- **Font**: Noto Sans
+- **H1**: 24px/Bold | **H2**: 18px/SemiBold | **Body**: 15px/Regular
+- **Caption**: 13px/Medium | **Overline**: 11px/SemiBold | **Label**: 10px/SemiBold
+
+### Icons
+- **Style**: 24x24 viewBox, 1.5px stroke, round cap/join
+- **경로**: `docs/designs/icons/*.svg`
+- bell, calendar, checkmark, chevron-left, chevron-right, clock, coffee, document, globe, heart, home, mail, mic, note, plus, settings, shield, trash
+
+---
 
 ## 구현된 화면
 
@@ -12,7 +79,7 @@
 
 | testID | 유형 | 설명 |
 |--------|------|------|
-| `settings-button` | TouchableOpacity | 헤더 우측 설정 아이콘 (⚙) — 탭 시 `onNavigateSettings` 콜백 호출 |
+| `settings-button` | TouchableOpacity | 헤더 우측 설정 아이콘 — 탭 시 `onNavigateSettings` 콜백 호출 |
 
 위치: 헤더 우측, ModeToggle 옆
 
@@ -92,3 +159,10 @@ usePushNotification({
   onError: (error) => { ... },
 });
 ```
+
+## 참고 사항
+
+- docs/designs/DESIGN_SYSTEM.md (디자인 시스템 컴포넌트 속성)
+- docs/designs/SCREENS.md (스크린 구성)
+- docs/designs/rn/*  (Paper Design react native 컴포넌트 Export)
+- https://app.paper.design/file/01KN1JJXBWWPNF44VBZ7DEF423?page=01KN1JJXBW47Q3GB6SG4VWQSTF  (페이퍼 디자인)

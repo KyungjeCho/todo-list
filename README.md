@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/designs/banner.png" alt="Todo List Banner" width="100%" />
+</p>
+
 # Todo List
 
 Plan, Do, Review 루틴 기반의 할 일 관리 모바일 앱.

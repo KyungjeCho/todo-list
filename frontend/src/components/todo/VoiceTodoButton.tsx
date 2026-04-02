@@ -7,6 +7,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useVoiceRecording } from '../../features/todo/useVoiceRecording';
+import { colors } from '../../theme';
 
 interface VoiceTodoButtonProps {
   onVoiceTodoCreated: (audioUri: string) => void;
@@ -102,38 +103,37 @@ export const VoiceTodoButton: React.FC<VoiceTodoButtonProps> = ({
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    marginVertical: 8,
   },
   button: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#2196F3',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
   },
   disabledButton: {
     opacity: 0.5,
   },
   stopButton: {
-    backgroundColor: '#F44336',
+    backgroundColor: colors.error,
   },
   micIcon: {
-    fontSize: 24,
+    fontSize: 22,
   },
   stopIcon: {
-    fontSize: 24,
+    fontSize: 22,
   },
   recordingIndicator: {
     marginBottom: 8,
   },
   recordingText: {
-    color: '#F44336',
+    color: colors.error,
     fontWeight: 'bold',
   },
   loading: {
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   errorText: {
-    color: '#F44336',
+    color: colors.error,
     fontSize: 12,
     textAlign: 'center',
   },

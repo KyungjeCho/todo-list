@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,13 +10,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Todo } from '../../types/todo';
 import type { CompleteDayResponse } from '../../services/api/todoApi';
-import { AddTodoInput } from '../../components/todo/AddTodoInput';
 import { TodoItem } from '../../components/todo/TodoItem';
 import { ModeToggle } from '../../components/todo/ModeToggle';
 import { ShareButton } from '../../components/todo/ShareButton';
 import { ReviewModeView } from './ReviewModeView';
 import { CompleteDayButton } from '../../components/todo/CompleteDayButton';
 import { VoiceTodoButton } from '../../components/todo/VoiceTodoButton';
+import { InputOverlay } from '../../components/todo/InputOverlay';
+import { colors, typography, spacing } from '../../theme';
 
 interface Stats {
   total: number;
@@ -75,7 +76,6 @@ export const MainScreen: React.FC<MainScreenProps> = ({
   isVoiceProcessing,
   voiceProcessingError,
   isLoading,
-  isAdding,
   isCompleting,
   isDayCompleted,
   completeDayResult,
@@ -83,6 +83,21 @@ export const MainScreen: React.FC<MainScreenProps> = ({
   error,
   onRetry,
 }) => {
+  const [isInputOverlayVisible, setIsInputOverlayVisible] = useState(false);
+
+  const handleFabAdd = () => {
+    setIsInputOverlayVisible(true);
+  };
+
+  const handleOverlaySubmit = (content: string) => {
+    onAddTodo?.(content);
+    setIsInputOverlayVisible(false);
+  };
+
+  const handleOverlayClose = () => {
+    setIsInputOverlayVisible(false);
+  };
+
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -92,6 +107,7 @@ export const MainScreen: React.FC<MainScreenProps> = ({
   }
 
   return (
+    <View style={styles.root}>
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.modeText}>
@@ -113,7 +129,7 @@ export const MainScreen: React.FC<MainScreenProps> = ({
       </View>
 
       <View style={styles.statsContainer}>
-        <Text testID="progress-rate">
+        <Text testID="progress-rate" style={styles.statsText}>
           {stats.completed}/{stats.total} ({stats.progressRate}%)
         </Text>
       </View>
@@ -179,56 +195,116 @@ export const MainScreen: React.FC<MainScreenProps> = ({
                   onDeleteMemo={onDeleteMemo}
                 />
               )}
+              contentContainerStyle={styles.listContent}
             />
           )}
 
-          <View style={styles.inputRow}>
-            {onAddTodo && (
-              <View style={styles.addInputWrapper}>
-                <AddTodoInput onAdd={onAddTodo} isLoading={isAdding} />
-              </View>
-            )}
-            {onVoiceTodoCreated && (
-              <VoiceTodoButton
-                onVoiceTodoCreated={onVoiceTodoCreated}
-                isProcessing={isVoiceProcessing}
-                processingError={voiceProcessingError}
-              />
-            )}
-          </View>
+          {!isInputOverlayVisible && (
+            <View style={styles.fabContainer}>
+              {onAddTodo && (
+                <TouchableOpacity
+                  testID="fab-add-button"
+                  onPress={handleFabAdd}
+                  activeOpacity={0.8}
+                  style={styles.fabButton}
+                  accessibilityLabel="할 일 추가"
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.fabIcon}>+</Text>
+                </TouchableOpacity>
+              )}
+              {onVoiceTodoCreated && (
+                <VoiceTodoButton
+                  onVoiceTodoCreated={onVoiceTodoCreated}
+                  isProcessing={isVoiceProcessing}
+                  processingError={voiceProcessingError}
+                />
+              )}
+            </View>
+          )}
+
         </>
       )}
     </SafeAreaView>
+
+      {onAddTodo && (
+        <InputOverlay
+          visible={isInputOverlayVisible}
+          mode="todo"
+          placeholder="할 일을 입력하세요"
+          onSubmit={handleOverlaySubmit}
+          onClose={handleOverlayClose}
+        />
+      )}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
+  root: {
+    flex: 1,
+    backgroundColor: colors.surfaceDim,
+  },
+  container: {
+    flex: 1,
+    padding: spacing.lg,
+    backgroundColor: colors.surfaceDim,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: spacing.lg,
   },
-  modeText: { fontSize: 24, fontWeight: 'bold' },
+  modeText: {
+    ...typography.h1,
+    color: colors.onSurface,
+  },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   settingsButton: { padding: 4 },
   settingsIcon: { fontSize: 22 },
-  statsContainer: { marginBottom: 16 },
-  errorContainer: { padding: 12, marginBottom: 16 },
-  errorText: { color: 'red' },
+  statsContainer: { marginBottom: spacing.lg },
+  statsText: {
+    ...typography.caption,
+    color: colors.onSurface,
+  },
+  errorContainer: { padding: spacing.md, marginBottom: spacing.lg },
+  errorText: { color: colors.error },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  emptyText: { fontSize: 16, color: '#888' },
-  inputRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  addInputWrapper: { flex: 1 },
+  emptyText: { fontSize: 16, color: colors.disabled },
+  listContent: { paddingBottom: 120 },
+  fabContainer: {
+    position: 'absolute',
+    right: 20,
+    bottom: 24,
+    gap: 12,
+    alignItems: 'center',
+  },
+  fabButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  fabIcon: {
+    color: colors.surface,
+    fontSize: 24,
+    lineHeight: 26,
+  },
   retryButton: {
     marginTop: 8,
     paddingVertical: 8,
     paddingHorizontal: 16,
-    backgroundColor: '#2196F3',
+    backgroundColor: colors.primary,
     borderRadius: 4,
     alignSelf: 'center',
   },
-  retryText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
-  todoItem: { padding: 12, borderBottomWidth: 1, borderBottomColor: '#eee' },
+  retryText: { color: colors.surface, fontSize: 14, fontWeight: 'bold' },
 });
