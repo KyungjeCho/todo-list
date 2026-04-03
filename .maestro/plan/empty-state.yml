@@ -7,6 +7,14 @@ tags:
 
 ---
 
+# WHY: Expo Fast Refresh가 이전 상태를 복원할 수 있음. 오버레이가 열려있으면 닫기
+- runFlow:
+    when:
+      visible: "input-overlay-backdrop"
+    commands:
+      - tapOn:
+          id: "input-overlay-backdrop"
+
 # 할 일이 없는 상태에서 Plan 진입 확인
 - assertVisible:
     id: "empty-state"
@@ -35,7 +43,7 @@ tags:
 - tapOn:
     id: "input-overlay-text-input"
 
-- inputText: "E2E 빈 상태 테스트 할 일"
+- inputText: "E2E empty state test todo"
 
 - tapOn:
     id: "input-overlay-submit-button"
@@ -44,4 +52,4 @@ tags:
 - assertNotVisible:
     id: "empty-state"
 
-- assertVisible: "E2E 빈 상태 테스트 할 일"
+- assertVisible: "E2E empty state test todo"

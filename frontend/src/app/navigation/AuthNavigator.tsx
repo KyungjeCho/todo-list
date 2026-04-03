@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
@@ -12,6 +12,8 @@ import type {
 import { memoApi } from '../../services/api/memoApi';
 import { useTodoStore } from '../../store/todoStore';
 import { usePushNotification } from '../../features/notification/usePushNotification';
+import { useAppFocusRefresh } from '../../features/todo/useAppFocusRefresh';
+import { getCurrentDate } from '../../features/todo/getCurrentDate';
 import { LoginScreen } from '../../screens/auth/LoginScreen';
 import { OnboardingScreen } from '../../screens/onboarding/OnboardingScreen';
 import { MainScreen } from '../../screens/main/MainScreen';
@@ -66,12 +68,13 @@ const defaultStats = {
 const MainWrapper: React.FC = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { selectedDate } = useTodoStore();
+  const { selectedDate, setSelectedDate } = useTodoStore();
 
   // WHY: 로그인 후 토큰 갱신(onTokenRefresh)·앱 재실행 시 서버에 FCM 토큰 재등록
   usePushNotification({
     onRegisterDevice: (params) => userApi.registerDevice(params),
   });
+
   const [data, setData] = useState<TodoListResponse | null>(null);
   const [modeOverride, setModeOverride] = useState<'PLAN' | 'REVIEW' | null>(
     'PLAN',
@@ -105,6 +108,21 @@ const MainWrapper: React.FC = () => {
       if (showLoading) setIsLoading(false);
     }
   }, []);
+
+  // WHY: 자정(00:00) 경과 또는 앱 포커스 복귀 시 오늘 날짜로 갱신하여 전날 완료된 todo 제거
+  const fetchTodosRef = useRef(fetchTodos);
+  fetchTodosRef.current = fetchTodos;
+
+  const handleMidnightRefresh = useCallback(() => {
+    const today = getCurrentDate();
+    if (selectedDate !== today) {
+      setSelectedDate(today);
+    } else {
+      fetchTodosRef.current(today);
+    }
+  }, [selectedDate, setSelectedDate]);
+
+  useAppFocusRefresh({ onRefresh: handleMidnightRefresh });
 
   const handleAddTodo = useCallback(
     async (content: string) => {

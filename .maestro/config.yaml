@@ -15,6 +15,8 @@ tags:
   - smoke
   - regression
 
-# Default timeout for element interactions (ms)
+# WHY: clearState를 사용하지 않음 — Expo Development Build에서 clearState가
+# Dev Client의 서버 연결 정보까지 초기화하여 앱이 Dev Client 화면에 머무는 문제 발생
 onFlowStart:
-  - clearState
+  - launchApp:
+      stopApp: true

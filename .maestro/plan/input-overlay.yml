@@ -7,6 +7,14 @@ tags:
 
 ---
 
+# WHY: Expo Fast Refresh가 이전 상태를 복원할 수 있음. 오버레이가 열려있으면 닫기
+- runFlow:
+    when:
+      visible: "input-overlay-backdrop"
+    commands:
+      - tapOn:
+          id: "input-overlay-backdrop"
+
 # FAB+ 버튼이 표시되는지 확인
 - assertVisible:
     id: "fab-add-button"
@@ -28,7 +36,7 @@ tags:
 - tapOn:
     id: "input-overlay-text-input"
 
-- inputText: "E2E 테스트 할 일"
+- inputText: "E2E test todo item"
 
 # 추가 버튼 탭
 - tapOn:
@@ -39,7 +47,7 @@ tags:
     id: "input-overlay"
 
 # 추가된 할 일이 목록에 표시되는지 확인
-- assertVisible: "E2E 테스트 할 일"
+- assertVisible: "E2E test todo item"
 
 # FAB 버튼이 다시 표시되는지 확인
 - assertVisible:
