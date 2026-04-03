@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,80 +7,68 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
-import {
-  Swipeable,
-  LongPressGestureHandler,
-  State,
-} from 'react-native-gesture-handler';
-import type { LongPressGestureHandlerStateChangeEvent } from 'react-native-gesture-handler';
+import Svg, { Path } from 'react-native-svg';
 import type { Todo } from '../../types/todo';
 import { MemoSection } from './MemoSection';
+import { TodoActionButtons } from './TodoActionButtons';
+import { colors, spacing, radius } from '../../theme';
 
 interface TodoItemProps {
   todo: Todo;
+  isExpanded?: boolean;
+  onExpand?: (id: string | null) => void;
   onToggleComplete?: (id: string) => void;
   onEdit?: (id: string, content: string) => void;
   onDeactivate?: (id: string) => void;
   onDelete?: (id: string) => void;
   onAddMemo?: (todoId: string, content: string) => void;
+  onAddMemoOverlay?: (todoId: string) => void;
   onUpdateMemo?: (todoId: string, memoId: string, content: string) => void;
   onDeleteMemo?: (todoId: string, memoId: string) => void;
 }
 
 export const TodoItem: React.FC<TodoItemProps> = ({
   todo,
+  isExpanded = false,
+  onExpand,
   onToggleComplete,
   onEdit,
   onDeactivate,
   onDelete,
-  onAddMemo,
+  onAddMemoOverlay,
   onUpdateMemo,
   onDeleteMemo,
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [showMemos, setShowMemos] = useState(false);
   const [editText, setEditText] = useState(todo.content);
   const isCompleted = todo.status === 'COMPLETED';
   const isInactive = todo.status === 'INACTIVE';
-  const swipeableRef = useRef<Swipeable>(null);
 
-  const handleContentPress = () => {
-    if (isInactive) return;
-    setEditText(todo.content);
-    setIsEditing(true);
-  };
+  useEffect(() => {
+    if (isExpanded) {
+      setEditText(todo.content);
+    }
+  }, [isExpanded, todo.content]);
+
+  const handleItemPress = useCallback(() => {
+    onExpand?.(isExpanded ? null : todo.id);
+  }, [isExpanded, onExpand, todo.id]);
 
   const handleSubmitEditing = () => {
     const trimmed = editText.trim();
     if (trimmed.length === 0 || trimmed === todo.content) {
-      setIsEditing(false);
+      setEditText(todo.content);
       return;
     }
     onEdit?.(todo.id, trimmed);
-    setIsEditing(false);
   };
 
   const handleBlur = () => {
-    setIsEditing(false);
-    setEditText(todo.content);
+    handleSubmitEditing();
   };
-
-  const handleLongPress = useCallback(
-    (event: LongPressGestureHandlerStateChangeEvent) => {
-      if (event.nativeEvent.state === State.ACTIVE) {
-        onDeactivate?.(todo.id);
-      }
-    },
-    [onDeactivate, todo.id],
-  );
 
   const handleDelete = useCallback(() => {
     Alert.alert('삭제', `"${todo.content}"를 삭제할까요?`, [
-      {
-        text: '취소',
-        style: 'cancel',
-        onPress: () => swipeableRef.current?.close(),
-      },
+      { text: '취소', style: 'cancel' },
       {
         text: '삭제',
         style: 'destructive',
@@ -89,158 +77,216 @@ export const TodoItem: React.FC<TodoItemProps> = ({
     ]);
   }, [onDelete, todo.id, todo.content]);
 
-  const renderRightActions = useCallback(
-    () => (
-      <TouchableOpacity
-        testID={`todo-delete-${todo.id}`}
-        style={styles.deleteAction}
-        onPress={handleDelete}
-        accessibilityLabel="삭제"
-        accessibilityRole="button"
-      >
-        <Text style={styles.deleteText}>삭제</Text>
-      </TouchableOpacity>
-    ),
-    [todo.id, handleDelete],
-  );
+  const handleDeactivate = useCallback(() => {
+    onDeactivate?.(todo.id);
+  }, [onDeactivate, todo.id]);
+
+  const handleAddMemo = useCallback(() => {
+    onAddMemoOverlay?.(todo.id);
+  }, [onAddMemoOverlay, todo.id]);
+
+  const handleCollapse = useCallback(() => {
+    onExpand?.(null);
+  }, [onExpand]);
 
   return (
-    <Swipeable
-      ref={swipeableRef}
-      renderRightActions={renderRightActions}
-      overshootRight={false}
+    <TouchableOpacity
+      testID={`todo-item-${todo.id}`}
+      accessibilityLabel={`${todo.content}, ${todo.status}${todo.isCarriedOver ? ', 이월' : ''}`}
+      activeOpacity={0.7}
+      onPress={handleItemPress}
+      style={[
+        styles.container,
+        isInactive && styles.inactive,
+        isExpanded && styles.expanded,
+      ]}
     >
-      <LongPressGestureHandler
-        onHandlerStateChange={handleLongPress}
-        minDurationMs={600}
-      >
-        <View
-          testID={`todo-item-${todo.id}`}
-          accessibilityLabel={`${todo.content}, ${todo.status}${todo.isCarriedOver ? ', 이월' : ''}`}
-          style={[styles.container, isInactive && styles.inactive]}
+      <View style={styles.row}>
+        <TouchableOpacity
+          testID={`todo-checkbox-${todo.id}`}
+          onPress={() => onToggleComplete?.(todo.id)}
+          accessibilityRole="checkbox"
+          accessibilityState={{ checked: isCompleted }}
+          style={[styles.checkbox, isCompleted && styles.checkboxChecked]}
         >
-          <TouchableOpacity
-            testID={`todo-checkbox-${todo.id}`}
-            onPress={() => onToggleComplete?.(todo.id)}
-            accessibilityRole="checkbox"
-            accessibilityState={{ checked: isCompleted }}
-            style={[styles.checkbox, isCompleted && styles.checkboxChecked]}
+          {isCompleted && <Text style={styles.checkmark}>&#10003;</Text>}
+        </TouchableOpacity>
+
+        {todo.isCarriedOver && (
+          <View
+            testID={`carried-over-badge-${todo.id}`}
+            accessibilityLabel="이월된 항목"
+            style={styles.carriedOverBadge}
           >
-            {isCompleted && <Text style={styles.checkmark}>&#10003;</Text>}
-          </TouchableOpacity>
-
-          {todo.isCarriedOver && (
-            <View
-              testID={`carried-over-badge-${todo.id}`}
-              accessibilityLabel="이월된 항목"
-              style={styles.carriedOverBadge}
-            >
-              <Text style={styles.carriedOverBadgeText}>이월</Text>
-            </View>
-          )}
-
-          <View style={styles.contentContainer}>
-            {isEditing ? (
-              <TextInput
-                testID={`todo-edit-input-${todo.id}`}
-                value={editText}
-                onChangeText={setEditText}
-                onSubmitEditing={handleSubmitEditing}
-                onBlur={handleBlur}
-                autoFocus
-                style={styles.editInput}
-              />
-            ) : (
-              <TouchableOpacity onPress={handleContentPress}>
-                <Text
-                  style={[
-                    styles.contentText,
-                    isCompleted && styles.completedText,
-                    isInactive && styles.inactiveText,
-                  ]}
-                >
-                  {todo.content}
-                </Text>
-              </TouchableOpacity>
-            )}
+            <Text style={styles.carriedOverBadgeText}>이월</Text>
           </View>
+        )}
 
+        <View style={styles.contentContainer}>
+          {isExpanded ? (
+            <TextInput
+              testID={`todo-edit-input-${todo.id}`}
+              value={editText}
+              onChangeText={setEditText}
+              onSubmitEditing={handleSubmitEditing}
+              onBlur={handleBlur}
+              style={[
+                styles.contentInput,
+                isCompleted && styles.completedText,
+                isInactive && styles.inactiveText,
+              ]}
+              accessibilityLabel="할 일 수정"
+            />
+          ) : (
+            <Text
+              style={[
+                styles.contentText,
+                isCompleted && styles.completedText,
+                isInactive && styles.inactiveText,
+              ]}
+            >
+              {todo.content}
+            </Text>
+          )}
+        </View>
+
+        {!isExpanded && todo.memos.length > 0 && (
+          <View style={styles.memoCountContainer}>
+            <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+              <Path
+                d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"
+                stroke={colors.primary}
+                strokeWidth={1.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <Path
+                d="M14 2v6h6"
+                stroke={colors.primary}
+                strokeWidth={1.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
+            <Text style={styles.memoCountText}>{todo.memos.length}</Text>
+          </View>
+        )}
+
+        {isExpanded && (
           <TouchableOpacity
-            testID={`memo-toggle-${todo.id}`}
-            onPress={() => setShowMemos(!showMemos)}
-            style={styles.memoToggle}
-            accessibilityLabel="메모"
+            testID={`chevron-up-${todo.id}`}
+            onPress={handleCollapse}
+            style={styles.chevronButton}
+            accessibilityLabel="접기"
             accessibilityRole="button"
           >
-            <Text style={styles.memoToggleText}>
-              {todo.memos.length > 0 ? `📝${todo.memos.length}` : '📝'}
-            </Text>
+            <Text style={styles.chevronIcon}>▲</Text>
           </TouchableOpacity>
-        </View>
-      </LongPressGestureHandler>
+        )}
+      </View>
 
-      {showMemos && (
-        <MemoSection
-          todoId={todo.id}
-          memos={todo.memos}
-          onAddMemo={(content) => onAddMemo?.(todo.id, content)}
-          onUpdateMemo={(memoId, content) =>
-            onUpdateMemo?.(todo.id, memoId, content)
-          }
-          onDeleteMemo={(memoId) => onDeleteMemo?.(todo.id, memoId)}
-        />
+      {isExpanded && (
+        <>
+          <TodoActionButtons
+            onDelete={handleDelete}
+            onDeactivate={handleDeactivate}
+            onAddMemo={handleAddMemo}
+          />
+
+          <MemoSection
+            todoId={todo.id}
+            memos={todo.memos}
+            onUpdateMemo={(memoId, content) =>
+              onUpdateMemo?.(todo.id, memoId, content)
+            }
+            onDeleteMemo={(memoId) => onDeleteMemo?.(todo.id, memoId)}
+          />
+        </>
       )}
-    </Swipeable>
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
+    padding: spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-    backgroundColor: '#fff',
+    borderBottomColor: colors.borderLight,
+    backgroundColor: colors.surface,
   },
   inactive: { opacity: 0.5 },
+  expanded: {
+    backgroundColor: colors.primaryLight,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.primary,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   checkbox: {
-    width: 24,
-    height: 24,
+    width: 22,
+    height: 22,
     borderWidth: 2,
-    borderColor: '#ccc',
-    borderRadius: 4,
-    marginRight: 12,
+    borderColor: colors.muted,
+    borderRadius: radius.sm,
+    marginRight: spacing.md,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  checkboxChecked: { backgroundColor: '#4CAF50', borderColor: '#4CAF50' },
-  checkmark: { color: '#fff', fontSize: 14 },
-  contentContainer: { flex: 1 },
-  contentText: { fontSize: 16 },
-  completedText: { textDecorationLine: 'line-through', color: '#888' },
-  inactiveText: { color: '#aaa' },
-  editInput: {
-    fontSize: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#2196F3',
-    padding: 0,
+  checkboxChecked: {
+    backgroundColor: colors.successLight,
+    borderColor: colors.successLight,
   },
+  checkmark: { color: colors.surface, fontSize: 14 },
+  contentContainer: { flex: 1 },
+  contentText: {
+    fontSize: 15,
+    color: colors.onSurface,
+  },
+  contentInput: {
+    fontSize: 15,
+    color: colors.onSurface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.primary,
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+    margin: 0,
+  },
+  completedText: {
+    textDecorationLine: 'line-through',
+    color: colors.disabled,
+  },
+  inactiveText: { color: colors.disabled },
   carriedOverBadge: {
-    backgroundColor: '#FFF3E0',
+    backgroundColor: colors.warningLight,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
-    marginRight: 8,
+    marginRight: spacing.sm,
   },
-  carriedOverBadgeText: { fontSize: 10, color: '#FF9800', fontWeight: 'bold' },
-  deleteAction: {
-    backgroundColor: '#FF3B30',
-    justifyContent: 'center',
+  carriedOverBadgeText: {
+    fontSize: 10,
+    color: colors.warningDark,
+    fontWeight: 'bold',
+  },
+  memoCountContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    width: 80,
+    gap: 4,
+    marginLeft: spacing.sm,
   },
-  deleteText: { color: '#fff', fontSize: 14, fontWeight: 'bold' },
-  memoToggle: { padding: 4, marginLeft: 8 },
-  memoToggleText: { fontSize: 14 },
+  memoCountText: {
+    fontSize: 13,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  chevronButton: {
+    padding: spacing.xs,
+    marginLeft: spacing.sm,
+  },
+  chevronIcon: {
+    fontSize: 12,
+    color: colors.secondaryText,
+  },
 });

@@ -27,10 +27,10 @@ describe('LoginScreen', () => {
     it('각 버튼에 접근성 라벨이 포함되어 있다', () => {
       render(<LoginScreen />);
 
-      expect(screen.getByLabelText('Google로 로그인')).toBeTruthy();
-      expect(screen.getByLabelText('Naver로 로그인')).toBeTruthy();
-      expect(screen.getByLabelText('Kakao로 로그인')).toBeTruthy();
-      expect(screen.getByLabelText('Apple로 로그인')).toBeTruthy();
+      expect(screen.getByLabelText('Google로 계속하기')).toBeTruthy();
+      expect(screen.getByLabelText('네이버로 계속하기')).toBeTruthy();
+      expect(screen.getByLabelText('카카오로 계속하기')).toBeTruthy();
+      expect(screen.getByLabelText('Apple로 계속하기')).toBeTruthy();
     });
 
     it('앱 타이틀을 표시한다', () => {
@@ -55,17 +55,14 @@ describe('LoginScreen', () => {
       },
     );
 
-    it.each(providers)(
-      '%s 로그인 버튼 탭 시 한 번만 호출된다',
-      (provider) => {
-        const mockOnLogin = jest.fn();
-        render(<LoginScreen onLogin={mockOnLogin} />);
+    it.each(providers)('%s 로그인 버튼 탭 시 한 번만 호출된다', (provider) => {
+      const mockOnLogin = jest.fn();
+      render(<LoginScreen onLogin={mockOnLogin} />);
 
-        fireEvent.press(screen.getByTestId(`login-button-${provider}`));
+      fireEvent.press(screen.getByTestId(`login-button-${provider}`));
 
-        expect(mockOnLogin).toHaveBeenCalledTimes(1);
-      },
-    );
+      expect(mockOnLogin).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('로딩 상태', () => {
@@ -79,7 +76,10 @@ describe('LoginScreen', () => {
       render(<LoginScreen isLoading={true} />);
 
       const googleButton = screen.getByTestId('login-button-google');
-      expect(googleButton.props.accessibilityState?.disabled ?? googleButton.props.disabled).toBe(true);
+      expect(
+        googleButton.props.accessibilityState?.disabled ??
+          googleButton.props.disabled,
+      ).toBe(true);
     });
 
     it('로딩 중이 아닐 때 로딩 인디케이터를 표시하지 않는다', () => {

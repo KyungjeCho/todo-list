@@ -1,9 +1,11 @@
 # todo-list Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-03-28
+Auto-generated from all feature plans. Last updated: 2026-04-02
 
 ## Active Technologies
 - Supabase (PostgreSQL) — 디스크 수준 AES-256 암호화, 추가 앱 레벨 암호화 없음 (001-todo-mobile-service)
+- TypeScript 5.x (Frontend & Backend) + React Native (Expo), react-native-gesture-handler, expo-blur, Zustand, NestJS (002-uiux-update)
+- Supabase (PostgreSQL) — 기존 스키마 변경 없음 (002-uiux-update)
 
 - TypeScript 5.x (Frontend & Backend) (001-todo-mobile-service)
 - React Native (Expo) — iOS/Android 크로스 플랫폼
@@ -71,6 +73,7 @@ cd frontend && npm test && npm run lint
 - `hotfix/*`: 긴급 수정
 
 ## Recent Changes
+- 002-uiux-update: Added TypeScript 5.x (Frontend & Backend) + React Native (Expo), react-native-gesture-handler, expo-blur, Zustand, NestJS
 - 001-todo-mobile-service: Added TypeScript 5.x (Frontend & Backend)
 - 001-todo-mobile-service: Todo 모바일 서비스 초기 설계
 

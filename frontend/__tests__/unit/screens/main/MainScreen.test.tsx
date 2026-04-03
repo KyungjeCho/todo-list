@@ -1,6 +1,14 @@
 import { render, fireEvent, screen } from '@testing-library/react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { MainScreen } from 'src/screens/main/MainScreen';
 import type { Todo } from 'src/types/todo';
+
+jest.mock('expo-blur', () => {
+  const { View } = require('react-native');
+  return {
+    BlurView: (props: Record<string, unknown>) => <View {...props} />,
+  };
+});
 
 const mockTodos: Todo[] = [
   {
@@ -45,6 +53,17 @@ const mockStats = {
 
 const mockDate = '2026-03-28';
 
+const safeAreaMetrics = {
+  insets: { top: 0, bottom: 0, left: 0, right: 0 },
+  frame: { x: 0, y: 0, width: 390, height: 844 },
+};
+
+function renderWithProvider(ui: React.ReactElement) {
+  return render(
+    <SafeAreaProvider initialMetrics={safeAreaMetrics}>{ui}</SafeAreaProvider>,
+  );
+}
+
 describe('MainScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -52,13 +71,27 @@ describe('MainScreen', () => {
 
   describe('Plan 모드 렌더링', () => {
     it('Plan 모드를 나타내는 텍스트를 표시한다', () => {
-      render(<MainScreen mode="PLAN" todos={mockTodos} stats={mockStats} date={mockDate} />);
+      renderWithProvider(
+        <MainScreen
+          mode="PLAN"
+          todos={mockTodos}
+          stats={mockStats}
+          date={mockDate}
+        />,
+      );
 
       expect(screen.getByText(/plan/i)).toBeTruthy();
     });
 
     it('할 일 목록을 렌더링한다', () => {
-      render(<MainScreen mode="PLAN" todos={mockTodos} stats={mockStats} date={mockDate} />);
+      renderWithProvider(
+        <MainScreen
+          mode="PLAN"
+          todos={mockTodos}
+          stats={mockStats}
+          date={mockDate}
+        />,
+      );
 
       expect(screen.getByText('회의 준비')).toBeTruthy();
       expect(screen.getByText('코드 리뷰')).toBeTruthy();
@@ -66,7 +99,14 @@ describe('MainScreen', () => {
     });
 
     it('진행률을 표시한다', () => {
-      render(<MainScreen mode="PLAN" todos={mockTodos} stats={mockStats} date={mockDate} />);
+      renderWithProvider(
+        <MainScreen
+          mode="PLAN"
+          todos={mockTodos}
+          stats={mockStats}
+          date={mockDate}
+        />,
+      );
 
       expect(screen.getByTestId('progress-rate')).toBeTruthy();
     });
@@ -74,13 +114,27 @@ describe('MainScreen', () => {
 
   describe('Review 모드 렌더링', () => {
     it('Review 모드를 나타내는 텍스트를 표시한다', () => {
-      render(<MainScreen mode="REVIEW" todos={mockTodos} stats={mockStats} date={mockDate} />);
+      renderWithProvider(
+        <MainScreen
+          mode="REVIEW"
+          todos={mockTodos}
+          stats={mockStats}
+          date={mockDate}
+        />,
+      );
 
       expect(screen.getByText(/review/i)).toBeTruthy();
     });
 
     it('Review 모드에서도 할 일 목록을 렌더링한다', () => {
-      render(<MainScreen mode="REVIEW" todos={mockTodos} stats={mockStats} date={mockDate} />);
+      renderWithProvider(
+        <MainScreen
+          mode="REVIEW"
+          todos={mockTodos}
+          stats={mockStats}
+          date={mockDate}
+        />,
+      );
 
       expect(screen.getByText('회의 준비')).toBeTruthy();
     });
@@ -88,14 +142,22 @@ describe('MainScreen', () => {
 
   describe('모드 전환', () => {
     it('모드 전환 토글 버튼이 존재한다', () => {
-      render(<MainScreen mode="PLAN" todos={mockTodos} stats={mockStats} date={mockDate} onModeToggle={jest.fn()} />);
+      renderWithProvider(
+        <MainScreen
+          mode="PLAN"
+          todos={mockTodos}
+          stats={mockStats}
+          date={mockDate}
+          onModeToggle={jest.fn()}
+        />,
+      );
 
       expect(screen.getByTestId('mode-toggle-button')).toBeTruthy();
     });
 
     it('모드 전환 버튼 탭 시 onModeToggle 콜백이 호출된다', () => {
       const mockOnModeToggle = jest.fn();
-      render(
+      renderWithProvider(
         <MainScreen
           mode="PLAN"
           todos={mockTodos}
@@ -113,26 +175,60 @@ describe('MainScreen', () => {
 
   describe('진행률 표시', () => {
     it('완료된 할 일 수를 표시한다', () => {
-      render(<MainScreen mode="PLAN" todos={mockTodos} stats={mockStats} date={mockDate} />);
+      renderWithProvider(
+        <MainScreen
+          mode="PLAN"
+          todos={mockTodos}
+          stats={mockStats}
+          date={mockDate}
+        />,
+      );
 
       expect(screen.getByText(/1/)).toBeTruthy();
     });
 
     it('전체 할 일 수를 표시한다', () => {
-      render(<MainScreen mode="PLAN" todos={mockTodos} stats={mockStats} date={mockDate} />);
+      renderWithProvider(
+        <MainScreen
+          mode="PLAN"
+          todos={mockTodos}
+          stats={mockStats}
+          date={mockDate}
+        />,
+      );
 
       expect(screen.getByText(/3/)).toBeTruthy();
     });
 
     it('진행률 퍼센트를 표시한다', () => {
-      render(<MainScreen mode="PLAN" todos={mockTodos} stats={mockStats} date={mockDate} />);
+      renderWithProvider(
+        <MainScreen
+          mode="PLAN"
+          todos={mockTodos}
+          stats={mockStats}
+          date={mockDate}
+        />,
+      );
 
       expect(screen.getByTestId('progress-rate')).toBeTruthy();
     });
 
     it('할 일이 없을 때 0% 진행률을 표시한다', () => {
-      const emptyStats = { total: 0, completed: 0, active: 0, inactive: 0, progressRate: 0 };
-      render(<MainScreen mode="PLAN" todos={[]} stats={emptyStats} date={mockDate} />);
+      const emptyStats = {
+        total: 0,
+        completed: 0,
+        active: 0,
+        inactive: 0,
+        progressRate: 0,
+      };
+      renderWithProvider(
+        <MainScreen
+          mode="PLAN"
+          todos={[]}
+          stats={emptyStats}
+          date={mockDate}
+        />,
+      );
 
       expect(screen.getByTestId('progress-rate')).toBeTruthy();
     });
@@ -140,8 +236,21 @@ describe('MainScreen', () => {
 
   describe('빈 상태 (empty state)', () => {
     it('할 일이 없을 때 빈 상태 메시지를 표시한다', () => {
-      const emptyStats = { total: 0, completed: 0, active: 0, inactive: 0, progressRate: 0 };
-      render(<MainScreen mode="PLAN" todos={[]} stats={emptyStats} date={mockDate} />);
+      const emptyStats = {
+        total: 0,
+        completed: 0,
+        active: 0,
+        inactive: 0,
+        progressRate: 0,
+      };
+      renderWithProvider(
+        <MainScreen
+          mode="PLAN"
+          todos={[]}
+          stats={emptyStats}
+          date={mockDate}
+        />,
+      );
 
       expect(screen.getByTestId('empty-state')).toBeTruthy();
     });
@@ -149,13 +258,29 @@ describe('MainScreen', () => {
 
   describe('로딩 상태', () => {
     it('로딩 중일 때 로딩 인디케이터를 표시한다', () => {
-      render(<MainScreen mode="PLAN" todos={[]} stats={mockStats} date={mockDate} isLoading={true} />);
+      renderWithProvider(
+        <MainScreen
+          mode="PLAN"
+          todos={[]}
+          stats={mockStats}
+          date={mockDate}
+          isLoading={true}
+        />,
+      );
 
       expect(screen.getByTestId('main-loading-indicator')).toBeTruthy();
     });
 
     it('로딩 중이 아닐 때 로딩 인디케이터를 표시하지 않는다', () => {
-      render(<MainScreen mode="PLAN" todos={mockTodos} stats={mockStats} date={mockDate} isLoading={false} />);
+      renderWithProvider(
+        <MainScreen
+          mode="PLAN"
+          todos={mockTodos}
+          stats={mockStats}
+          date={mockDate}
+          isLoading={false}
+        />,
+      );
 
       expect(screen.queryByTestId('main-loading-indicator')).toBeNull();
     });
@@ -163,7 +288,7 @@ describe('MainScreen', () => {
 
   describe('에러 상태', () => {
     it('에러 메시지가 있을 때 에러를 표시한다', () => {
-      render(
+      renderWithProvider(
         <MainScreen
           mode="PLAN"
           todos={[]}
@@ -177,7 +302,14 @@ describe('MainScreen', () => {
     });
 
     it('에러가 없을 때 에러 메시지를 표시하지 않는다', () => {
-      render(<MainScreen mode="PLAN" todos={mockTodos} stats={mockStats} date={mockDate} />);
+      renderWithProvider(
+        <MainScreen
+          mode="PLAN"
+          todos={mockTodos}
+          stats={mockStats}
+          date={mockDate}
+        />,
+      );
 
       expect(screen.queryByTestId('main-error-message')).toBeNull();
     });
@@ -185,10 +317,20 @@ describe('MainScreen', () => {
 
   describe('접근성', () => {
     it('모드 전환 버튼에 접근성 라벨이 있다', () => {
-      render(<MainScreen mode="PLAN" todos={mockTodos} stats={mockStats} date={mockDate} onModeToggle={jest.fn()} />);
+      renderWithProvider(
+        <MainScreen
+          mode="PLAN"
+          todos={mockTodos}
+          stats={mockStats}
+          date={mockDate}
+          onModeToggle={jest.fn()}
+        />,
+      );
 
       const toggle = screen.getByTestId('mode-toggle-button');
-      expect(toggle.props.accessibilityLabel || toggle.props['aria-label']).toBeTruthy();
+      expect(
+        toggle.props.accessibilityLabel || toggle.props['aria-label'],
+      ).toBeTruthy();
     });
   });
 });

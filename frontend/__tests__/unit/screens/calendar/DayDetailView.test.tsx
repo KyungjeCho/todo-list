@@ -51,24 +51,16 @@ describe('DayDetailView', () => {
   describe('날짜 선택 시 할 일 목록 표시', () => {
     it('선택된 날짜를 헤더에 표시한다', () => {
       render(
-        <DayDetailView
-          date="2026-03-15"
-          todos={mockTodos}
-          stats={mockStats}
-        />,
+        <DayDetailView date="2026-03-15" todos={mockTodos} stats={mockStats} />,
       );
 
       expect(screen.getByTestId('day-detail-date')).toBeTruthy();
-      expect(screen.getByText(/2026-03-15/)).toBeTruthy();
+      expect(screen.getByText(/3월 15일/)).toBeTruthy();
     });
 
     it('해당 날짜의 할 일 목록을 렌더링한다', () => {
       render(
-        <DayDetailView
-          date="2026-03-15"
-          todos={mockTodos}
-          stats={mockStats}
-        />,
+        <DayDetailView date="2026-03-15" todos={mockTodos} stats={mockStats} />,
       );
 
       expect(screen.getByText('회의 준비')).toBeTruthy();
@@ -78,11 +70,7 @@ describe('DayDetailView', () => {
 
     it('할 일 상태에 따라 다른 스타일을 적용한다', () => {
       render(
-        <DayDetailView
-          date="2026-03-15"
-          todos={mockTodos}
-          stats={mockStats}
-        />,
+        <DayDetailView date="2026-03-15" todos={mockTodos} stats={mockStats} />,
       );
 
       expect(screen.getByTestId('day-todo-item-todo-1')).toBeTruthy();
@@ -92,11 +80,7 @@ describe('DayDetailView', () => {
 
     it('진행률 통계를 표시한다', () => {
       render(
-        <DayDetailView
-          date="2026-03-15"
-          todos={mockTodos}
-          stats={mockStats}
-        />,
+        <DayDetailView date="2026-03-15" todos={mockTodos} stats={mockStats} />,
       );
 
       expect(screen.getByTestId('day-detail-stats')).toBeTruthy();
@@ -104,11 +88,7 @@ describe('DayDetailView', () => {
 
     it('완료된 할 일 수와 전체 수를 표시한다', () => {
       render(
-        <DayDetailView
-          date="2026-03-15"
-          todos={mockTodos}
-          stats={mockStats}
-        />,
+        <DayDetailView date="2026-03-15" todos={mockTodos} stats={mockStats} />,
       );
 
       expect(screen.getAllByText(/1/).length).toBeGreaterThanOrEqual(1);
@@ -126,13 +106,7 @@ describe('DayDetailView', () => {
         progressRate: 0,
       };
 
-      render(
-        <DayDetailView
-          date="2026-03-20"
-          todos={[]}
-          stats={emptyStats}
-        />,
-      );
+      render(<DayDetailView date="2026-03-20" todos={[]} stats={emptyStats} />);
 
       expect(screen.getByTestId('day-detail-empty-state')).toBeTruthy();
     });
@@ -162,9 +136,7 @@ describe('DayDetailView', () => {
         />,
       );
 
-      expect(
-        screen.queryByTestId('day-detail-loading-indicator'),
-      ).toBeNull();
+      expect(screen.queryByTestId('day-detail-loading-indicator')).toBeNull();
     });
   });
 
@@ -184,11 +156,7 @@ describe('DayDetailView', () => {
 
     it('에러가 없을 때 에러 메시지를 표시하지 않는다', () => {
       render(
-        <DayDetailView
-          date="2026-03-15"
-          todos={mockTodos}
-          stats={mockStats}
-        />,
+        <DayDetailView date="2026-03-15" todos={mockTodos} stats={mockStats} />,
       );
 
       expect(screen.queryByTestId('day-detail-error-message')).toBeNull();
@@ -212,7 +180,13 @@ describe('DayDetailView', () => {
         <DayDetailView
           date="2026-03-15"
           todos={[carriedOverTodo]}
-          stats={{ total: 1, completed: 0, active: 1, inactive: 0, progressRate: 0 }}
+          stats={{
+            total: 1,
+            completed: 0,
+            active: 1,
+            inactive: 0,
+            progressRate: 0,
+          }}
         />,
       );
 
@@ -225,11 +199,7 @@ describe('DayDetailView', () => {
   describe('접근성', () => {
     it('할 일 항목에 접근성 라벨이 있다', () => {
       render(
-        <DayDetailView
-          date="2026-03-15"
-          todos={mockTodos}
-          stats={mockStats}
-        />,
+        <DayDetailView date="2026-03-15" todos={mockTodos} stats={mockStats} />,
       );
 
       const todoItem = screen.getByTestId('day-todo-item-todo-1');

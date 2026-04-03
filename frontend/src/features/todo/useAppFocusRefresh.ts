@@ -14,6 +14,8 @@ export function useAppFocusRefresh({
 }: UseAppFocusRefreshOptions): void {
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
   const lastDateRef = useRef<string>(getCurrentDate());
+  const onRefreshRef = useRef(onRefresh);
+  onRefreshRef.current = onRefresh;
 
   useEffect(() => {
     const subscription = AppState.addEventListener(
@@ -26,7 +28,7 @@ export function useAppFocusRefresh({
           (previousState === 'background' || previousState === 'inactive') &&
           nextAppState === 'active'
         ) {
-          onRefresh();
+          onRefreshRef.current();
           lastDateRef.current = getCurrentDate();
         }
       },
@@ -36,7 +38,7 @@ export function useAppFocusRefresh({
       const currentDate = getCurrentDate();
       if (currentDate !== lastDateRef.current) {
         lastDateRef.current = currentDate;
-        onRefresh();
+        onRefreshRef.current();
       }
     }, MIDNIGHT_CHECK_INTERVAL);
 
@@ -44,5 +46,5 @@ export function useAppFocusRefresh({
       subscription.remove();
       clearInterval(interval);
     };
-  }, [onRefresh]);
+  }, []);
 }

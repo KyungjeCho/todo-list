@@ -14,12 +14,17 @@ describe('useAppFocusRefresh', () => {
     appStateListeners = [];
     mockRefresh = jest.fn();
 
-    jest.spyOn(AppState, 'addEventListener').mockImplementation(
-      (_type: string, listener: (state: AppStateStatus) => void): NativeEventSubscription => {
-        appStateListeners.push(listener);
-        return { remove: jest.fn() };
-      },
-    );
+    jest
+      .spyOn(AppState, 'addEventListener')
+      .mockImplementation(
+        (
+          _type: string,
+          listener: (state: AppStateStatus) => void,
+        ): NativeEventSubscription => {
+          appStateListeners.push(listener);
+          return { remove: jest.fn() };
+        },
+      );
   });
 
   afterEach(() => {
@@ -81,12 +86,17 @@ describe('useAppFocusRefresh', () => {
 
     it('언마운트 시 AppState 리스너를 제거한다', () => {
       const mockRemove = jest.fn();
-      jest.spyOn(AppState, 'addEventListener').mockImplementation(
-        (_type: string, listener: (state: AppStateStatus) => void): NativeEventSubscription => {
-          appStateListeners.push(listener);
-          return { remove: mockRemove };
-        },
-      );
+      jest
+        .spyOn(AppState, 'addEventListener')
+        .mockImplementation(
+          (
+            _type: string,
+            listener: (state: AppStateStatus) => void,
+          ): NativeEventSubscription => {
+            appStateListeners.push(listener);
+            return { remove: mockRemove };
+          },
+        );
 
       const { unmount } = renderHook(() =>
         useAppFocusRefresh({ onRefresh: mockRefresh }),

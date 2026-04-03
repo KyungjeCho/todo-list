@@ -149,7 +149,8 @@ describe('useShareTodo', () => {
         await result.current.shareToSelf(mockTodos, '2026-03-31');
       });
 
-      const copiedText = (Clipboard.setStringAsync as jest.Mock).mock.calls[0][0] as string;
+      const copiedText = (Clipboard.setStringAsync as jest.Mock).mock
+        .calls[0][0] as string;
       expect(copiedText).toContain('운동하기');
       expect(copiedText).toContain('장보기');
     });
@@ -165,7 +166,9 @@ describe('useShareTodo', () => {
     });
 
     it('클립보드 복사 실패 시 에러를 반환한다', async () => {
-      (Clipboard.setStringAsync as jest.Mock).mockRejectedValueOnce(new Error('복사 실패'));
+      (Clipboard.setStringAsync as jest.Mock).mockRejectedValueOnce(
+        new Error('복사 실패'),
+      );
 
       const { result } = renderHook(() => useShareTodo());
 

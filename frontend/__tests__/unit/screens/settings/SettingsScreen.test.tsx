@@ -1,4 +1,9 @@
-import { render, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import {
+  render,
+  fireEvent,
+  screen,
+  waitFor,
+} from '@testing-library/react-native';
 import { SettingsScreen } from 'src/screens/settings/SettingsScreen';
 import type { UserProfile } from 'src/types/user';
 
@@ -70,7 +75,7 @@ describe('SettingsScreen', () => {
       );
 
       expect(screen.getByTestId('timezone-value')).toBeTruthy();
-      expect(screen.getByText('Asia/Seoul')).toBeTruthy();
+      expect(screen.getByText('Seoul')).toBeTruthy();
     });
   });
 
@@ -157,7 +162,11 @@ describe('SettingsScreen', () => {
         />,
       );
 
-      fireEvent(screen.getByTestId('plan-notification-toggle'), 'valueChange', false);
+      fireEvent(
+        screen.getByTestId('plan-notification-toggle'),
+        'valueChange',
+        false,
+      );
 
       await waitFor(() => {
         expect(mockUpdateSettings).toHaveBeenCalledWith(
@@ -179,7 +188,11 @@ describe('SettingsScreen', () => {
         />,
       );
 
-      fireEvent(screen.getByTestId('review-notification-toggle'), 'valueChange', false);
+      fireEvent(
+        screen.getByTestId('review-notification-toggle'),
+        'valueChange',
+        false,
+      );
 
       await waitFor(() => {
         expect(mockUpdateSettings).toHaveBeenCalledWith(
@@ -205,7 +218,11 @@ describe('SettingsScreen', () => {
         />,
       );
 
-      fireEvent(screen.getByTestId('plan-notification-toggle'), 'valueChange', true);
+      fireEvent(
+        screen.getByTestId('plan-notification-toggle'),
+        'valueChange',
+        true,
+      );
 
       await waitFor(() => {
         expect(mockUpdateSettings).toHaveBeenCalledWith(

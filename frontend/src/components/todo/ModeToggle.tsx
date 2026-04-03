@@ -1,5 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { colors, typography, spacing } from '../../theme';
 
 interface ModeToggleProps {
   mode: 'PLAN' | 'REVIEW';
@@ -22,10 +23,14 @@ export const ModeToggle: React.FC<ModeToggleProps> = ({ mode, onToggle }) => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: spacing.lg,
+    backgroundColor: colors.borderLight,
   },
-  text: { fontSize: 14, fontWeight: '600' },
+  text: {
+    fontSize: typography.caption.fontSize,
+    fontWeight: typography.caption.fontWeight,
+    color: colors.onSurface,
+  },
 });

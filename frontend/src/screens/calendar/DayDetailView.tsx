@@ -6,7 +6,27 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
+import Svg, { Path, Circle as SvgCircle } from 'react-native-svg';
 import type { Todo } from '../../types/todo';
+import { colors, typography, spacing, radius } from '../../theme';
+
+const WEEKDAY_NAMES = [
+  '일요일',
+  '월요일',
+  '화요일',
+  '수요일',
+  '목요일',
+  '금요일',
+  '토요일',
+];
+
+function formatDateDisplay(dateStr: string): string {
+  const d = new Date(dateStr);
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+  const weekday = WEEKDAY_NAMES[d.getDay()];
+  return `${month}월 ${day}일 ${weekday}`;
+}
 
 interface DayStats {
   total: number;
@@ -24,12 +44,34 @@ interface DayDetailViewProps {
   error?: string;
 }
 
-const STATUS_STYLES: Record<string, { color: string; label: string }> = {
-  ACTIVE: { color: '#4A90D9', label: '진행' },
-  COMPLETED: { color: '#4CAF50', label: '완료' },
-  INACTIVE: { color: '#9E9E9E', label: '미활성' },
-  CARRIED_OVER: { color: '#FF9800', label: '이월' },
-};
+function CheckCircleIcon() {
+  return (
+    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+      <SvgCircle cx={12} cy={12} r={10} fill={colors.successLight} />
+      <Path
+        d="M8 12l3 3 5-5"
+        stroke={colors.surface}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function EmptyCircleIcon() {
+  return (
+    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+      <SvgCircle
+        cx={12}
+        cy={12}
+        r={10}
+        stroke={colors.muted}
+        strokeWidth={1.5}
+      />
+    </Svg>
+  );
+}
 
 export const DayDetailView: React.FC<DayDetailViewProps> = ({
   date,
@@ -57,30 +99,29 @@ export const DayDetailView: React.FC<DayDetailViewProps> = ({
   }
 
   const renderTodoItem = ({ item }: { item: Todo }) => {
-    const statusStyle = STATUS_STYLES[item.status] ?? STATUS_STYLES.ACTIVE;
     const isCompleted = item.status === 'COMPLETED';
 
     return (
       <View
         testID={`day-todo-item-${item.id}`}
         style={styles.todoItem}
-        accessibilityLabel={`${item.content}, ${statusStyle.label}`}
+        accessibilityLabel={`${item.content}, ${isCompleted ? '완료' : item.isCarriedOver ? '이월' : '미완료'}`}
       >
-        <View
-          style={[styles.statusDot, { backgroundColor: statusStyle.color }]}
-        />
+        <View style={styles.checkboxContainer}>
+          {isCompleted ? <CheckCircleIcon /> : <EmptyCircleIcon />}
+        </View>
         <Text
           style={[styles.todoContent, isCompleted && styles.completedContent]}
         >
           {item.content}
         </Text>
         {item.isCarriedOver && (
-          <View
+          <Text
             testID={`carried-over-badge-${item.id}`}
-            style={styles.carriedOverBadge}
+            style={styles.carriedOverLabel}
           >
-            <Text style={styles.carriedOverText}>이월</Text>
-          </View>
+            이월
+          </Text>
         )}
       </View>
     );
@@ -88,19 +129,14 @@ export const DayDetailView: React.FC<DayDetailViewProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text testID="day-detail-date" style={styles.dateHeader}>
-        {date}
-      </Text>
-
-      <View testID="day-detail-stats" style={styles.statsContainer}>
-        <View style={styles.statsRow}>
-          <Text style={styles.statsLabel}>완료 </Text>
-          <Text style={styles.statsValue}>{stats.completed}</Text>
-          <Text style={styles.statsLabel}> / 전체 </Text>
-          <Text style={styles.statsValue}>{stats.total}</Text>
-        </View>
+      <View testID="day-detail-stats" style={styles.headerRow}>
+        <Text testID="day-detail-date" style={styles.dateHeader}>
+          {formatDateDisplay(date)}
+        </Text>
         {stats.total > 0 && (
-          <Text style={styles.progressText}>{stats.progressRate}%</Text>
+          <View style={styles.progressBadge}>
+            <Text style={styles.progressBadgeText}>{stats.progressRate}%</Text>
+          </View>
         )}
       </View>
 
@@ -125,92 +161,72 @@ export const DayDetailView: React.FC<DayDetailViewProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    padding: 16,
+    backgroundColor: colors.surfaceDim,
+    padding: spacing.lg,
   },
-  dateHeader: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1A1A1A',
-    marginBottom: 12,
-  },
-  statsContainer: {
+  headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
+    marginBottom: spacing.sm,
   },
-  statsRow: {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
+  dateHeader: {
+    ...typography.h2,
+    color: colors.onSurface,
   },
-  statsLabel: {
-    fontSize: 14,
-    color: '#555555',
+  progressBadge: {
+    backgroundColor: colors.primaryLight,
+    borderRadius: radius.md,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: 10,
   },
-  statsValue: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: '#1A1A1A',
-  },
-  progressText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#4A90D9',
+  progressBadgeText: {
+    ...typography.overline,
+    fontWeight: '700',
+    color: colors.primary,
+    fontSize: 13,
   },
   todoItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 8,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: colors.borderLight,
   },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 12,
+  checkboxContainer: {
+    marginRight: spacing.md,
   },
   todoContent: {
     flex: 1,
-    fontSize: 14,
-    color: '#1A1A1A',
+    ...typography.body,
+    color: colors.onSurface,
   },
   completedContent: {
     textDecorationLine: 'line-through',
-    color: '#9E9E9E',
+    color: colors.disabled,
   },
-  carriedOverBadge: {
-    backgroundColor: '#FFF3E0',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginLeft: 8,
-  },
-  carriedOverText: {
-    fontSize: 11,
-    color: '#FF9800',
-    fontWeight: '500',
+  carriedOverLabel: {
+    ...typography.caption,
+    color: colors.warning,
+    fontWeight: '600',
+    marginLeft: spacing.sm,
   },
   emptyState: {
     alignItems: 'center',
-    paddingVertical: 32,
+    paddingVertical: spacing.xxl,
   },
   emptyText: {
-    fontSize: 14,
-    color: '#888888',
+    ...typography.body,
+    color: colors.secondaryText,
   },
   errorContainer: {
-    backgroundColor: '#FFF3F0',
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: colors.primaryLight,
+    padding: spacing.md,
+    borderRadius: radius.md,
   },
   errorText: {
-    color: '#D32F2F',
-    fontSize: 14,
+    color: colors.error,
+    ...typography.body,
   },
 });

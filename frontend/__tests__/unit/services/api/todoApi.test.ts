@@ -72,7 +72,9 @@ describe('TodoApi', () => {
     it('API 에러 시 예외를 전파한다', async () => {
       mockedClient.get.mockRejectedValue(new Error('Network Error'));
 
-      await expect(todoApi.getTodos('2026-03-28')).rejects.toThrow('Network Error');
+      await expect(todoApi.getTodos('2026-03-28')).rejects.toThrow(
+        'Network Error',
+      );
     });
   });
 
@@ -105,7 +107,9 @@ describe('TodoApi', () => {
       const updatedTodo = { ...mockTodoItem, content: '수정된 내용' };
       mockedClient.patch.mockResolvedValue({ data: updatedTodo });
 
-      const result = await todoApi.updateTodo('todo-uuid-1', { content: '수정된 내용' });
+      const result = await todoApi.updateTodo('todo-uuid-1', {
+        content: '수정된 내용',
+      });
 
       expect(mockedClient.patch).toHaveBeenCalledWith('/todos/todo-uuid-1', {
         content: '수정된 내용',
@@ -119,11 +123,16 @@ describe('TodoApi', () => {
       const completedTodo = { ...mockTodoItem, status: 'COMPLETED' as const };
       mockedClient.patch.mockResolvedValue({ data: completedTodo });
 
-      const result = await todoApi.changeTodoStatus('todo-uuid-1', { status: 'COMPLETED' });
-
-      expect(mockedClient.patch).toHaveBeenCalledWith('/todos/todo-uuid-1/status', {
+      const result = await todoApi.changeTodoStatus('todo-uuid-1', {
         status: 'COMPLETED',
       });
+
+      expect(mockedClient.patch).toHaveBeenCalledWith(
+        '/todos/todo-uuid-1/status',
+        {
+          status: 'COMPLETED',
+        },
+      );
       expect(result).toEqual(completedTodo);
     });
 
@@ -131,11 +140,16 @@ describe('TodoApi', () => {
       const inactiveTodo = { ...mockTodoItem, status: 'INACTIVE' as const };
       mockedClient.patch.mockResolvedValue({ data: inactiveTodo });
 
-      const result = await todoApi.changeTodoStatus('todo-uuid-1', { status: 'INACTIVE' });
-
-      expect(mockedClient.patch).toHaveBeenCalledWith('/todos/todo-uuid-1/status', {
+      const result = await todoApi.changeTodoStatus('todo-uuid-1', {
         status: 'INACTIVE',
       });
+
+      expect(mockedClient.patch).toHaveBeenCalledWith(
+        '/todos/todo-uuid-1/status',
+        {
+          status: 'INACTIVE',
+        },
+      );
       expect(result).toEqual(inactiveTodo);
     });
 
@@ -143,18 +157,26 @@ describe('TodoApi', () => {
       const activeTodo = { ...mockTodoItem, status: 'ACTIVE' as const };
       mockedClient.patch.mockResolvedValue({ data: activeTodo });
 
-      const result = await todoApi.changeTodoStatus('todo-uuid-1', { status: 'ACTIVE' });
-
-      expect(mockedClient.patch).toHaveBeenCalledWith('/todos/todo-uuid-1/status', {
+      const result = await todoApi.changeTodoStatus('todo-uuid-1', {
         status: 'ACTIVE',
       });
+
+      expect(mockedClient.patch).toHaveBeenCalledWith(
+        '/todos/todo-uuid-1/status',
+        {
+          status: 'ACTIVE',
+        },
+      );
       expect(result).toEqual(activeTodo);
     });
   });
 
   describe('deleteTodo', () => {
     it('할 일 삭제 요청을 전송한다', async () => {
-      const deleteResponse = { id: 'todo-uuid-1', deletedAt: '2026-03-28T12:00:00.000Z' };
+      const deleteResponse = {
+        id: 'todo-uuid-1',
+        deletedAt: '2026-03-28T12:00:00.000Z',
+      };
       mockedClient.delete.mockResolvedValue({ data: deleteResponse });
 
       const result = await todoApi.deleteTodo('todo-uuid-1');
@@ -166,7 +188,9 @@ describe('TodoApi', () => {
     it('API 에러 시 예외를 전파한다', async () => {
       mockedClient.delete.mockRejectedValue(new Error('Not Found'));
 
-      await expect(todoApi.deleteTodo('non-existent')).rejects.toThrow('Not Found');
+      await expect(todoApi.deleteTodo('non-existent')).rejects.toThrow(
+        'Not Found',
+      );
     });
   });
 
@@ -225,7 +249,9 @@ describe('TodoApi', () => {
 
       const callArgs = mockedClient.post.mock.calls[0];
       expect(callArgs[1]).toHaveProperty('todoDate');
-      expect((callArgs[1] as Record<string, string>).todoDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect((callArgs[1] as Record<string, string>).todoDate).toMatch(
+        /^\d{4}-\d{2}-\d{2}$/,
+      );
     });
   });
 });

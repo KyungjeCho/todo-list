@@ -71,7 +71,10 @@ describe('UserApi', () => {
 
       const result = await userApi.updateSettings(updateData);
 
-      expect(mockedClient.patch).toHaveBeenCalledWith('/users/me/settings', updateData);
+      expect(mockedClient.patch).toHaveBeenCalledWith(
+        '/users/me/settings',
+        updateData,
+      );
       expect(result).toEqual(updatedProfile);
     });
 
@@ -85,7 +88,9 @@ describe('UserApi', () => {
 
       const result = await userApi.updateSettings(updateData);
 
-      expect(mockedClient.patch).toHaveBeenCalledWith('/users/me/settings', { userName: '새이름' });
+      expect(mockedClient.patch).toHaveBeenCalledWith('/users/me/settings', {
+        userName: '새이름',
+      });
       expect(result.userName).toBe('새이름');
     });
 
@@ -124,9 +129,7 @@ describe('UserApi', () => {
     it('설정 변경 실패 시 에러를 전파한다', async () => {
       mockedClient.patch.mockRejectedValueOnce(new Error('Bad request'));
 
-      await expect(
-        userApi.updateSettings({ userName: '' }),
-      ).rejects.toThrow();
+      await expect(userApi.updateSettings({ userName: '' })).rejects.toThrow();
     });
   });
 });

@@ -6,6 +6,7 @@ import {
   Text,
   StyleSheet,
 } from 'react-native';
+import { colors, typography, spacing } from '../../theme';
 
 interface AddTodoInputProps {
   onAdd: (content: string) => void;
@@ -58,19 +59,25 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
+    padding: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: colors.borderLight,
   },
-  input: { flex: 1, fontSize: 16, padding: 8, marginRight: 8 },
+  input: {
+    flex: 1,
+    ...typography.body,
+    padding: spacing.sm,
+    marginRight: spacing.sm,
+    color: colors.onSurface,
+  },
   button: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#2196F3',
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   buttonDisabled: { opacity: 0.5 },
-  buttonText: { color: '#fff', fontSize: 24, lineHeight: 28 },
+  buttonText: { color: colors.surface, fontSize: 24, lineHeight: 28 },
 });

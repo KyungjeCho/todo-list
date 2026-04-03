@@ -1,0 +1,55 @@
+appId: ${APP_ID}
+name: "US3: 빈 상태 화면 E2E"
+tags:
+  - plan
+  - empty-state
+  - us3
+
+---
+
+# WHY: Expo Fast Refresh가 이전 상태를 복원할 수 있음. 오버레이가 열려있으면 닫기
+- runFlow:
+    when:
+      visible: "input-overlay-backdrop"
+    commands:
+      - tapOn:
+          id: "input-overlay-backdrop"
+
+# 할 일이 없는 상태에서 Plan 진입 확인
+- assertVisible:
+    id: "empty-state"
+
+# Checkmark 아이콘 표시 확인
+- assertVisible:
+    id: "empty-state-checkmark"
+
+# "오늘의 할 일이 없어요" 텍스트 확인
+- assertVisible: "오늘의 할 일이 없어요"
+
+# 안내 문구 확인
+- assertVisible: "오늘의 계획을 추가해보세요"
+
+# FAB 버튼이 존재하는지 확인
+- assertVisible:
+    id: "fab-add-button"
+
+# FAB 탭 → 할 일 추가 → 빈 상태 사라짐 확인
+- tapOn:
+    id: "fab-add-button"
+
+- assertVisible:
+    id: "input-overlay"
+
+- tapOn:
+    id: "input-overlay-text-input"
+
+- inputText: "E2E empty state test todo"
+
+- tapOn:
+    id: "input-overlay-submit-button"
+
+# 빈 상태가 사라지고 할 일이 표시되는지 확인
+- assertNotVisible:
+    id: "empty-state"
+
+- assertVisible: "E2E empty state test todo"

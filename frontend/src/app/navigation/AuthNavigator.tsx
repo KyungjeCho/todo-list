@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation } from '@react-navigation/native';
@@ -12,6 +12,8 @@ import type {
 import { memoApi } from '../../services/api/memoApi';
 import { useTodoStore } from '../../store/todoStore';
 import { usePushNotification } from '../../features/notification/usePushNotification';
+import { useAppFocusRefresh } from '../../features/todo/useAppFocusRefresh';
+import { getCurrentDate } from '../../features/todo/getCurrentDate';
 import { LoginScreen } from '../../screens/auth/LoginScreen';
 import { OnboardingScreen } from '../../screens/onboarding/OnboardingScreen';
 import { MainScreen } from '../../screens/main/MainScreen';
@@ -66,15 +68,16 @@ const defaultStats = {
 const MainWrapper: React.FC = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { selectedDate } = useTodoStore();
+  const { selectedDate, setSelectedDate } = useTodoStore();
 
   // WHY: 로그인 후 토큰 갱신(onTokenRefresh)·앱 재실행 시 서버에 FCM 토큰 재등록
   usePushNotification({
     onRegisterDevice: (params) => userApi.registerDevice(params),
   });
+
   const [data, setData] = useState<TodoListResponse | null>(null);
   const [modeOverride, setModeOverride] = useState<'PLAN' | 'REVIEW' | null>(
-    null,
+    'PLAN',
   );
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
@@ -105,6 +108,21 @@ const MainWrapper: React.FC = () => {
       if (showLoading) setIsLoading(false);
     }
   }, []);
+
+  // WHY: 자정(00:00) 경과 또는 앱 포커스 복귀 시 오늘 날짜로 갱신하여 전날 완료된 todo 제거
+  const fetchTodosRef = useRef(fetchTodos);
+  fetchTodosRef.current = fetchTodos;
+
+  const handleMidnightRefresh = useCallback(() => {
+    const today = getCurrentDate();
+    if (selectedDate !== today) {
+      setSelectedDate(today);
+    } else {
+      fetchTodosRef.current(today);
+    }
+  }, [selectedDate, setSelectedDate]);
+
+  useAppFocusRefresh({ onRefresh: handleMidnightRefresh });
 
   const handleAddTodo = useCallback(
     async (content: string) => {
@@ -271,7 +289,7 @@ const MainWrapper: React.FC = () => {
   }, [modeOverride, data?.mode]);
 
   useEffect(() => {
-    setModeOverride(null);
+    setModeOverride('PLAN');
     setIsDayCompleted(false);
     setCompleteDayResult(null);
     setCompleteDayError(undefined);
@@ -317,15 +335,20 @@ const MainTabScreen: React.FC = () => {
 };
 
 export const AuthNavigator: React.FC = () => {
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, isLoading, user } = useAuthStore();
 
   // WHY: 신규 유저는 timezone이 null로 내려옴. undefined와 null 모두 체크해야 온보딩을 건너뛰지 않음
   const isOnboarded = user?.timezone != null;
 
+  // WHY: 로그인 직후 프로필 로딩 중에는 user가 null이므로 온보딩으로 잘못 리다이렉트됨.
+  // 프로필 로딩이 완료될 때까지 Auth 화면을 유지하여 플리커 방지
+  const showOnboarding = isAuthenticated && !isLoading && !isOnboarded;
+  const showMain = isAuthenticated && (isLoading || isOnboarded);
+
   const getInitialRoute = (): keyof RootStackParamList => {
     if (!isAuthenticated) return 'Auth';
-    if (!isOnboarded) return 'Onboarding';
-    return 'Main';
+    if (showMain) return 'Main';
+    return 'Onboarding';
   };
 
   return (
@@ -335,7 +358,7 @@ export const AuthNavigator: React.FC = () => {
     >
       {!isAuthenticated ? (
         <Stack.Screen name="Auth" component={LoginScreen} />
-      ) : !isOnboarded ? (
+      ) : showOnboarding ? (
         <Stack.Screen name="Onboarding" component={OnboardingWrapper} />
       ) : (
         <Stack.Screen name="Main" component={MainTabScreen} />

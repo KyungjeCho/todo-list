@@ -7,9 +7,12 @@ import {
   Platform,
   StyleSheet,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Path, Circle, Polyline } from 'react-native-svg';
 import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
+import { colors, typography, spacing, radius } from '../../theme';
 
 interface OnboardingSettings {
   planTime: string;
@@ -33,6 +36,97 @@ function formatTime(date: Date): string {
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
   return `${hours}:${minutes}`;
+}
+
+function ClockIcon() {
+  return (
+    <Svg width={40} height={40} viewBox="0 0 24 24" fill="none">
+      <Circle
+        cx={12}
+        cy={12}
+        r={10}
+        stroke={colors.primary}
+        strokeWidth={1.5}
+      />
+      <Polyline
+        points="12 6 12 12 16 14"
+        stroke={colors.primary}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function SunIcon() {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+      <Circle cx={12} cy={12} r={4} stroke={colors.warning} strokeWidth={1.5} />
+      <Path
+        d="M12 2v2"
+        stroke={colors.warning}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+      />
+      <Path
+        d="M12 20v2"
+        stroke={colors.warning}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+      />
+      <Path
+        d="M4.93 4.93l1.41 1.41"
+        stroke={colors.warning}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+      />
+      <Path
+        d="M17.66 17.66l1.41 1.41"
+        stroke={colors.warning}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+      />
+      <Path
+        d="M2 12h2"
+        stroke={colors.warning}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+      />
+      <Path
+        d="M20 12h2"
+        stroke={colors.warning}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+      />
+      <Path
+        d="M6.34 17.66l-1.41 1.41"
+        stroke={colors.warning}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+      />
+      <Path
+        d="M19.07 4.93l-1.41 1.41"
+        stroke={colors.warning}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
+
+function MoonIcon() {
+  return (
+    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"
+        stroke={colors.primary}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
 }
 
 export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
@@ -67,8 +161,17 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
   }, [onComplete, planTime, reviewTime]);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>루틴 설정</Text>
+    <LinearGradient
+      colors={[colors.primaryLight, colors.surface]}
+      style={styles.container}
+    >
+      <View style={styles.brandSection}>
+        <ClockIcon />
+        <Text style={styles.title}>루틴 설정</Text>
+        <Text style={styles.subtitle}>
+          하루의 계획과 회고 시간을 정해주세요
+        </Text>
+      </View>
 
       {isLoading && (
         <ActivityIndicator testID="onboarding-loading-indicator" size="large" />
@@ -80,46 +183,54 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
         </Text>
       )}
 
-      <View style={styles.section}>
-        <Text style={styles.label}>계획 시간</Text>
-        <TouchableOpacity
-          testID="plan-time-picker"
-          style={styles.timeButton}
-          onPress={() => setShowPicker('plan')}
-        >
-          <Text style={styles.timeText}>{planTime}</Text>
-        </TouchableOpacity>
-        {showPicker === 'plan' && (
-          <DateTimePicker
-            testID="plan-time-native-picker"
-            value={timeStringToDate(planTime)}
-            mode="time"
-            is24Hour={true}
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            onChange={handleTimeChange('plan')}
-          />
-        )}
-      </View>
+      <View style={styles.timeSections}>
+        <View style={styles.section}>
+          <View style={styles.labelRow}>
+            <SunIcon />
+            <Text style={styles.label}>계획 시간</Text>
+          </View>
+          <TouchableOpacity
+            testID="plan-time-picker"
+            style={styles.timeButton}
+            onPress={() => setShowPicker('plan')}
+          >
+            <Text style={styles.timeText}>{planTime}</Text>
+          </TouchableOpacity>
+          {showPicker === 'plan' && (
+            <DateTimePicker
+              testID="plan-time-native-picker"
+              value={timeStringToDate(planTime)}
+              mode="time"
+              is24Hour={true}
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={handleTimeChange('plan')}
+            />
+          )}
+        </View>
 
-      <View style={styles.section}>
-        <Text style={styles.label}>회고 시간</Text>
-        <TouchableOpacity
-          testID="review-time-picker"
-          style={styles.timeButton}
-          onPress={() => setShowPicker('review')}
-        >
-          <Text style={styles.timeText}>{reviewTime}</Text>
-        </TouchableOpacity>
-        {showPicker === 'review' && (
-          <DateTimePicker
-            testID="review-time-native-picker"
-            value={timeStringToDate(reviewTime)}
-            mode="time"
-            is24Hour={true}
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            onChange={handleTimeChange('review')}
-          />
-        )}
+        <View style={styles.section}>
+          <View style={styles.labelRow}>
+            <MoonIcon />
+            <Text style={styles.label}>회고 시간</Text>
+          </View>
+          <TouchableOpacity
+            testID="review-time-picker"
+            style={styles.timeButton}
+            onPress={() => setShowPicker('review')}
+          >
+            <Text style={styles.timeText}>{reviewTime}</Text>
+          </TouchableOpacity>
+          {showPicker === 'review' && (
+            <DateTimePicker
+              testID="review-time-native-picker"
+              value={timeStringToDate(reviewTime)}
+              mode="time"
+              is24Hour={true}
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={handleTimeChange('review')}
+            />
+          )}
+        </View>
       </View>
 
       <TouchableOpacity
@@ -132,7 +243,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
       >
         <Text style={styles.completeButtonText}>완료</Text>
       </TouchableOpacity>
-    </View>
+    </LinearGradient>
   );
 };
 
@@ -140,52 +251,75 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
-    backgroundColor: '#FFFFFF',
+  },
+  brandSection: {
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: 40,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 32,
-    textAlign: 'center',
+    fontSize: 28,
+    fontWeight: '700',
+    color: colors.onSurface,
+    lineHeight: 34,
+  },
+  subtitle: {
+    ...typography.body,
+    fontSize: 14,
+    color: colors.secondaryText,
+  },
+  timeSections: {
+    width: 310,
+    gap: spacing.xl,
+    marginBottom: spacing.xxl,
   },
   section: {
-    marginBottom: 24,
+    gap: spacing.sm,
+  },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   label: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
+    ...typography.overline,
+    color: colors.secondaryText,
+    fontWeight: '700',
   },
   timeButton: {
-    backgroundColor: '#F2F2F7',
-    padding: 16,
-    borderRadius: 8,
+    backgroundColor: colors.surfaceDim,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    borderRadius: radius.xl,
     alignItems: 'center',
   },
   timeText: {
-    fontSize: 20,
-    fontWeight: '500',
-    color: '#007AFF',
+    fontSize: 36,
+    fontWeight: '700',
+    color: colors.primary,
+    lineHeight: 44,
   },
   completeButton: {
-    backgroundColor: '#007AFF',
-    padding: 16,
-    borderRadius: 8,
+    backgroundColor: colors.primary,
+    height: 52,
+    width: 310,
+    borderRadius: radius.lg,
     alignItems: 'center',
-    marginTop: 24,
+    justifyContent: 'center',
   },
   disabledButton: {
     opacity: 0.5,
   },
   completeButtonText: {
-    color: '#FFFFFF',
+    color: colors.surface,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   error: {
-    color: '#FF3B30',
-    marginBottom: 16,
+    color: colors.error,
+    marginBottom: spacing.lg,
     textAlign: 'center',
   },
 });

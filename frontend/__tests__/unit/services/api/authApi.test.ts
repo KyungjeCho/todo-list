@@ -1,6 +1,10 @@
 import { authApi } from 'src/services/api/authApi';
 import { apiClient } from 'src/services/api/client';
-import type { OAuthProvider, DeviceType, TokenRefreshResponse } from 'src/types/user';
+import type {
+  OAuthProvider,
+  DeviceType,
+  TokenRefreshResponse,
+} from 'src/types/user';
 
 jest.mock('src/services/api/client', () => ({
   apiClient: {
@@ -37,7 +41,12 @@ describe('AuthApi', () => {
       const deviceType: DeviceType = 'IOS';
       const redirectUri = 'exp://192.168.0.1:8081/--/auth/callback';
 
-      const url = authApi.getOAuthUrl(provider, fcmToken, deviceType, redirectUri);
+      const url = authApi.getOAuthUrl(
+        provider,
+        fcmToken,
+        deviceType,
+        redirectUri,
+      );
 
       expect(url).toContain('/auth/oauth/google');
       expect(url).toContain('fcmToken=fcm-token-123');
@@ -46,7 +55,13 @@ describe('AuthApi', () => {
     });
 
     it('deviceName이 있으면 URL에 포함한다', () => {
-      const url = authApi.getOAuthUrl('naver', 'fcm-token', 'ANDROID', 'exp://localhost/--/auth/callback', 'Galaxy S24');
+      const url = authApi.getOAuthUrl(
+        'naver',
+        'fcm-token',
+        'ANDROID',
+        'exp://localhost/--/auth/callback',
+        'Galaxy S24',
+      );
 
       expect(url).toContain('deviceName=');
     });
@@ -54,7 +69,12 @@ describe('AuthApi', () => {
     it.each<OAuthProvider>(['google', 'naver', 'kakao', 'apple'])(
       '%s provider를 지원한다',
       (provider) => {
-        const url = authApi.getOAuthUrl(provider, 'fcm-token', 'IOS', 'exp://localhost/--/auth/callback');
+        const url = authApi.getOAuthUrl(
+          provider,
+          'fcm-token',
+          'IOS',
+          'exp://localhost/--/auth/callback',
+        );
         expect(url).toContain(`/auth/oauth/${provider}`);
       },
     );

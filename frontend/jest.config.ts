@@ -14,7 +14,7 @@ const config: Config = {
   testRegex: '(/__tests__/.*\\.(test|spec))\\.(ts|tsx)$',
   testPathIgnorePatterns: ['/node_modules/', '/e2e/'],
   transformIgnorePatterns: [
-    'node_modules/(?!(@react-native|react-native|@react-native-community|@react-native-firebase)/)',
+    'node_modules/(?!(@react-native|react-native|react-native-svg|@react-native-community|@react-native-firebase)/)',
   ],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
@@ -30,6 +30,8 @@ const config: Config = {
     '^expo-clipboard$': '<rootDir>/__mocks__/expo-clipboard.ts',
     '^expo-audio$': '<rootDir>/__mocks__/expo-audio.ts',
     '^@react-native-community/datetimepicker$': '<rootDir>/__mocks__/@react-native-community/datetimepicker.tsx',
+    '^react-native-svg$': '<rootDir>/__mocks__/react-native-svg.tsx',
+    '^expo-linear-gradient$': '<rootDir>/__mocks__/expo-linear-gradient.tsx',
   },
 };
 

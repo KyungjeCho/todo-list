@@ -6,13 +6,66 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
+import Svg, { Path, Line, Rect } from 'react-native-svg';
 import { useVoiceRecording } from '../../features/todo/useVoiceRecording';
+import { colors } from '../../theme';
 
 interface VoiceTodoButtonProps {
   onVoiceTodoCreated: (audioUri: string) => void;
   isProcessing?: boolean;
   processingError?: string;
   disabled?: boolean;
+}
+
+function MicIcon() {
+  return (
+    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+      <Rect
+        x={9}
+        y={1}
+        width={6}
+        height={12}
+        rx={3}
+        stroke={colors.surface}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M19 10v2a7 7 0 01-14 0v-2"
+        stroke={colors.surface}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Line
+        x1={12}
+        y1={19}
+        x2={12}
+        y2={23}
+        stroke={colors.surface}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+      />
+      <Line
+        x1={8}
+        y1={23}
+        x2={16}
+        y2={23}
+        stroke={colors.surface}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
+
+function StopIcon() {
+  return (
+    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
+      <Rect x={4} y={4} width={16} height={16} rx={2} fill={colors.surface} />
+    </Svg>
+  );
 }
 
 export const VoiceTodoButton: React.FC<VoiceTodoButtonProps> = ({
@@ -42,7 +95,7 @@ export const VoiceTodoButton: React.FC<VoiceTodoButtonProps> = ({
           disabled={true}
           style={[styles.button, styles.disabledButton]}
         >
-          <Text style={styles.micIcon}>🎙</Text>
+          <MicIcon />
         </TouchableOpacity>
         <ActivityIndicator testID="voice-loading" style={styles.loading} />
       </View>
@@ -64,7 +117,7 @@ export const VoiceTodoButton: React.FC<VoiceTodoButtonProps> = ({
           onPress={stopRecording}
           style={[styles.button, styles.stopButton]}
         >
-          <Text style={styles.stopIcon}>⏹</Text>
+          <StopIcon />
         </TouchableOpacity>
         <TouchableOpacity
           testID="voice-todo-button"
@@ -72,7 +125,7 @@ export const VoiceTodoButton: React.FC<VoiceTodoButtonProps> = ({
           onPress={startRecording}
           style={[styles.button, { display: 'none' }]}
         >
-          <Text style={styles.micIcon}>🎙</Text>
+          <MicIcon />
         </TouchableOpacity>
       </View>
     );
@@ -88,7 +141,7 @@ export const VoiceTodoButton: React.FC<VoiceTodoButtonProps> = ({
         onPress={startRecording}
         style={[styles.button, isDisabled && styles.disabledButton]}
       >
-        <Text style={styles.micIcon}>🎙</Text>
+        <MicIcon />
       </TouchableOpacity>
       {(error || processingError) && (
         <View testID="voice-error" style={styles.errorContainer}>
@@ -102,38 +155,31 @@ export const VoiceTodoButton: React.FC<VoiceTodoButtonProps> = ({
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    marginVertical: 8,
   },
   button: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#2196F3',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
   },
   disabledButton: {
     opacity: 0.5,
   },
   stopButton: {
-    backgroundColor: '#F44336',
-  },
-  micIcon: {
-    fontSize: 24,
-  },
-  stopIcon: {
-    fontSize: 24,
+    backgroundColor: colors.error,
   },
   recordingIndicator: {
     marginBottom: 8,
   },
   recordingText: {
-    color: '#F44336',
+    color: colors.error,
     fontWeight: 'bold',
   },
   loading: {
@@ -144,7 +190,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   errorText: {
-    color: '#F44336',
+    color: colors.error,
     fontSize: 12,
     textAlign: 'center',
   },

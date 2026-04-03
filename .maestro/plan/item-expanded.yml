@@ -1,0 +1,166 @@
+appId: ${APP_ID}
+name: "US2: 할 일 아이템 확장 E2E"
+tags:
+  - plan
+  - item-expanded
+  - us2
+
+---
+
+# WHY: Expo Fast Refresh가 이전 상태를 복원할 수 있음. 오버레이가 열려있으면 닫기
+- runFlow:
+    when:
+      visible: "input-overlay-backdrop"
+    commands:
+      - tapOn:
+          id: "input-overlay-backdrop"
+
+# ===== 사전 조건: 할 일 추가 =====
+- tapOn:
+    id: "fab-add-button"
+
+- tapOn:
+    id: "input-overlay-text-input"
+
+- inputText: "expand test todo"
+
+- tapOn:
+    id: "input-overlay-submit-button"
+
+- assertNotVisible:
+    id: "input-overlay"
+
+- assertVisible: "expand test todo"
+
+# ===== 1. 아이템 탭 → 확장 확인 =====
+- tapOn: "expand test todo"
+
+# 확장 시 액션 버튼 3개 표시 확인
+- assertVisible:
+    id: "action-buttons-container"
+
+- assertVisible:
+    id: "action-delete-button"
+
+- assertVisible:
+    id: "action-deactivate-button"
+
+- assertVisible:
+    id: "action-add-memo-button"
+
+# ===== 2. chevron-up 탭 → 접기 확인 =====
+- tapOn:
+    id: "chevron-up-.*"
+    regex: true
+
+# 접힌 후 액션 버튼이 사라졌는지 확인
+- assertNotVisible:
+    id: "action-buttons-container"
+
+# ===== 3. 삭제 테스트 =====
+# 삭제용 할 일 추가
+- tapOn:
+    id: "fab-add-button"
+
+- tapOn:
+    id: "input-overlay-text-input"
+
+- inputText: "delete target todo"
+
+- tapOn:
+    id: "input-overlay-submit-button"
+
+- assertVisible: "delete target todo"
+
+# 아이템 확장
+- tapOn: "delete target todo"
+
+- assertVisible:
+    id: "action-delete-button"
+
+# 삭제 버튼 탭 → Alert 표시
+- tapOn:
+    id: "action-delete-button"
+
+# Alert의 "삭제" 확인 버튼 탭 (OS native alert)
+# WHY: 화면에 "삭제" 텍스트가 3개 — 액션 버튼(0), Alert 제목(1), Alert 확인 버튼(2)
+- tapOn:
+    text: "삭제"
+    index: 2
+
+# 삭제된 아이템이 목록에서 사라졌는지 확인
+- assertNotVisible: "delete target todo"
+
+# ===== 4. 비활성화 테스트 =====
+# 비활성화용 할 일 추가
+- tapOn:
+    id: "fab-add-button"
+
+- tapOn:
+    id: "input-overlay-text-input"
+
+- inputText: "deactivate target todo"
+
+- tapOn:
+    id: "input-overlay-submit-button"
+
+- assertVisible: "deactivate target todo"
+
+# 아이템 확장 후 비활성화
+- tapOn: "deactivate target todo"
+
+- assertVisible:
+    id: "action-deactivate-button"
+
+- tapOn:
+    id: "action-deactivate-button"
+
+# 비활성화 후 아이템이 여전히 목록에 존재하나 접혀있는지 확인
+- assertVisible: "deactivate target todo"
+
+- assertNotVisible:
+    id: "action-buttons-container"
+
+# ===== 5. 메모 추가 테스트 (InputOverlay 연동) =====
+# 첫번째 할 일 다시 확장
+- tapOn: "expand test todo"
+
+- assertVisible:
+    id: "action-add-memo-button"
+
+# + 메모 버튼 탭 → InputOverlay(mode=memo) 표시
+- tapOn:
+    id: "action-add-memo-button"
+
+- assertVisible:
+    id: "input-overlay"
+
+- assertVisible:
+    id: "input-overlay-text-input"
+
+# 메모 내용 입력 후 제출
+- tapOn:
+    id: "input-overlay-text-input"
+
+- inputText: "E2E test memo"
+
+- tapOn:
+    id: "input-overlay-submit-button"
+
+# 오버레이 닫힘 확인
+- assertNotVisible:
+    id: "input-overlay"
+
+# ===== 6. 다른 아이템 탭 → 이전 아이템 접기 확인 =====
+# 두 개의 할 일이 있을 때 하나 확장 후 다른 것 탭
+- tapOn: "expand test todo"
+
+- assertVisible:
+    id: "action-buttons-container"
+
+# 다른 아이템 탭 → 이전 접기 + 새 아이템 확장
+- tapOn: "deactivate target todo"
+
+# FAB 버튼 여전히 존재 확인
+- assertVisible:
+    id: "fab-add-button"

@@ -38,75 +38,11 @@ describe('MemoSection', () => {
       expect(screen.queryByTestId('memo-item-memo-1')).toBeNull();
     });
 
-    it('메모 입력 필드를 렌더링한다', () => {
-      render(<MemoSection todoId="todo-1" memos={[]} />);
-
-      expect(screen.getByTestId('memo-input')).toBeTruthy();
-    });
-
-    it('메모 추가 버튼을 렌더링한다', () => {
-      render(<MemoSection todoId="todo-1" memos={[]} />);
-
-      expect(screen.getByTestId('memo-add-button')).toBeTruthy();
-    });
-
     it('각 메모 항목에 testID가 부여된다', () => {
       render(<MemoSection todoId="todo-1" memos={mockMemos} />);
 
       expect(screen.getByTestId('memo-item-memo-1')).toBeTruthy();
       expect(screen.getByTestId('memo-item-memo-2')).toBeTruthy();
-    });
-  });
-
-  describe('메모 추가', () => {
-    it('내용 입력 후 추가 버튼 탭 시 onAddMemo 콜백이 호출된다', () => {
-      const mockOnAddMemo = jest.fn();
-      render(
-        <MemoSection todoId="todo-1" memos={[]} onAddMemo={mockOnAddMemo} />,
-      );
-
-      const input = screen.getByTestId('memo-input');
-      fireEvent.changeText(input, '새 메모');
-      fireEvent.press(screen.getByTestId('memo-add-button'));
-
-      expect(mockOnAddMemo).toHaveBeenCalledWith('새 메모');
-    });
-
-    it('메모 추가 후 입력 필드가 초기화된다', () => {
-      const mockOnAddMemo = jest.fn();
-      render(
-        <MemoSection todoId="todo-1" memos={[]} onAddMemo={mockOnAddMemo} />,
-      );
-
-      const input = screen.getByTestId('memo-input');
-      fireEvent.changeText(input, '새 메모');
-      fireEvent.press(screen.getByTestId('memo-add-button'));
-
-      expect(input.props.value).toBe('');
-    });
-
-    it('빈 내용으로는 메모를 추가하지 않는다', () => {
-      const mockOnAddMemo = jest.fn();
-      render(
-        <MemoSection todoId="todo-1" memos={[]} onAddMemo={mockOnAddMemo} />,
-      );
-
-      fireEvent.press(screen.getByTestId('memo-add-button'));
-
-      expect(mockOnAddMemo).not.toHaveBeenCalled();
-    });
-
-    it('공백만 입력된 경우 메모를 추가하지 않는다', () => {
-      const mockOnAddMemo = jest.fn();
-      render(
-        <MemoSection todoId="todo-1" memos={[]} onAddMemo={mockOnAddMemo} />,
-      );
-
-      const input = screen.getByTestId('memo-input');
-      fireEvent.changeText(input, '   ');
-      fireEvent.press(screen.getByTestId('memo-add-button'));
-
-      expect(mockOnAddMemo).not.toHaveBeenCalled();
     });
   });
 

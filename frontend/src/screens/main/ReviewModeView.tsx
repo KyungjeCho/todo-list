@@ -7,6 +7,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import type { Todo } from '../../types/todo';
+import { colors, typography, spacing, radius } from '../../theme';
 
 interface Stats {
   total: number;
@@ -60,7 +61,9 @@ export const ReviewModeView: React.FC<ReviewModeViewProps> = ({
       </Text>
 
       <View testID="review-completed-section" style={styles.section}>
-        <Text style={styles.sectionTitle}>완료</Text>
+        <Text style={[styles.sectionTitle, styles.sectionTitleCompleted]}>
+          완료
+        </Text>
         <FlatList
           data={completedTodos}
           keyExtractor={(item) => item.id}
@@ -83,7 +86,9 @@ export const ReviewModeView: React.FC<ReviewModeViewProps> = ({
       </View>
 
       <View testID="review-incomplete-section" style={styles.section}>
-        <Text style={styles.sectionTitle}>미완료</Text>
+        <Text style={[styles.sectionTitle, styles.sectionTitleIncomplete]}>
+          미완료
+        </Text>
         <FlatList
           data={incompleteTodos}
           keyExtractor={(item) => item.id}
@@ -119,58 +124,71 @@ export const ReviewModeView: React.FC<ReviewModeViewProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16 },
+  container: { flex: 1, padding: spacing.lg },
   progressBarContainer: {
     height: 8,
-    backgroundColor: '#E0E0E0',
+    backgroundColor: colors.border,
     borderRadius: 4,
-    marginBottom: 8,
+    marginBottom: spacing.sm,
     overflow: 'hidden',
   },
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#4CAF50',
+    backgroundColor: colors.success,
     borderRadius: 4,
   },
   progressText: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 16,
+    ...typography.body,
+    color: colors.secondaryText,
+    marginBottom: spacing.lg,
     textAlign: 'center',
   },
-  section: { marginBottom: 16 },
-  sectionTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 8 },
+  section: { marginBottom: spacing.lg },
+  sectionTitle: {
+    ...typography.overline,
+    fontWeight: '700',
+    marginBottom: spacing.sm,
+  },
+  sectionTitleCompleted: {
+    color: colors.success,
+  },
+  sectionTitleIncomplete: {
+    color: colors.warning,
+  },
   todoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
+    paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: colors.borderLight,
   },
   checkbox: {
     width: 22,
     height: 22,
     borderWidth: 2,
-    borderColor: '#ccc',
-    borderRadius: 4,
+    borderColor: colors.muted,
+    borderRadius: radius.sm,
     marginRight: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  checkboxChecked: { backgroundColor: '#4CAF50', borderColor: '#4CAF50' },
-  checkmark: { color: '#fff', fontSize: 13 },
-  todoText: { fontSize: 14, flex: 1 },
+  checkboxChecked: {
+    backgroundColor: colors.success,
+    borderColor: colors.success,
+  },
+  checkmark: { color: colors.surface, fontSize: 13 },
+  todoText: { ...typography.body, flex: 1 },
   completedText: {
-    fontSize: 14,
+    ...typography.body,
     flex: 1,
     textDecorationLine: 'line-through',
-    color: '#888',
+    color: colors.disabled,
   },
-  carriedOverText: { color: '#FF9800' },
+  carriedOverText: { color: colors.warning },
   carriedOverBadge: {
-    fontSize: 10,
-    color: '#FF9800',
-    backgroundColor: '#FFF3E0',
+    ...typography.label,
+    color: colors.warningDark,
+    backgroundColor: colors.warningLight,
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,

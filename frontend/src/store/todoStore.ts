@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { Todo, TodoMemo } from '../types/todo';
+import { getCurrentDate } from '../features/todo/getCurrentDate';
 
 interface TodoState {
   todos: Todo[];
@@ -20,7 +21,7 @@ interface TodoState {
 
 export const useTodoStore = create<TodoState>((set) => ({
   todos: [],
-  selectedDate: new Date().toISOString().split('T')[0],
+  selectedDate: getCurrentDate(),
   memos: {},
   isLoading: false,
   error: null,

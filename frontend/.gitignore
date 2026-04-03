@@ -43,6 +43,6 @@ yarn-error.*
 /android
 
 
-# FCM 
-GoogleService-Info.plist
-google-services.json
+# FCM — google-services.json and GoogleService-Info.plist contain only
+# public identifiers (project ID, API key restricted to package/bundle).
+# Safe to commit per Firebase and Expo docs.

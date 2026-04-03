@@ -1,0 +1,54 @@
+appId: ${APP_ID}
+name: "US1: 할 일 입력 오버레이 E2E"
+tags:
+  - plan
+  - input-overlay
+  - us1
+
+---
+
+# WHY: Expo Fast Refresh가 이전 상태를 복원할 수 있음. 오버레이가 열려있으면 닫기
+- runFlow:
+    when:
+      visible: "input-overlay-backdrop"
+    commands:
+      - tapOn:
+          id: "input-overlay-backdrop"
+
+# FAB+ 버튼이 표시되는지 확인
+- assertVisible:
+    id: "fab-add-button"
+
+# FAB+ 탭 → 입력 오버레이 표시
+- tapOn:
+    id: "fab-add-button"
+
+- assertVisible:
+    id: "input-overlay"
+
+- assertVisible:
+    id: "input-overlay-text-input"
+
+- assertVisible:
+    id: "input-overlay-submit-button"
+
+# 텍스트 입력
+- tapOn:
+    id: "input-overlay-text-input"
+
+- inputText: "E2E test todo item"
+
+# 추가 버튼 탭
+- tapOn:
+    id: "input-overlay-submit-button"
+
+# 오버레이가 닫혔는지 확인
+- assertNotVisible:
+    id: "input-overlay"
+
+# 추가된 할 일이 목록에 표시되는지 확인
+- assertVisible: "E2E test todo item"
+
+# FAB 버튼이 다시 표시되는지 확인
+- assertVisible:
+    id: "fab-add-button"
