@@ -72,20 +72,22 @@ export const MemoSection: React.FC<MemoSectionProps> = ({
               </TouchableOpacity>
             </View>
           ) : (
-            <View style={styles.memoContent}>
-              <Text style={styles.noteIcon}>📄</Text>
-              <Text style={styles.memoText}>{memo.content}</Text>
-            </View>
+            <>
+              <View style={styles.memoContent}>
+                <Text style={styles.noteIcon}>📄</Text>
+                <Text style={styles.memoText}>{memo.content}</Text>
+              </View>
+              <TouchableOpacity
+                testID={`memo-delete-${memo.id}`}
+                onPress={() => onDeleteMemo?.(memo.id)}
+                style={styles.deleteButton}
+                accessibilityLabel="메모 삭제"
+                accessibilityRole="button"
+              >
+                <Text style={styles.deleteText}>&#10005;</Text>
+              </TouchableOpacity>
+            </>
           )}
-          <TouchableOpacity
-            testID={`memo-delete-${memo.id}`}
-            onPress={() => onDeleteMemo?.(memo.id)}
-            style={styles.deleteButton}
-            accessibilityLabel="메모 삭제"
-            accessibilityRole="button"
-          >
-            <Text style={styles.deleteText}>&#10005;</Text>
-          </TouchableOpacity>
         </TouchableOpacity>
       ))}
     </View>

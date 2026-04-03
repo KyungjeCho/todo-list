@@ -49,7 +49,9 @@ tags:
     id: "action-add-memo-button"
 
 # ===== 2. chevron-up 탭 → 접기 확인 =====
-- tapOn: "▲"
+- tapOn:
+    id: "chevron-up-.*"
+    regex: true
 
 # 접힌 후 액션 버튼이 사라졌는지 확인
 - assertNotVisible:

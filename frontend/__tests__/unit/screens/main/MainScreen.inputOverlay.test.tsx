@@ -1,4 +1,5 @@
 import { render, fireEvent, screen } from '@testing-library/react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { MainScreen } from 'src/screens/main/MainScreen';
 import type { Todo } from 'src/types/todo';
 
@@ -42,19 +43,30 @@ const defaultProps = {
   onVoiceTodoCreated: jest.fn(),
 };
 
+const safeAreaMetrics = {
+  insets: { top: 0, bottom: 0, left: 0, right: 0 },
+  frame: { x: 0, y: 0, width: 390, height: 844 },
+};
+
+function renderWithProvider(ui: React.ReactElement) {
+  return render(
+    <SafeAreaProvider initialMetrics={safeAreaMetrics}>{ui}</SafeAreaProvider>,
+  );
+}
+
 describe('MainScreen InputOverlay 통합', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   it('FAB+ 버튼이 표시된다', () => {
-    render(<MainScreen {...defaultProps} />);
+    renderWithProvider(<MainScreen {...defaultProps} />);
 
     expect(screen.getByTestId('fab-add-button')).toBeTruthy();
   });
 
   it('FAB+ 탭 시 입력 오버레이가 표시된다', () => {
-    render(<MainScreen {...defaultProps} />);
+    renderWithProvider(<MainScreen {...defaultProps} />);
 
     fireEvent.press(screen.getByTestId('fab-add-button'));
 
@@ -63,7 +75,7 @@ describe('MainScreen InputOverlay 통합', () => {
 
   it('오버레이에서 텍스트 입력 후 추가 시 onAddTodo가 호출된다', () => {
     const onAddTodo = jest.fn();
-    render(<MainScreen {...defaultProps} onAddTodo={onAddTodo} />);
+    renderWithProvider(<MainScreen {...defaultProps} onAddTodo={onAddTodo} />);
 
     fireEvent.press(screen.getByTestId('fab-add-button'));
 
@@ -75,7 +87,7 @@ describe('MainScreen InputOverlay 통합', () => {
   });
 
   it('할 일 추가 후 오버레이가 닫힌다', () => {
-    render(<MainScreen {...defaultProps} />);
+    renderWithProvider(<MainScreen {...defaultProps} />);
 
     fireEvent.press(screen.getByTestId('fab-add-button'));
     expect(screen.getByTestId('input-overlay')).toBeTruthy();
@@ -88,7 +100,7 @@ describe('MainScreen InputOverlay 통합', () => {
   });
 
   it('오버레이 배경 탭 시 오버레이가 닫힌다', () => {
-    render(<MainScreen {...defaultProps} />);
+    renderWithProvider(<MainScreen {...defaultProps} />);
 
     fireEvent.press(screen.getByTestId('fab-add-button'));
     expect(screen.getByTestId('input-overlay')).toBeTruthy();
@@ -99,7 +111,7 @@ describe('MainScreen InputOverlay 통합', () => {
   });
 
   it('오버레이 활성 시 FAB 버튼이 숨겨진다', () => {
-    render(<MainScreen {...defaultProps} />);
+    renderWithProvider(<MainScreen {...defaultProps} />);
 
     fireEvent.press(screen.getByTestId('fab-add-button'));
 

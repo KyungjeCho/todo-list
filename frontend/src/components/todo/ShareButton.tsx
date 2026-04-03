@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Todo } from '../../types/todo';
 import { useShareTodo } from '../../features/share/useShareTodo';
 import { colors, typography, spacing, radius } from '../../theme';
@@ -23,6 +24,7 @@ export function ShareButton({
   date,
 }: ShareButtonProps): React.JSX.Element {
   const { shareTodos, shareToSelf, isSharing, copied, error } = useShareTodo();
+  const insets = useSafeAreaInsets();
   const [menuVisible, setMenuVisible] = useState(false);
   const disabled = todos.length === 0;
 
@@ -91,7 +93,7 @@ export function ShareButton({
       >
         <Pressable
           testID="share-backdrop"
-          style={styles.backdrop}
+          style={[styles.backdrop, { paddingTop: insets.top + spacing.lg }]}
           onPress={handleDismiss}
         >
           <View testID="share-menu" style={styles.menu}>
@@ -142,8 +144,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'flex-end',
-    paddingTop: 80,
     paddingRight: spacing.lg,
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
   },
   menu: {
     backgroundColor: colors.surface,
@@ -165,9 +167,8 @@ const styles = StyleSheet.create({
     color: colors.onSurface,
   },
   toast: {
-    position: 'absolute',
-    bottom: -36,
-    right: 0,
+    marginTop: spacing.xs,
+    alignSelf: 'flex-end',
     backgroundColor: colors.onSurface,
     borderRadius: radius.sm,
     paddingHorizontal: spacing.md,
@@ -178,9 +179,8 @@ const styles = StyleSheet.create({
     color: colors.surface,
   },
   errorToast: {
-    position: 'absolute',
-    bottom: -36,
-    right: 0,
+    marginTop: spacing.xs,
+    alignSelf: 'flex-end',
     backgroundColor: colors.error,
     borderRadius: radius.sm,
     paddingHorizontal: spacing.md,

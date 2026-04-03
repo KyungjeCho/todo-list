@@ -35,7 +35,6 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   onEdit,
   onDeactivate,
   onDelete,
-  onAddMemo,
   onAddMemoOverlay,
   onUpdateMemo,
   onDeleteMemo,
@@ -83,12 +82,8 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   }, [onDeactivate, todo.id]);
 
   const handleAddMemo = useCallback(() => {
-    if (onAddMemoOverlay) {
-      onAddMemoOverlay(todo.id);
-    } else {
-      onAddMemo?.(todo.id, '');
-    }
-  }, [onAddMemoOverlay, onAddMemo, todo.id]);
+    onAddMemoOverlay?.(todo.id);
+  }, [onAddMemoOverlay, todo.id]);
 
   const handleCollapse = useCallback(() => {
     onExpand?.(null);

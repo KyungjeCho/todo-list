@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Platform,
   KeyboardAvoidingView,
+  InteractionManager,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { colors, typography, spacing, radius } from '../../theme';
@@ -32,7 +33,10 @@ export const InputOverlay: React.FC<InputOverlayProps> = ({
 
   useEffect(() => {
     if (visible) {
-      setTimeout(() => inputRef.current?.focus(), 100);
+      const handle = InteractionManager.runAfterInteractions(() => {
+        inputRef.current?.focus();
+      });
+      return () => handle.cancel();
     } else {
       setText('');
     }
