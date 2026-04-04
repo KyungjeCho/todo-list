@@ -1,7 +1,7 @@
 # T215 [US8] Maestro E2E: TodoList 공유 흐름
-# 공유 버튼 → 메뉴 표시 → "나에게 전송" 최상단 확인 → 공유하기 옵션 검증
+# 공유 버튼 → 메뉴 표시 → "공유하기" → "클립보드 복사" 순서 확인 → "나에게 전송" 부재 확인
 # WHY: 사용자가 할 일 목록을 공유하는 핵심 플로우.
-#       공유 버튼 탭 → 메뉴 표시 → "나에게 전송" 최상단 확인까지 검증.
+#       공유 버튼 탭 → 메뉴 표시 → "공유하기", "클립보드 복사" 순서 확인까지 검증.
 # PREREQ: 인증 완료 + 온보딩 완료 상태에서 메인 화면 진입, 할 일 1개 이상 존재 필요.
 
 appId: com.todolist.app
@@ -47,18 +47,30 @@ tags:
 - assertVisible:
     id: "share-menu"
 
-# "나에게 전송"이 최상단에 표시되는지 확인
-- assertVisible:
-    id: "share-to-self"
-- assertVisible:
-    text: "나에게 전송"
-
-# "공유하기" 옵션도 표시되는지 확인
+# "공유하기"가 첫 번째로 표시되는지 확인
 - assertVisible:
     id: "share-to-others"
 - assertVisible:
     text: "공유하기"
 
+# "클립보드 복사"가 두 번째로 표시되는지 확인
+- assertVisible:
+    id: "copy-to-clipboard"
+- assertVisible:
+    text: "클립보드 복사"
+
+# "나에게 전송"이 존재하지 않는지 확인
+- assertNotVisible:
+    id: "share-to-self"
+    optional: true
+
+# "클립보드 복사" 탭 후 토스트가 화면 중하단에 표시되는지 확인
+- tapOn:
+    id: "copy-to-clipboard"
+
+- assertVisible:
+    id: "share-toast"
+
 # WHY: OS 공유 시트가 뜨면 에뮬레이터에서 비동기 처리되므로,
-#       메뉴 표시 + 옵션 배치(나에게 전송 최상단) 검증까지만 수행.
+#       메뉴 표시 + 옵션 배치(공유하기 → 클립보드 복사 순서) + 클립보드 복사 토스트 검증까지 수행.
 #       실제 공유 동작은 사용자가 직접 확인한다.

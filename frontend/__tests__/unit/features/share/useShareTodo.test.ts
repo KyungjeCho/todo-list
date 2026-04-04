@@ -119,6 +119,27 @@ describe('useShareTodo', () => {
       expect(result.current.isSharing).toBe(false);
     });
 
+    it('공유 실패 에러가 2초 후 자동으로 사라진다', async () => {
+      jest.useFakeTimers();
+      ShareMock.share.mockRejectedValueOnce(new Error('공유 실패'));
+
+      const { result } = renderHook(() => useShareTodo());
+
+      await act(async () => {
+        await result.current.shareTodos(mockTodos, '2026-03-31');
+      });
+
+      expect(result.current.error).toBe('공유에 실패했습니다');
+
+      act(() => {
+        jest.advanceTimersByTime(2000);
+      });
+
+      expect(result.current.error).toBeNull();
+
+      jest.useRealTimers();
+    });
+
     it('빈 할 일 목록은 공유하지 않는다', async () => {
       const { result } = renderHook(() => useShareTodo());
 
@@ -130,12 +151,12 @@ describe('useShareTodo', () => {
     });
   });
 
-  describe('shareToSelf', () => {
-    it('"나에게 전송" 시 클립보드에 복사한다', async () => {
+  describe('copyToClipboard', () => {
+    it('클립보드에 복사한다', async () => {
       const { result } = renderHook(() => useShareTodo());
 
       await act(async () => {
-        await result.current.shareToSelf(mockTodos, '2026-03-31');
+        await result.current.copyToClipboard(mockTodos, '2026-03-31');
       });
 
       expect(Clipboard.setStringAsync).toHaveBeenCalledTimes(1);
@@ -146,7 +167,7 @@ describe('useShareTodo', () => {
       const { result } = renderHook(() => useShareTodo());
 
       await act(async () => {
-        await result.current.shareToSelf(mockTodos, '2026-03-31');
+        await result.current.copyToClipboard(mockTodos, '2026-03-31');
       });
 
       const copiedText = (Clipboard.setStringAsync as jest.Mock).mock
@@ -159,7 +180,7 @@ describe('useShareTodo', () => {
       const { result } = renderHook(() => useShareTodo());
 
       await act(async () => {
-        await result.current.shareToSelf(mockTodos, '2026-03-31');
+        await result.current.copyToClipboard(mockTodos, '2026-03-31');
       });
 
       expect(result.current.copied).toBe(true);
@@ -173,17 +194,40 @@ describe('useShareTodo', () => {
       const { result } = renderHook(() => useShareTodo());
 
       await act(async () => {
-        await result.current.shareToSelf(mockTodos, '2026-03-31');
+        await result.current.copyToClipboard(mockTodos, '2026-03-31');
       });
 
       expect(result.current.error).toBe('클립보드 복사에 실패했습니다');
+    });
+
+    it('클립보드 복사 실패 에러가 2초 후 자동으로 사라진다', async () => {
+      jest.useFakeTimers();
+      (Clipboard.setStringAsync as jest.Mock).mockRejectedValueOnce(
+        new Error('복사 실패'),
+      );
+
+      const { result } = renderHook(() => useShareTodo());
+
+      await act(async () => {
+        await result.current.copyToClipboard(mockTodos, '2026-03-31');
+      });
+
+      expect(result.current.error).toBe('클립보드 복사에 실패했습니다');
+
+      act(() => {
+        jest.advanceTimersByTime(2000);
+      });
+
+      expect(result.current.error).toBeNull();
+
+      jest.useRealTimers();
     });
 
     it('빈 할 일 목록은 복사하지 않는다', async () => {
       const { result } = renderHook(() => useShareTodo());
 
       await act(async () => {
-        await result.current.shareToSelf([], '2026-03-31');
+        await result.current.copyToClipboard([], '2026-03-31');
       });
 
       expect(Clipboard.setStringAsync).not.toHaveBeenCalled();
@@ -195,7 +239,7 @@ describe('useShareTodo', () => {
       const { result } = renderHook(() => useShareTodo());
 
       await act(async () => {
-        await result.current.shareToSelf(mockTodos, '2026-03-31');
+        await result.current.copyToClipboard(mockTodos, '2026-03-31');
       });
 
       expect(result.current.copied).toBe(true);
