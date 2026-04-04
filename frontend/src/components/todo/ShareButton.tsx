@@ -15,6 +15,8 @@ import type { Todo } from '../../types/todo';
 import { useShareTodo } from '../../features/share/useShareTodo';
 import { colors, typography, spacing, radius } from '../../theme';
 
+const TOAST_VERTICAL_RATIO = 0.65;
+
 interface ShareButtonProps {
   todos: Todo[];
   date: string;
@@ -84,7 +86,7 @@ export function ShareButton({
       >
         <View
           testID="share-toast-container"
-          style={[styles.toastOverlay, { paddingTop: windowHeight * 0.65 }]}
+          style={[styles.toastOverlay, { paddingTop: windowHeight * TOAST_VERTICAL_RATIO }]}
           pointerEvents="none"
         >
           <View testID="share-toast" style={styles.toast}>
@@ -101,7 +103,7 @@ export function ShareButton({
       >
         <View
           testID="share-error-container"
-          style={[styles.toastOverlay, { paddingTop: windowHeight * 0.65 }]}
+          style={[styles.toastOverlay, { paddingTop: windowHeight * TOAST_VERTICAL_RATIO }]}
           pointerEvents="none"
         >
           <View testID="share-error" style={styles.errorToast}>
