@@ -8,7 +8,7 @@ import { colors, typography, radius } from 'src/theme';
 jest.mock('src/features/share/useShareTodo');
 
 const mockShareTodos = jest.fn().mockResolvedValue(undefined);
-const mockShareToSelf = jest.fn().mockResolvedValue(undefined);
+const mockCopyToClipboard = jest.fn().mockResolvedValue(undefined);
 const mockUseShareTodo = useShareTodo as jest.MockedFunction<
   typeof useShareTodo
 >;
@@ -16,7 +16,7 @@ const mockUseShareTodo = useShareTodo as jest.MockedFunction<
 function setupHook(overrides: Partial<ReturnType<typeof useShareTodo>> = {}) {
   mockUseShareTodo.mockReturnValue({
     shareTodos: mockShareTodos,
-    shareToSelf: mockShareToSelf,
+    copyToClipboard: mockCopyToClipboard,
     isSharing: false,
     copied: false,
     error: null,
@@ -41,7 +41,12 @@ const insets = { top: 0, bottom: 0, left: 0, right: 0 };
 
 function renderWithProvider(ui: React.ReactElement) {
   return render(
-    <SafeAreaProvider initialMetrics={{ insets, frame: { x: 0, y: 0, width: 390, height: 844 } }}>
+    <SafeAreaProvider
+      initialMetrics={{
+        insets,
+        frame: { x: 0, y: 0, width: 390, height: 844 },
+      }}
+    >
       {ui}
     </SafeAreaProvider>,
   );
@@ -76,22 +81,22 @@ describe('ShareButton', () => {
       expect(screen.getByTestId('share-menu')).toBeTruthy();
     });
 
-    it('"나에게 전송" 옵션이 최상단에 표시된다', () => {
+    it('메뉴에 "공유하기", "클립보드 복사" 순서로 표시되고 "나에게 전송"이 없다', () => {
       renderWithProvider(<ShareButton todos={mockTodos} date="2026-03-31" />);
 
       fireEvent.press(screen.getByTestId('share-button'));
 
-      const shareToSelfOption = screen.getByTestId('share-to-self');
-      expect(shareToSelfOption).toBeTruthy();
-      expect(screen.getByText('나에게 전송')).toBeTruthy();
-    });
-
-    it('공유하기 옵션이 표시된다', () => {
-      renderWithProvider(<ShareButton todos={mockTodos} date="2026-03-31" />);
-
-      fireEvent.press(screen.getByTestId('share-button'));
+      const menu = screen.getByTestId('share-menu');
+      expect(menu).toBeTruthy();
 
       expect(screen.getByTestId('share-to-others')).toBeTruthy();
+      expect(screen.getByText('공유하기')).toBeTruthy();
+
+      expect(screen.getByTestId('copy-to-clipboard')).toBeTruthy();
+      expect(screen.getByText('클립보드 복사')).toBeTruthy();
+
+      expect(screen.queryByTestId('share-to-self')).toBeNull();
+      expect(screen.queryByText('나에게 전송')).toBeNull();
     });
 
     it('메뉴 바깥 영역 터치 시 메뉴가 닫힌다', () => {
@@ -106,13 +111,13 @@ describe('ShareButton', () => {
   });
 
   describe('공유 액션', () => {
-    it('"나에게 전송" 클릭 시 shareToSelf를 호출한다', () => {
+    it('"클립보드 복사" 클릭 시 copyToClipboard를 호출한다', () => {
       renderWithProvider(<ShareButton todos={mockTodos} date="2026-03-31" />);
 
       fireEvent.press(screen.getByTestId('share-button'));
-      fireEvent.press(screen.getByTestId('share-to-self'));
+      fireEvent.press(screen.getByTestId('copy-to-clipboard'));
 
-      expect(mockShareToSelf).toHaveBeenCalledWith(mockTodos, '2026-03-31');
+      expect(mockCopyToClipboard).toHaveBeenCalledWith(mockTodos, '2026-03-31');
     });
 
     it('공유하기 클릭 시 shareTodos를 호출한다', () => {
@@ -187,6 +192,38 @@ describe('ShareButton', () => {
       renderWithProvider(<ShareButton todos={mockTodos} date="2026-03-31" />);
 
       expect(screen.getByText('클립보드에 복사되었습니다')).toBeTruthy();
+    });
+
+    it('토스트가 화면 가로 중앙, 세로 중하단에 렌더링된다', () => {
+      setupHook({ copied: true });
+
+      renderWithProvider(<ShareButton todos={mockTodos} date="2026-03-31" />);
+
+      const container = screen.getByTestId('share-toast-container');
+      const containerStyle = Array.isArray(container.props.style)
+        ? Object.assign({}, ...container.props.style)
+        : container.props.style;
+
+      expect(containerStyle.flex).toBe(1);
+      expect(containerStyle.alignItems).toBe('center');
+      expect(typeof containerStyle.paddingTop).toBe('number');
+      expect(containerStyle.paddingTop).toBeGreaterThan(0);
+    });
+
+    it('에러 토스트도 화면 가로 중앙, 세로 중하단에 렌더링된다', () => {
+      setupHook({ error: '클립보드 복사에 실패했습니다' });
+
+      renderWithProvider(<ShareButton todos={mockTodos} date="2026-03-31" />);
+
+      const container = screen.getByTestId('share-error-container');
+      const containerStyle = Array.isArray(container.props.style)
+        ? Object.assign({}, ...container.props.style)
+        : container.props.style;
+
+      expect(containerStyle.flex).toBe(1);
+      expect(containerStyle.alignItems).toBe('center');
+      expect(typeof containerStyle.paddingTop).toBe('number');
+      expect(containerStyle.paddingTop).toBeGreaterThan(0);
     });
   });
 

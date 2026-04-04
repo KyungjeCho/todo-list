@@ -8,7 +8,7 @@ const TOAST_DURATION_MS = 2000;
 
 interface UseShareTodoReturn {
   shareTodos: (todos: Todo[], date: string) => Promise<void>;
-  shareToSelf: (todos: Todo[], date: string) => Promise<void>;
+  copyToClipboard: (todos: Todo[], date: string) => Promise<void>;
   isSharing: boolean;
   copied: boolean;
   error: string | null;
@@ -38,7 +38,7 @@ export function useShareTodo(): UseShareTodoReturn {
     }
   }, []);
 
-  const shareToSelf = useCallback(async (todos: Todo[], date: string) => {
+  const copyToClipboard = useCallback(async (todos: Todo[], date: string) => {
     if (todos.length === 0) {
       return;
     }
@@ -64,5 +64,5 @@ export function useShareTodo(): UseShareTodoReturn {
     }
   }, []);
 
-  return { shareTodos, shareToSelf, isSharing, copied, error };
+  return { shareTodos, copyToClipboard, isSharing, copied, error };
 }

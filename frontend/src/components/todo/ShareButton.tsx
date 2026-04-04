@@ -8,6 +8,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Todo } from '../../types/todo';
@@ -23,8 +24,10 @@ export function ShareButton({
   todos,
   date,
 }: ShareButtonProps): React.JSX.Element {
-  const { shareTodos, shareToSelf, isSharing, copied, error } = useShareTodo();
+  const { shareTodos, copyToClipboard, isSharing, copied, error } =
+    useShareTodo();
   const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
   const [menuVisible, setMenuVisible] = useState(false);
   const disabled = todos.length === 0;
 
@@ -48,9 +51,9 @@ export function ShareButton({
     setMenuVisible(false);
   };
 
-  const handleShareToSelf = () => {
+  const handleCopyToClipboard = () => {
     setMenuVisible(false);
-    void shareToSelf(todos, date);
+    void copyToClipboard(todos, date);
   };
 
   const handleShareToOthers = () => {
@@ -73,17 +76,39 @@ export function ShareButton({
         </Text>
       </TouchableOpacity>
 
-      {copied && (
-        <View style={styles.toast}>
-          <Text style={styles.toastText}>클립보드에 복사되었습니다</Text>
+      <Modal
+        visible={copied}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+      >
+        <View
+          testID="share-toast-container"
+          style={[styles.toastOverlay, { paddingTop: windowHeight * 0.65 }]}
+          pointerEvents="none"
+        >
+          <View testID="share-toast" style={styles.toast}>
+            <Text style={styles.toastText}>클립보드에 복사되었습니다</Text>
+          </View>
         </View>
-      )}
+      </Modal>
 
-      {error !== null && (
-        <View testID="share-error" style={styles.errorToast}>
-          <Text style={styles.toastText}>{error}</Text>
+      <Modal
+        visible={error !== null}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+      >
+        <View
+          testID="share-error-container"
+          style={[styles.toastOverlay, { paddingTop: windowHeight * 0.65 }]}
+          pointerEvents="none"
+        >
+          <View testID="share-error" style={styles.errorToast}>
+            <Text style={styles.toastText}>{error}</Text>
+          </View>
         </View>
-      )}
+      </Modal>
 
       <Modal
         visible={menuVisible}
@@ -98,18 +123,18 @@ export function ShareButton({
         >
           <View testID="share-menu" style={styles.menu}>
             <TouchableOpacity
-              testID="share-to-self"
-              style={styles.menuItem}
-              onPress={handleShareToSelf}
-            >
-              <Text style={styles.menuText}>나에게 전송</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
               testID="share-to-others"
               style={styles.menuItem}
               onPress={handleShareToOthers}
             >
               <Text style={styles.menuText}>공유하기</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              testID="copy-to-clipboard"
+              style={styles.menuItem}
+              onPress={handleCopyToClipboard}
+            >
+              <Text style={styles.menuText}>클립보드 복사</Text>
             </TouchableOpacity>
           </View>
         </Pressable>
@@ -166,9 +191,11 @@ const styles = StyleSheet.create({
     ...typography.body,
     color: colors.onSurface,
   },
+  toastOverlay: {
+    flex: 1,
+    alignItems: 'center',
+  },
   toast: {
-    marginTop: spacing.xs,
-    alignSelf: 'flex-end',
     backgroundColor: colors.onSurface,
     borderRadius: radius.sm,
     paddingHorizontal: spacing.md,
@@ -179,8 +206,6 @@ const styles = StyleSheet.create({
     color: colors.surface,
   },
   errorToast: {
-    marginTop: spacing.xs,
-    alignSelf: 'flex-end',
     backgroundColor: colors.error,
     borderRadius: radius.sm,
     paddingHorizontal: spacing.md,

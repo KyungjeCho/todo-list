@@ -130,12 +130,12 @@ describe('useShareTodo', () => {
     });
   });
 
-  describe('shareToSelf', () => {
-    it('"나에게 전송" 시 클립보드에 복사한다', async () => {
+  describe('copyToClipboard', () => {
+    it('클립보드에 복사한다', async () => {
       const { result } = renderHook(() => useShareTodo());
 
       await act(async () => {
-        await result.current.shareToSelf(mockTodos, '2026-03-31');
+        await result.current.copyToClipboard(mockTodos, '2026-03-31');
       });
 
       expect(Clipboard.setStringAsync).toHaveBeenCalledTimes(1);
@@ -146,7 +146,7 @@ describe('useShareTodo', () => {
       const { result } = renderHook(() => useShareTodo());
 
       await act(async () => {
-        await result.current.shareToSelf(mockTodos, '2026-03-31');
+        await result.current.copyToClipboard(mockTodos, '2026-03-31');
       });
 
       const copiedText = (Clipboard.setStringAsync as jest.Mock).mock
@@ -159,7 +159,7 @@ describe('useShareTodo', () => {
       const { result } = renderHook(() => useShareTodo());
 
       await act(async () => {
-        await result.current.shareToSelf(mockTodos, '2026-03-31');
+        await result.current.copyToClipboard(mockTodos, '2026-03-31');
       });
 
       expect(result.current.copied).toBe(true);
@@ -173,7 +173,7 @@ describe('useShareTodo', () => {
       const { result } = renderHook(() => useShareTodo());
 
       await act(async () => {
-        await result.current.shareToSelf(mockTodos, '2026-03-31');
+        await result.current.copyToClipboard(mockTodos, '2026-03-31');
       });
 
       expect(result.current.error).toBe('클립보드 복사에 실패했습니다');
@@ -183,7 +183,7 @@ describe('useShareTodo', () => {
       const { result } = renderHook(() => useShareTodo());
 
       await act(async () => {
-        await result.current.shareToSelf([], '2026-03-31');
+        await result.current.copyToClipboard([], '2026-03-31');
       });
 
       expect(Clipboard.setStringAsync).not.toHaveBeenCalled();
@@ -195,7 +195,7 @@ describe('useShareTodo', () => {
       const { result } = renderHook(() => useShareTodo());
 
       await act(async () => {
-        await result.current.shareToSelf(mockTodos, '2026-03-31');
+        await result.current.copyToClipboard(mockTodos, '2026-03-31');
       });
 
       expect(result.current.copied).toBe(true);

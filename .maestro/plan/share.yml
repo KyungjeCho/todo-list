@@ -24,12 +24,12 @@ tags:
 - assertVisible:
     id: "share-menu"
 
-# 메뉴에 나에게 전송, 공유하기 옵션 확인
-- assertVisible:
-    id: "share-to-self"
-
+# 메뉴에 공유하기, 클립보드 복사 옵션 확인
 - assertVisible:
     id: "share-to-others"
+
+- assertVisible:
+    id: "copy-to-clipboard"
 
 # 메뉴 닫기
 - tapOn:
