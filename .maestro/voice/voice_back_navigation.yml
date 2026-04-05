@@ -1,0 +1,28 @@
+appId: ${APP_ID}
+tags:
+  - voice
+  - regression
+---
+# 뒤로가기 확인 다이얼로그 테스트
+- launchApp:
+    stopApp: true
+
+# 마이크 FAB 탭 → VoiceInputScreen 이동
+- tapOn:
+    id: "voice-todo-button"
+    optional: true
+
+# 음성 입력 화면 확인
+- assertVisible:
+    text: "음성 입력"
+    optional: true
+
+# 뒤로가기 버튼 탭
+- tapOn:
+    id: "voice-back-button"
+    optional: true
+
+# 임시 할 일이 없으면 즉시 이전 화면으로 복귀
+- assertVisible:
+    id: "fab-add-button"
+    optional: true

@@ -13,7 +13,8 @@ import { UpdateTodoUsecase } from 'src/todo/application/update-todo.usecase';
 import { ChangeTodoStatusUsecase } from 'src/todo/application/change-todo-status.usecase';
 import { DeleteTodoUsecase } from 'src/todo/application/delete-todo.usecase';
 import { GetMonthlySummaryUsecase } from 'src/todo/application/get-monthly-summary.usecase';
-import { CreateVoiceTodoUsecase } from 'src/todo/application/create-voice-todo.usecase';
+import { RefineTextUsecase } from 'src/todo/application/refine-text.usecase';
+import { BatchCreateTodoUsecase } from 'src/todo/application/batch-create-todo.usecase';
 import { JwtStrategy } from 'src/auth/infrastructure/jwt.strategy';
 
 const TEST_JWT_SECRET = 'test-jwt-secret';
@@ -58,7 +59,11 @@ describe('TodoCompleteController (Integration)', () => {
           useValue: mockGetMonthlySummaryUsecase,
         },
         {
-          provide: CreateVoiceTodoUsecase,
+          provide: RefineTextUsecase,
+          useValue: { execute: jest.fn() },
+        },
+        {
+          provide: BatchCreateTodoUsecase,
           useValue: { execute: jest.fn() },
         },
         {

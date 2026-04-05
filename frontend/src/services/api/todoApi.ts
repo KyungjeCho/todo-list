@@ -40,6 +40,22 @@ export interface DeleteTodoResponse {
   deletedAt: string;
 }
 
+export interface RefineTextRequest {
+  text: string;
+}
+
+export interface RefineTextResponse {
+  refinedText: string;
+}
+
+export interface BatchCreateTodosRequest {
+  todos: { content: string; todoDate: string }[];
+}
+
+export interface BatchCreateTodosResponse {
+  created: Todo[];
+}
+
 export const todoApi = {
   async getTodos(date: string): Promise<TodoListResponse> {
     const response = await apiClient.get('/todos', {
@@ -79,6 +95,18 @@ export const todoApi = {
 
   async completeDay(date: string): Promise<CompleteDayResponse> {
     const response = await apiClient.post('/todos/complete', { date });
+    return response.data;
+  },
+
+  async refineText(request: RefineTextRequest): Promise<RefineTextResponse> {
+    const response = await apiClient.post('/todos/refine', request);
+    return response.data;
+  },
+
+  async batchCreateTodos(
+    request: BatchCreateTodosRequest,
+  ): Promise<BatchCreateTodosResponse> {
+    const response = await apiClient.post('/todos/batch', request);
     return response.data;
   },
 

@@ -1,0 +1,36 @@
+appId: ${APP_ID}
+tags:
+  - voice
+  - smoke
+---
+# 음성 입력 화면 진입 및 기본 플로우 확인
+- launchApp:
+    stopApp: true
+
+# 로그인 상태 가정 (기존 세션 유지)
+- assertVisible:
+    id: "fab-add-button"
+    optional: true
+
+# 마이�� FAB 버튼 탭 → VoiceInputScreen 이동
+- tapOn:
+    id: "voice-todo-button"
+
+# 음성 입력 화면 진입 확인
+- assertVisible:
+    text: "음성 입력"
+
+# 녹음 시작 확인
+- assertVisible:
+    id: "voice-controls"
+    optional: true
+
+# 종료 버튼 탭
+- tapOn:
+    id: "voice-stop-button"
+    optional: true
+
+# 이전 화면 복귀 확인
+- assertVisible:
+    id: "fab-add-button"
+    optional: true

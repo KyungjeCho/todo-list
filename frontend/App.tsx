@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { StatusBar } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import {
@@ -32,6 +33,7 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      <StatusBar barStyle="dark-content" />
       <NavigationContainer>
         <AuthNavigator />
       </NavigationContainer>

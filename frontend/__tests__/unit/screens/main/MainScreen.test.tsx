@@ -3,6 +3,12 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { MainScreen } from 'src/screens/main/MainScreen';
 import type { Todo } from 'src/types/todo';
 
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({
+    navigate: jest.fn(),
+  }),
+}));
+
 jest.mock('expo-blur', () => {
   const { View } = require('react-native');
   return {

@@ -8,7 +8,8 @@ import { ChangeTodoStatusUsecase } from './application/change-todo-status.usecas
 import { DeleteTodoUsecase } from './application/delete-todo.usecase';
 import { CompleteDayUsecase } from './application/complete-day.usecase';
 import { GetMonthlySummaryUsecase } from './application/get-monthly-summary.usecase';
-import { CreateVoiceTodoUsecase } from './application/create-voice-todo.usecase';
+import { RefineTextUsecase } from './application/refine-text.usecase';
+import { BatchCreateTodoUsecase } from './application/batch-create-todo.usecase';
 import { TodoRepository } from './infrastructure/todo.repository';
 import { CarriedOverHistoryRepository } from './infrastructure/carried-over-history.repository';
 import { Todo } from './domain/todo.entity';
@@ -32,7 +33,8 @@ import { AiModule } from '../ai/ai.module';
     DeleteTodoUsecase,
     CompleteDayUsecase,
     GetMonthlySummaryUsecase,
-    CreateVoiceTodoUsecase,
+    RefineTextUsecase,
+    BatchCreateTodoUsecase,
     TodoRepository,
     CarriedOverHistoryRepository,
     UserRepository,

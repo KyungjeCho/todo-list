@@ -194,6 +194,58 @@ describe('TodoApi', () => {
     });
   });
 
+  describe('refineText', () => {
+    it('텍스트 정리 요청을 전송한다', async () => {
+      const refineResponse = { refinedText: '내일까지 장보기' };
+      mockedClient.post.mockResolvedValue({ data: refineResponse });
+
+      const result = await todoApi.refineText({
+        text: '장보기 가야 돼 내일까지',
+      });
+
+      expect(mockedClient.post).toHaveBeenCalledWith('/todos/refine', {
+        text: '장보기 가야 돼 내일까지',
+      });
+      expect(result).toEqual(refineResponse);
+    });
+
+    it('API 에러 시 예외를 전파한다', async () => {
+      mockedClient.post.mockRejectedValue(new Error('AI Error'));
+
+      await expect(
+        todoApi.refineText({ text: '장보기' }),
+      ).rejects.toThrow('AI Error');
+    });
+  });
+
+  describe('batchCreateTodos', () => {
+    it('여러 할 일을 일괄 생성 요청을 전송한다', async () => {
+      const batchResponse = {
+        created: [mockTodoItem],
+      };
+      mockedClient.post.mockResolvedValue({ data: batchResponse });
+
+      const result = await todoApi.batchCreateTodos({
+        todos: [{ content: '장보기', todoDate: '2026-04-04' }],
+      });
+
+      expect(mockedClient.post).toHaveBeenCalledWith('/todos/batch', {
+        todos: [{ content: '장보기', todoDate: '2026-04-04' }],
+      });
+      expect(result).toEqual(batchResponse);
+    });
+
+    it('API 에러 시 예외를 전파한다', async () => {
+      mockedClient.post.mockRejectedValue(new Error('Batch Error'));
+
+      await expect(
+        todoApi.batchCreateTodos({
+          todos: [{ content: '장보기', todoDate: '2026-04-04' }],
+        }),
+      ).rejects.toThrow('Batch Error');
+    });
+  });
+
   describe('HTTP 상태별 에러 매핑', () => {
     it('400 에러 시 ApiError로 전파된다', async () => {
       const error = new ApiError(400, 'VALIDATION_ERROR', '내용은 필수입니다');

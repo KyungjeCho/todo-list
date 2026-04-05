@@ -14,7 +14,8 @@ import { ChangeTodoStatusUsecase } from 'src/todo/application/change-todo-status
 import { DeleteTodoUsecase } from 'src/todo/application/delete-todo.usecase';
 import { CompleteDayUsecase } from 'src/todo/application/complete-day.usecase';
 import { GetMonthlySummaryUsecase } from 'src/todo/application/get-monthly-summary.usecase';
-import { CreateVoiceTodoUsecase } from 'src/todo/application/create-voice-todo.usecase';
+import { RefineTextUsecase } from 'src/todo/application/refine-text.usecase';
+import { BatchCreateTodoUsecase } from 'src/todo/application/batch-create-todo.usecase';
 import { GetProfileUsecase } from 'src/user/application/get-profile.usecase';
 import { UpdateSettingsUsecase } from 'src/user/application/update-settings.usecase';
 import { JwtStrategy } from 'src/auth/infrastructure/jwt.strategy';
@@ -43,7 +44,8 @@ describe('Full Flow E2E (onboarding → CRUD → review → carryover)', () => {
   const mockDeleteTodo = { execute: jest.fn() };
   const mockCompleteDay = { execute: jest.fn() };
   const mockGetMonthlySummary = { execute: jest.fn() };
-  const mockCreateVoiceTodo = { execute: jest.fn() };
+  const mockRefineText = { execute: jest.fn() };
+  const mockBatchCreateTodo = { execute: jest.fn() };
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -65,7 +67,8 @@ describe('Full Flow E2E (onboarding → CRUD → review → carryover)', () => {
         { provide: DeleteTodoUsecase, useValue: mockDeleteTodo },
         { provide: CompleteDayUsecase, useValue: mockCompleteDay },
         { provide: GetMonthlySummaryUsecase, useValue: mockGetMonthlySummary },
-        { provide: CreateVoiceTodoUsecase, useValue: mockCreateVoiceTodo },
+        { provide: RefineTextUsecase, useValue: mockRefineText },
+        { provide: BatchCreateTodoUsecase, useValue: mockBatchCreateTodo },
         JwtStrategy,
         {
           provide: ConfigService,

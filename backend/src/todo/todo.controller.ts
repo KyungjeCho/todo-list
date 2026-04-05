@@ -9,22 +9,20 @@ import {
   Query,
   UseGuards,
   UseFilters,
-  UseInterceptors,
-  UploadedFile,
-  BadRequestException,
   Req,
   HttpCode,
   HttpStatus,
+  HttpException,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { CreateTodoDto } from './application/dto/create-todo.dto';
 import { UpdateTodoDto } from './application/dto/update-todo.dto';
 import { ChangeTodoStatusDto } from './application/dto/change-todo-status.dto';
 import { CompleteDayDto } from './application/dto/complete-day.dto';
 import { GetTodosQueryDto } from './application/dto/get-todos-query.dto';
 import { GetMonthlySummaryQueryDto } from './application/dto/monthly-summary.dto';
-import { VoiceTodoDateDto } from './application/dto/voice-todo.dto';
+import { RefineTextDto } from './application/dto/refine-text.dto';
+import { BatchCreateTodosDto } from './application/dto/batch-create-todos.dto';
 import { CreateTodoUsecase } from './application/create-todo.usecase';
 import { GetTodosUsecase } from './application/get-todos.usecase';
 import { UpdateTodoUsecase } from './application/update-todo.usecase';
@@ -32,8 +30,8 @@ import { ChangeTodoStatusUsecase } from './application/change-todo-status.usecas
 import { DeleteTodoUsecase } from './application/delete-todo.usecase';
 import { CompleteDayUsecase } from './application/complete-day.usecase';
 import { GetMonthlySummaryUsecase } from './application/get-monthly-summary.usecase';
-import { CreateVoiceTodoUsecase } from './application/create-voice-todo.usecase';
-import { SUPPORTED_AUDIO_MIME_TYPES } from '../ai/infrastructure/gemini.service';
+import { RefineTextUsecase } from './application/refine-text.usecase';
+import { BatchCreateTodoUsecase } from './application/batch-create-todo.usecase';
 import { JwtAuthGuard } from '../auth/infrastructure/jwt-auth.guard';
 import { HttpExceptionFilter } from '../common/filters/http-exception.filter';
 import type { AuthenticatedRequest } from '../common/types/authenticated-request';
@@ -50,7 +48,8 @@ export class TodoController {
     private readonly deleteTodoUsecase: DeleteTodoUsecase,
     private readonly completeDayUsecase: CompleteDayUsecase,
     private readonly getMonthlySummaryUsecase: GetMonthlySummaryUsecase,
-    private readonly createVoiceTodoUsecase: CreateVoiceTodoUsecase,
+    private readonly refineTextUsecase: RefineTextUsecase,
+    private readonly batchCreateTodoUsecase: BatchCreateTodoUsecase,
   ) {}
 
   @Get('report/summary')
@@ -76,44 +75,49 @@ export class TodoController {
     });
   }
 
-  @Post('voice')
-  @HttpCode(HttpStatus.CREATED)
+  @Post('refine')
+  @HttpCode(HttpStatus.OK)
   @Throttle({
     short: { ttl: 1000, limit: 1 },
-    medium: { ttl: 60000, limit: 5 },
+    medium: { ttl: 60000, limit: 30 },
   })
-  @UseInterceptors(
-    FileInterceptor('audio', {
-      limits: { fileSize: 10 * 1024 * 1024 },
-      fileFilter: (_req, file, cb) => {
-        if (!SUPPORTED_AUDIO_MIME_TYPES.includes(file.mimetype)) {
-          cb(
-            new BadRequestException(
-              `지원하지 않는 오디오 포맷입니다: ${file.mimetype}. wav, m4a, mp3만 지원합니다.`,
-            ),
-            false,
-          );
-          return;
-        }
-        cb(null, true);
-      },
-    }),
-  )
-  async createVoiceTodo(
+  async refineText(
     @Req() req: AuthenticatedRequest,
-    @UploadedFile() file: Express.Multer.File,
-    @Body() body: VoiceTodoDateDto,
+    @Body() body: RefineTextDto,
   ) {
-    if (!file) {
-      throw new BadRequestException('오디오 파일이 필요합니다.');
-    }
-
-    return this.createVoiceTodoUsecase.execute({
+    return this.refineTextUsecase.execute({
       userAuthId: req.user.userAuthId,
-      audioBuffer: file.buffer,
-      mimeType: file.mimetype,
-      todoDate: body.todoDate,
+      text: body.text,
     });
+  }
+
+  @Post('batch')
+  @HttpCode(HttpStatus.CREATED)
+  async batchCreateTodos(
+    @Req() req: AuthenticatedRequest,
+    @Body() body: BatchCreateTodosDto,
+  ) {
+    return this.batchCreateTodoUsecase.execute({
+      userAuthId: req.user.userAuthId,
+      todos: body.todos,
+    });
+  }
+
+  /**
+   * @deprecated 디바이스 내장 STT + POST /todos/refine 조합으로 대체됨.
+   */
+  @Post('voice')
+  @HttpCode(HttpStatus.GONE)
+  createVoiceTodo() {
+    throw new HttpException(
+      {
+        statusCode: HttpStatus.GONE,
+        code: 'ENDPOINT_DEPRECATED',
+        message:
+          '이 엔드포인트는 더 이상 사용되지 않습니다. 디바이스 내장 STT + POST /todos/refine 조합으로 대체되었습니다.',
+      },
+      HttpStatus.GONE,
+    );
   }
 
   @Post()
