@@ -45,7 +45,8 @@
       "@react-native-firebase/app",
       "@react-native-firebase/messaging",
       "expo-audio",
-      "expo-font"
+      "expo-font",
+      "expo-speech-recognition"
     ],
     "extra": {
       "eas": {

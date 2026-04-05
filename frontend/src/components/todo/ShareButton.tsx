@@ -86,7 +86,10 @@ export function ShareButton({
       >
         <View
           testID="share-toast-container"
-          style={[styles.toastOverlay, { paddingTop: windowHeight * TOAST_VERTICAL_RATIO }]}
+          style={[
+            styles.toastOverlay,
+            { paddingTop: windowHeight * TOAST_VERTICAL_RATIO },
+          ]}
           pointerEvents="none"
         >
           <View testID="share-toast" style={styles.toast}>
@@ -103,7 +106,10 @@ export function ShareButton({
       >
         <View
           testID="share-error-container"
-          style={[styles.toastOverlay, { paddingTop: windowHeight * TOAST_VERTICAL_RATIO }]}
+          style={[
+            styles.toastOverlay,
+            { paddingTop: windowHeight * TOAST_VERTICAL_RATIO },
+          ]}
           pointerEvents="none"
         >
           <View testID="share-error" style={styles.errorToast}>

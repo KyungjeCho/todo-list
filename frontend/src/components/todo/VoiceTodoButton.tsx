@@ -1,19 +1,13 @@
-import React, { useEffect } from 'react';
-import {
-  View,
-  TouchableOpacity,
-  Text,
-  ActivityIndicator,
-  StyleSheet,
-} from 'react-native';
+import React from 'react';
+import { TouchableOpacity, StyleSheet } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Svg, { Path, Line, Rect } from 'react-native-svg';
-import { useVoiceRecording } from '../../features/todo/useVoiceRecording';
+import type { RootStackParamList } from '../../app/navigation/types';
 import { colors } from '../../theme';
 
 interface VoiceTodoButtonProps {
-  onVoiceTodoCreated: (audioUri: string) => void;
-  isProcessing?: boolean;
-  processingError?: string;
+  todoDate: string;
   disabled?: boolean;
 }
 
@@ -60,102 +54,32 @@ function MicIcon() {
   );
 }
 
-function StopIcon() {
-  return (
-    <Svg width={22} height={22} viewBox="0 0 24 24" fill="none">
-      <Rect x={4} y={4} width={16} height={16} rx={2} fill={colors.surface} />
-    </Svg>
-  );
-}
-
 export const VoiceTodoButton: React.FC<VoiceTodoButtonProps> = ({
-  onVoiceTodoCreated,
-  isProcessing = false,
-  processingError,
+  todoDate,
   disabled = false,
 }) => {
-  const { isRecording, audioUri, error, startRecording, stopRecording } =
-    useVoiceRecording();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
-  useEffect(() => {
-    if (audioUri) {
-      onVoiceTodoCreated(audioUri);
-    }
-  }, [audioUri, onVoiceTodoCreated]);
-
-  const isDisabled = disabled || isProcessing;
-
-  if (isProcessing) {
-    return (
-      <View style={styles.container}>
-        <TouchableOpacity
-          testID="voice-todo-button"
-          accessibilityLabel="음성으로 할 일 추가"
-          accessibilityState={{ disabled: true }}
-          disabled={true}
-          style={[styles.button, styles.disabledButton]}
-        >
-          <MicIcon />
-        </TouchableOpacity>
-        <ActivityIndicator testID="voice-loading" style={styles.loading} />
-      </View>
-    );
-  }
-
-  if (isRecording) {
-    return (
-      <View style={styles.container}>
-        <View
-          testID="voice-recording-indicator"
-          style={styles.recordingIndicator}
-        >
-          <Text style={styles.recordingText}>녹음 중...</Text>
-        </View>
-        <TouchableOpacity
-          testID="voice-stop-button"
-          accessibilityLabel="녹음 중지"
-          onPress={stopRecording}
-          style={[styles.button, styles.stopButton]}
-        >
-          <StopIcon />
-        </TouchableOpacity>
-        <TouchableOpacity
-          testID="voice-todo-button"
-          accessibilityLabel="음성으로 할 일 추가"
-          onPress={startRecording}
-          style={[styles.button, { display: 'none' }]}
-        >
-          <MicIcon />
-        </TouchableOpacity>
-      </View>
-    );
-  }
+  const handlePress = () => {
+    navigation.navigate('VoiceInput', { todoDate });
+  };
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity
-        testID="voice-todo-button"
-        accessibilityLabel="음성으로 할 일 추가"
-        accessibilityState={{ disabled: isDisabled }}
-        disabled={isDisabled}
-        onPress={startRecording}
-        style={[styles.button, isDisabled && styles.disabledButton]}
-      >
-        <MicIcon />
-      </TouchableOpacity>
-      {(error || processingError) && (
-        <View testID="voice-error" style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error || processingError}</Text>
-        </View>
-      )}
-    </View>
+    <TouchableOpacity
+      testID="voice-todo-button"
+      accessibilityLabel="음성으로 할 일 추가"
+      accessibilityState={{ disabled }}
+      disabled={disabled}
+      onPress={handlePress}
+      style={[styles.button, disabled && styles.disabledButton]}
+    >
+      <MicIcon />
+    </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-  },
   button: {
     width: 48,
     height: 48,
@@ -171,27 +95,5 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.5,
-  },
-  stopButton: {
-    backgroundColor: colors.error,
-  },
-  recordingIndicator: {
-    marginBottom: 8,
-  },
-  recordingText: {
-    color: colors.error,
-    fontWeight: 'bold',
-  },
-  loading: {
-    marginTop: 8,
-  },
-  errorContainer: {
-    marginTop: 8,
-    paddingHorizontal: 16,
-  },
-  errorText: {
-    color: colors.error,
-    fontSize: 12,
-    textAlign: 'center',
   },
 });

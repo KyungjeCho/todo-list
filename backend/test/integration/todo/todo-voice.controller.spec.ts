@@ -13,12 +13,13 @@ import { ChangeTodoStatusUsecase } from 'src/todo/application/change-todo-status
 import { DeleteTodoUsecase } from 'src/todo/application/delete-todo.usecase';
 import { CompleteDayUsecase } from 'src/todo/application/complete-day.usecase';
 import { GetMonthlySummaryUsecase } from 'src/todo/application/get-monthly-summary.usecase';
-import { CreateVoiceTodoUsecase } from 'src/todo/application/create-voice-todo.usecase';
+import { RefineTextUsecase } from 'src/todo/application/refine-text.usecase';
+import { BatchCreateTodoUsecase } from 'src/todo/application/batch-create-todo.usecase';
 import { JwtStrategy } from 'src/auth/infrastructure/jwt.strategy';
 
 const TEST_JWT_SECRET = 'test-jwt-secret';
 
-describe('TodoController - Voice Todo (Integration)', () => {
+describe('TodoController - Voice Endpoints (Integration)', () => {
   let app: INestApplication;
   let jwtService: JwtService;
 
@@ -29,7 +30,8 @@ describe('TodoController - Voice Todo (Integration)', () => {
   const mockDeleteTodoUsecase = { execute: jest.fn() };
   const mockCompleteDayUsecase = { execute: jest.fn() };
   const mockGetMonthlySummaryUsecase = { execute: jest.fn() };
-  const mockCreateVoiceTodoUsecase = { execute: jest.fn() };
+  const mockRefineTextUsecase = { execute: jest.fn() };
+  const mockBatchCreateTodoUsecase = { execute: jest.fn() };
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -55,9 +57,10 @@ describe('TodoController - Voice Todo (Integration)', () => {
           provide: GetMonthlySummaryUsecase,
           useValue: mockGetMonthlySummaryUsecase,
         },
+        { provide: RefineTextUsecase, useValue: mockRefineTextUsecase },
         {
-          provide: CreateVoiceTodoUsecase,
-          useValue: mockCreateVoiceTodoUsecase,
+          provide: BatchCreateTodoUsecase,
+          useValue: mockBatchCreateTodoUsecase,
         },
         {
           provide: ConfigService,
@@ -93,184 +96,113 @@ describe('TodoController - Voice Todo (Integration)', () => {
     );
   }
 
-  describe('POST /todos/voice', () => {
-    const mockVoiceTodoResponse = {
-      id: 'todo-id-1',
-      content: '장보기',
-      rawText: '장보기',
-      status: 'ACTIVE',
-      isCarriedOver: false,
-      todoDate: '2026-04-01',
-      memos: [],
-      createdAt: '2026-04-01T09:00:00.000Z',
-      updatedAt: '2026-04-01T09:00:00.000Z',
-    };
-
-    it('multipart/form-data로 오디오 파일을 업로드하면 201을 반환한다', async () => {
-      mockCreateVoiceTodoUsecase.execute.mockResolvedValue(
-        mockVoiceTodoResponse,
-      );
+  describe('POST /todos/refine', () => {
+    it('텍스트를 정리하여 200을 반환한다', async () => {
+      mockRefineTextUsecase.execute.mockResolvedValue({
+        refinedText: '내일까지 장보기',
+      });
 
       const response = await request(app.getHttpServer() as App)
-        .post('/todos/voice')
+        .post('/todos/refine')
         .set('Authorization', `Bearer ${createValidToken()}`)
-        .attach('audio', Buffer.from('fake-audio-data'), {
-          filename: 'recording.wav',
-          contentType: 'audio/wav',
-        })
-        .field('todoDate', '2026-04-01');
+        .send({ text: '장보기 가야 돼 내일까지' });
 
-      expect(response.status).toBe(201);
-      expect(response.body).toEqual(
-        expect.objectContaining({
-          id: 'todo-id-1',
-          content: '장보기',
-          rawText: '장보기',
-          status: 'ACTIVE',
-        }),
-      );
-    });
-
-    it('usecase에 userAuthId, audioBuffer, mimeType, todoDate를 전달한다', async () => {
-      mockCreateVoiceTodoUsecase.execute.mockResolvedValue(
-        mockVoiceTodoResponse,
-      );
-
-      await request(app.getHttpServer() as App)
-        .post('/todos/voice')
-        .set('Authorization', `Bearer ${createValidToken()}`)
-        .attach('audio', Buffer.from('fake-audio-data'), {
-          filename: 'recording.wav',
-          contentType: 'audio/wav',
-        })
-        .field('todoDate', '2026-04-01');
-
-      expect(mockCreateVoiceTodoUsecase.execute).toHaveBeenCalledWith(
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ refinedText: '내일까지 장보기' });
+      expect(mockRefineTextUsecase.execute).toHaveBeenCalledWith(
         expect.objectContaining({
           userAuthId: 'test-user-auth-id',
-          mimeType: expect.stringContaining('audio/wav'),
-          todoDate: '2026-04-01',
+          text: '장보기 가야 돼 내일까지',
         }),
       );
-
-      const callArgs = mockCreateVoiceTodoUsecase.execute.mock.calls[0][0];
-      expect(callArgs.audioBuffer).toBeInstanceOf(Buffer);
     });
 
-    it('todoDate 없이 요청하면 400을 반환한다', async () => {
+    it('text가 빈 문자열이면 400을 반환한다', async () => {
       const response = await request(app.getHttpServer() as App)
-        .post('/todos/voice')
+        .post('/todos/refine')
         .set('Authorization', `Bearer ${createValidToken()}`)
-        .attach('audio', Buffer.from('fake-audio-data'), {
-          filename: 'recording.m4a',
-          contentType: 'audio/mp4',
-        });
-
-      expect(response.status).toBe(400);
-    });
-
-    it('오디오 파일 없이 요청하면 400을 반환한다', async () => {
-      const response = await request(app.getHttpServer() as App)
-        .post('/todos/voice')
-        .set('Authorization', `Bearer ${createValidToken()}`)
-        .field('todoDate', '2026-04-01');
+        .send({ text: '' });
 
       expect(response.status).toBe(400);
     });
 
     it('인증 토큰 없이 요청하면 401을 반환한다', async () => {
       const response = await request(app.getHttpServer() as App)
-        .post('/todos/voice')
-        .attach('audio', Buffer.from('fake-audio-data'), {
-          filename: 'recording.wav',
-          contentType: 'audio/wav',
-        });
+        .post('/todos/refine')
+        .send({ text: '장보기' });
 
       expect(response.status).toBe(401);
     });
+  });
 
-    it('usecase 실행 실패 시 에러 응답을 반환한다', async () => {
-      mockCreateVoiceTodoUsecase.execute.mockRejectedValue({
-        status: 500,
-        response: {
-          statusCode: 500,
-          code: 'VOICE_AI_API_ERROR',
-          message: 'Gemini API 호출 실패',
+  describe('POST /todos/batch', () => {
+    const mockBatchResponse = {
+      created: [
+        {
+          id: 'todo-1',
+          content: '장보기',
+          todoDate: '2026-04-04',
+          status: 'ACTIVE',
+          isCarriedOver: false,
+          memos: [],
+          createdAt: '2026-04-04T10:00:00.000Z',
+          updatedAt: '2026-04-04T10:00:00.000Z',
         },
-      });
+      ],
+    };
+
+    it('여러 할 일을 일괄 생성하여 201을 반환한다', async () => {
+      mockBatchCreateTodoUsecase.execute.mockResolvedValue(mockBatchResponse);
 
       const response = await request(app.getHttpServer() as App)
-        .post('/todos/voice')
+        .post('/todos/batch')
         .set('Authorization', `Bearer ${createValidToken()}`)
-        .attach('audio', Buffer.from('fake-audio-data'), {
-          filename: 'recording.wav',
-          contentType: 'audio/wav',
+        .send({
+          todos: [{ content: '장보기', todoDate: '2026-04-04' }],
         });
 
-      expect(response.status).toBeGreaterThanOrEqual(400);
-    });
-
-    it('m4a 포맷 오디오 파일을 지원한다', async () => {
-      mockCreateVoiceTodoUsecase.execute.mockResolvedValue({
-        ...mockVoiceTodoResponse,
-        content: '운동하기',
-        rawText: '운동하기',
-      });
-
-      const response = await request(app.getHttpServer() as App)
-        .post('/todos/voice')
-        .set('Authorization', `Bearer ${createValidToken()}`)
-        .attach('audio', Buffer.from('fake-audio-data'), {
-          filename: 'recording.m4a',
-          contentType: 'audio/mp4',
-        })
-        .field('todoDate', '2026-04-01');
-
       expect(response.status).toBe(201);
+      expect(response.body).toEqual(mockBatchResponse);
+      expect(mockBatchCreateTodoUsecase.execute).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userAuthId: 'test-user-auth-id',
+          todos: [{ content: '장보기', todoDate: '2026-04-04' }],
+        }),
+      );
     });
 
-    it('잘못된 todoDate 형식이면 400을 반환한다', async () => {
+    it('todos가 빈 배열이면 400을 반환한다', async () => {
       const response = await request(app.getHttpServer() as App)
-        .post('/todos/voice')
+        .post('/todos/batch')
         .set('Authorization', `Bearer ${createValidToken()}`)
-        .attach('audio', Buffer.from('fake-audio-data'), {
-          filename: 'recording.wav',
-          contentType: 'audio/wav',
-        })
-        .field('todoDate', 'invalid-date');
+        .send({ todos: [] });
 
       expect(response.status).toBe(400);
     });
 
-    it('지원하지 않는 오디오 포맷이면 400을 반환한다', async () => {
+    it('인증 토큰 없이 요청하면 401을 반환한다', async () => {
       const response = await request(app.getHttpServer() as App)
-        .post('/todos/voice')
-        .set('Authorization', `Bearer ${createValidToken()}`)
-        .attach('audio', Buffer.from('fake-audio-data'), {
-          filename: 'recording.txt',
-          contentType: 'text/plain',
-        });
+        .post('/todos/batch')
+        .send({ todos: [{ content: '장보기', todoDate: '2026-04-04' }] });
 
-      expect(response.status).toBe(400);
+      expect(response.status).toBe(401);
     });
+  });
 
-    it('mp3 포맷 오디오 파일을 지원한다', async () => {
-      mockCreateVoiceTodoUsecase.execute.mockResolvedValue({
-        ...mockVoiceTodoResponse,
-        content: '독서하기',
-        rawText: '독서하기',
-      });
-
+  describe('POST /todos/voice (deprecated)', () => {
+    it('410 Gone을 반환한다', async () => {
       const response = await request(app.getHttpServer() as App)
         .post('/todos/voice')
         .set('Authorization', `Bearer ${createValidToken()}`)
-        .attach('audio', Buffer.from('fake-audio-data'), {
-          filename: 'recording.mp3',
-          contentType: 'audio/mpeg',
-        })
-        .field('todoDate', '2026-04-01');
+        .send({});
 
-      expect(response.status).toBe(201);
+      expect(response.status).toBe(410);
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          statusCode: 410,
+          code: 'ENDPOINT_DEPRECATED',
+        }),
+      );
     });
   });
 });

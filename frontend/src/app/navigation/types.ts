@@ -3,6 +3,7 @@ export type RootStackParamList = {
   Onboarding: undefined;
   Main: undefined;
   Settings: undefined;
+  VoiceInput: { todoDate: string };
 };
 
 export type AuthStackParamList = {

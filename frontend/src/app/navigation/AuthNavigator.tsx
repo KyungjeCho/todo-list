@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuthStore } from '../../store/authStore';
 import { userApi } from '../../services/api/userApi';
 import { todoApi } from '../../services/api/todoApi';
@@ -17,6 +17,7 @@ import { getCurrentDate } from '../../features/todo/getCurrentDate';
 import { LoginScreen } from '../../screens/auth/LoginScreen';
 import { OnboardingScreen } from '../../screens/onboarding/OnboardingScreen';
 import { MainScreen } from '../../screens/main/MainScreen';
+import { VoiceInputScreen } from '../../screens/voice/VoiceInputScreen';
 import { MainTabNavigator } from './MainTabNavigator';
 import type { RootStackParamList } from './types';
 
@@ -89,10 +90,6 @@ const MainWrapper: React.FC = () => {
     string | undefined
   >();
   const [error, setError] = useState<string | undefined>();
-  const [isVoiceProcessing, setIsVoiceProcessing] = useState(false);
-  const [voiceProcessingError, setVoiceProcessingError] = useState<
-    string | undefined
-  >();
 
   const fetchTodos = useCallback(async (date: string, showLoading = false) => {
     if (showLoading) setIsLoading(true);
@@ -263,26 +260,6 @@ const MainWrapper: React.FC = () => {
     [selectedDate, fetchTodos],
   );
 
-  const handleVoiceTodo = useCallback(
-    async (audioUri: string) => {
-      setIsVoiceProcessing(true);
-      setVoiceProcessingError(undefined);
-      try {
-        await todoApi.createVoiceTodo(audioUri, selectedDate);
-        await fetchTodos(selectedDate);
-      } catch (err) {
-        const message =
-          err instanceof Error
-            ? err.message
-            : '음성 인식에 실패했습니다. 다시 시도해주세요.';
-        setVoiceProcessingError(message);
-      } finally {
-        setIsVoiceProcessing(false);
-      }
-    },
-    [selectedDate, fetchTodos],
-  );
-
   const handleModeToggle = useCallback(() => {
     const currentMode = modeOverride ?? data?.mode ?? 'PLAN';
     setModeOverride(currentMode === 'PLAN' ? 'REVIEW' : 'PLAN');
@@ -296,6 +273,15 @@ const MainWrapper: React.FC = () => {
     fetchTodos(selectedDate, true);
   }, [selectedDate, fetchTodos]);
 
+  // WHY: VoiceInputScreen에서 batch create 후 돌아올 때 todo 목록 갱신
+  useFocusEffect(
+    useCallback(() => {
+      if (!isLoading) {
+        fetchTodos(selectedDate);
+      }
+    }, [selectedDate, fetchTodos, isLoading]),
+  );
+
   const currentMode = modeOverride ?? data?.mode ?? 'PLAN';
 
   return (
@@ -306,9 +292,6 @@ const MainWrapper: React.FC = () => {
       date={selectedDate}
       onModeToggle={handleModeToggle}
       onAddTodo={handleAddTodo}
-      onVoiceTodoCreated={handleVoiceTodo}
-      isVoiceProcessing={isVoiceProcessing}
-      voiceProcessingError={voiceProcessingError}
       onToggleComplete={handleToggleComplete}
       onEdit={handleEdit}
       onDeactivate={handleDeactivate}
@@ -361,7 +344,17 @@ export const AuthNavigator: React.FC = () => {
       ) : showOnboarding ? (
         <Stack.Screen name="Onboarding" component={OnboardingWrapper} />
       ) : (
-        <Stack.Screen name="Main" component={MainTabScreen} />
+        <>
+          <Stack.Screen name="Main" component={MainTabScreen} />
+          <Stack.Screen
+            name="VoiceInput"
+            component={VoiceInputScreen}
+            options={{
+              presentation: 'modal',
+              headerShown: false,
+            }}
+          />
+        </>
       )}
     </Stack.Navigator>
   );

@@ -44,9 +44,6 @@ interface MainScreenProps {
   onDeleteMemo?: (todoId: string, memoId: string) => void;
   onCompleteDay?: () => void;
   onNavigateSettings?: () => void;
-  onVoiceTodoCreated?: (audioUri: string) => void;
-  isVoiceProcessing?: boolean;
-  voiceProcessingError?: string;
   isLoading?: boolean;
   isAdding?: boolean;
   isCompleting?: boolean;
@@ -72,9 +69,6 @@ export const MainScreen: React.FC<MainScreenProps> = ({
   onUpdateMemo,
   onDeleteMemo,
   onCompleteDay,
-  onVoiceTodoCreated,
-  isVoiceProcessing,
-  voiceProcessingError,
   isLoading,
   isCompleting,
   isDayCompleted,
@@ -228,13 +222,7 @@ export const MainScreen: React.FC<MainScreenProps> = ({
                     <Text style={styles.fabIcon}>+</Text>
                   </TouchableOpacity>
                 )}
-                {onVoiceTodoCreated && (
-                  <VoiceTodoButton
-                    onVoiceTodoCreated={onVoiceTodoCreated}
-                    isProcessing={isVoiceProcessing}
-                    processingError={voiceProcessingError}
-                  />
-                )}
+                <VoiceTodoButton todoDate={date} />
               </View>
             )}
           </>

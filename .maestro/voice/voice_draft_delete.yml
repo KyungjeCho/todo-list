@@ -1,0 +1,24 @@
+appId: ${APP_ID}
+tags:
+  - voice
+  - regression
+---
+# 임시 할 일 삭제 테스트
+- launchApp:
+    stopApp: true
+
+# 마이크 FAB 탭 → VoiceInputScreen 이동
+- tapOn:
+    id: "voice-todo-button"
+    optional: true
+
+# 음성 입력 화면 확인
+- assertVisible:
+    text: "음성 입력"
+    optional: true
+
+# 임시 카드 존재 시 X 버튼 탭 → 카드 제거 확인
+# NOTE: 실제 STT 입력이 필요하므로 에뮬레이터에서는 제한적
+- assertVisible:
+    id: "draft-todo-list"
+    optional: true

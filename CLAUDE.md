@@ -1,6 +1,6 @@
 # todo-list Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-04-03
+Auto-generated from all feature plans. Last updated: 2026-04-04
 
 ## Active Technologies
 - Supabase (PostgreSQL) — 디스크 수준 AES-256 암호화, 추가 앱 레벨 암호화 없음 (001-todo-mobile-service)
@@ -8,6 +8,8 @@ Auto-generated from all feature plans. Last updated: 2026-04-03
 - Supabase (PostgreSQL) — 기존 스키마 변경 없음 (002-uiux-update)
 - TypeScript 5.x + React Native (Expo), expo-clipboard, react-native-safe-area-context (feature/003-share-button-update)
 - N/A (프론트엔드 전용 변경, 백엔드/DB 변경 없음) (feature/003-share-button-update)
+- TypeScript 5.x (Frontend & Backend) + React Native (Expo ~55), expo-speech-recognition (신규), NestJS v11, @google/generative-ai (004-voice-input-screen)
+- Supabase (PostgreSQL) via TypeORM — 기존 Todo 테이블 재사용, 스키마 변경 없음 (004-voice-input-screen)
 
 - TypeScript 5.x (Frontend & Backend) (001-todo-mobile-service)
 - React Native (Expo) — iOS/Android 크로스 플랫폼
@@ -75,9 +77,9 @@ cd frontend && npm test && npm run lint
 - `hotfix/*`: 긴급 수정
 
 ## Recent Changes
+- 004-voice-input-screen: Added TypeScript 5.x (Frontend & Backend) + React Native (Expo ~55), expo-speech-recognition (신규), NestJS v11, @google/generative-ai
 - feature/003-share-button-update: Added TypeScript 5.x + React Native (Expo), expo-clipboard, react-native-safe-area-context
 - 002-uiux-update: Added TypeScript 5.x (Frontend & Backend) + React Native (Expo), react-native-gesture-handler, expo-blur, Zustand, NestJS
-- 001-todo-mobile-service: Added TypeScript 5.x (Frontend & Backend)
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

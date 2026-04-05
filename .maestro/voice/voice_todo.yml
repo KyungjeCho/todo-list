@@ -1,9 +1,6 @@
-# T213 [US6] Maestro E2E: 음성 인식 할 일 추가 흐름
-# 마이크 탭 → 녹음 UI 표시 → 중지 → Gemini 변환 → 목록 추가
+# 음성 인식 할 일 추가 흐름 (VoiceInputScreen 기반)
+# 마이크 FAB 탭 → VoiceInputScreen 진입 → 녹음 UI 확인 → 종료 → 복귀
 # WHY: 사용자가 음성으로 할 일을 추가하는 전체 플로우 검증.
-#       마이크 버튼 렌더링, 녹음 UI 상태 전환, 로딩 상태 확인.
-# PREREQ: 인증 완료 + 온보딩 완료 상태에서 메인 화면 진입 필요.
-#          실제 E2E 실행 시 사전 인증 stub 또는 login.yml + onboarding.yml 선행 필요.
 # NOTE: 실제 음성 녹음/AI 변환은 에뮬레이터 환경에서 제한적이므로
 #       UI 요소 존재 및 상태 전환 검증에 초점.
 
@@ -31,7 +28,7 @@ tags:
 - assertVisible:
     id: "voice-todo-button"
 
-# 마이크 버튼 탭 — 녹음 시작
+# 마이크 버튼 탭 → VoiceInputScreen 진입
 - tapOn:
     id: "voice-todo-button"
 
@@ -48,32 +45,22 @@ tags:
     text: "While using the app"
     optional: true
 
-# 녹음 중 표시 확인 (권한 허용 후)
+# 음성 입력 화면 진입 확인
 - assertVisible:
-    id: "voice-recording-indicator"
+    text: "음성 입력"
     optional: true
 
-# 녹음 중지 버튼 확인
+# 녹음 컨트롤 표시 확인
 - assertVisible:
-    id: "voice-stop-button"
+    id: "voice-controls"
     optional: true
 
-# 녹음 중지 버튼 탭
+# 종료 버튼 탭
 - tapOn:
     id: "voice-stop-button"
     optional: true
 
-# 로딩 인디케이터 확인 (AI 변환 중)
-- assertVisible:
-    id: "voice-loading"
-    optional: true
-
-# 에러가 표시되면 확인 (에뮬레이터 환경에서 녹음 실패 가능)
-- assertVisible:
-    id: "voice-error"
-    optional: true
-
-# 마이크 버튼이 다시 표시되는지 확인 (녹음 완료 후 초기 상태 복귀)
+# 메인 화면 복귀 확인
 - extendedWaitUntil:
     visible:
       id: "voice-todo-button"
