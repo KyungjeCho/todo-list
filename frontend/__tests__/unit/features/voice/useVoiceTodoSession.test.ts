@@ -144,8 +144,9 @@ describe('useVoiceTodoSession', () => {
     ).rejects.toThrow('Batch Error');
   });
 
-  it('hasRefining이 refining 상태 draft 존재 시 true를 반환한다', () => {
+  it('confirmAll 호출 시 REFINING 상태인 draft는 rawText로 폴백하여 포함한다', async () => {
     mockedTodoApi.refineText.mockReturnValue(new Promise(() => {}));
+    mockedTodoApi.batchCreateTodos.mockResolvedValue({ created: [] });
 
     const { result } = renderHook(() =>
       useVoiceTodoSession({ todoDate: '2026-04-04' }),
@@ -155,6 +156,14 @@ describe('useVoiceTodoSession', () => {
       result.current.addDraft('장보기');
     });
 
-    expect(result.current.hasRefining).toBe(true);
+    expect(result.current.drafts[0].status).toBe(DraftTodoStatus.REFINING);
+
+    await act(async () => {
+      await result.current.confirmAll();
+    });
+
+    expect(mockedTodoApi.batchCreateTodos).toHaveBeenCalledWith({
+      todos: [{ content: '장보기', todoDate: '2026-04-04' }],
+    });
   });
 });

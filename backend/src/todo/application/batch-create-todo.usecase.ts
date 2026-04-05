@@ -47,30 +47,17 @@ export class BatchCreateTodoUsecase {
           });
 
           const saved = await todoRepo.save(entity);
-          const todo = await todoRepo.findOne({
-            where: { id: saved.id },
-            relations: ['memos'],
-          });
 
-          if (!todo) continue;
-
-          const memos = (todo.memos ?? []).map((memo) => ({
-            id: memo.id,
-            todoId: memo.todoId,
-            content: memo.content,
-            createdAt: new Date(memo.createdAt).toISOString(),
-            updatedAt: new Date(memo.updatedAt).toISOString(),
-          }));
-
+          // WHY: 새로 생성한 todo는 memos가 항상 빈 배열이므로 findOne 불필요
           results.push({
-            id: todo.id,
-            content: todo.content,
-            status: todo.status,
+            id: saved.id,
+            content: saved.content,
+            status: saved.status,
             isCarriedOver: false,
-            todoDate: todo.todoDate,
-            memos,
-            createdAt: new Date(todo.createdAt).toISOString(),
-            updatedAt: new Date(todo.updatedAt).toISOString(),
+            todoDate: saved.todoDate,
+            memos: [],
+            createdAt: new Date(saved.createdAt).toISOString(),
+            updatedAt: new Date(saved.updatedAt).toISOString(),
           });
         }
 

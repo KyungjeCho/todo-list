@@ -23,8 +23,9 @@ export const VoiceInputScreen: React.FC<VoiceInputScreenProps> = ({
   navigation,
 }) => {
   const { todoDate } = route.params;
-  const { drafts, hasRefining, addDraft, removeDraft, confirmAll } =
-    useVoiceTodoSession({ todoDate });
+  const { drafts, addDraft, removeDraft, confirmAll } = useVoiceTodoSession({
+    todoDate,
+  });
   const { isListening, interimText, error, start, stop } = useSpeechRecognition(
     { onFinal: addDraft },
   );
@@ -68,24 +69,6 @@ export const VoiceInputScreen: React.FC<VoiceInputScreenProps> = ({
   const handleStop = useCallback(async () => {
     stop();
 
-    // WHY: 아직 refining 중인 draft가 있으면 잠시 대기 (최대 5초)
-    const waitForRefining = async () => {
-      const maxWait = 5000;
-      const interval = 200;
-      let waited = 0;
-      while (waited < maxWait) {
-        await new Promise((resolve) => setTimeout(resolve, interval));
-        waited += interval;
-        // hasRefining은 snapshot이므로 직접 확인 불가. drafts를 통해 체크
-        // 이 시점에서는 가장 최신 drafts를 참조하므로 ok
-        break;
-      }
-    };
-
-    if (hasRefining) {
-      await waitForRefining();
-    }
-
     if (drafts.length === 0) {
       Alert.alert('알림', EMPTY_RESULT_MESSAGE);
       isStoppingRef.current = true;
@@ -100,7 +83,7 @@ export const VoiceInputScreen: React.FC<VoiceInputScreenProps> = ({
     } catch {
       Alert.alert('오류', '할 일 등록에 실패했습니다. 다시 시도해주세요.');
     }
-  }, [stop, hasRefining, drafts.length, confirmAll, navigation]);
+  }, [stop, drafts.length, confirmAll, navigation]);
 
   return (
     <LinearGradient
@@ -124,6 +107,15 @@ export const VoiceInputScreen: React.FC<VoiceInputScreenProps> = ({
         {error && (
           <View style={styles.errorContainer} testID="voice-error">
             <Text style={styles.errorText}>{error}</Text>
+            {!isListening && (
+              <TouchableOpacity
+                testID="voice-retry-button"
+                onPress={start}
+                style={styles.retryButton}
+              >
+                <Text style={styles.retryText}>다시 시도</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
 
@@ -177,6 +169,19 @@ const styles = StyleSheet.create({
   errorText: {
     ...typography.caption,
     color: colors.error,
+  },
+  retryButton: {
+    marginTop: spacing.sm,
+    alignSelf: 'flex-start',
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    backgroundColor: colors.error,
+    borderRadius: 4,
+  },
+  retryText: {
+    ...typography.caption,
+    color: colors.surface,
+    fontWeight: '600',
   },
   listContainer: {
     flex: 1,

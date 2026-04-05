@@ -42,97 +42,53 @@ export class GeminiService {
       );
     }
 
-    const maxRetries = 3;
-
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        const result = await this.model.generateContent([
-          {
-            inlineData: {
-              mimeType,
-              data: audioBuffer.toString('base64'),
-            },
+    const text = await this.retryWithBackoff(async () => {
+      const result = await this.model.generateContent([
+        {
+          inlineData: {
+            mimeType,
+            data: audioBuffer.toString('base64'),
           },
-          TRANSCRIBE_PROMPT,
-        ]);
+        },
+        TRANSCRIBE_PROMPT,
+      ]);
+      return result.response.text().trim();
+    });
 
-        const text = result.response.text().trim();
-
-        if (!text) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-              code: 'VOICE_AI_API_ERROR',
-              message: '음성에서 텍스트를 추출할 수 없습니다.',
-            },
-            HttpStatus.INTERNAL_SERVER_ERROR,
-          );
-        }
-
-        return text;
-      } catch (error) {
-        if (error instanceof HttpException) {
-          throw error;
-        }
-
-        // WHY: Gemini 무료 tier는 분당 요청 수 제한이 있어 429가 자주 발생함
-        const status = (error as { status?: number }).status;
-        if (status === 429 && attempt < maxRetries) {
-          const delay = attempt * 2000;
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          continue;
-        }
-
-        if (status === 429) {
-          throw new HttpException(
-            {
-              statusCode: HttpStatus.TOO_MANY_REQUESTS,
-              code: 'VOICE_AI_RATE_LIMIT',
-              message:
-                'AI 서비스 요청이 너무 많습니다. 잠시 후 다시 시도해주세요.',
-            },
-            HttpStatus.TOO_MANY_REQUESTS,
-          );
-        }
-
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-            code: 'VOICE_AI_API_ERROR',
-            message: 'Gemini API 호출에 실패했습니다.',
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-        );
-      }
+    if (!text) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          code: 'VOICE_AI_API_ERROR',
+          message: '음성에서 텍스트를 추출할 수 없습니다.',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
 
-    throw new HttpException(
-      {
-        statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-        code: 'VOICE_AI_API_ERROR',
-        message: 'Gemini API 호출에 실패했습니다.',
-      },
-      HttpStatus.INTERNAL_SERVER_ERROR,
-    );
+    return text;
   }
 
   async refineText(rawText: string): Promise<string> {
-    const maxRetries = 3;
+    const text = await this.retryWithBackoff(async () => {
+      const result = await this.model.generateContent([
+        `${REFINE_PROMPT}\n\n${rawText}`,
+      ]);
+      return result.response.text().trim();
+    });
 
+    // WHY: LLM이 빈 응답을 반환할 수 있으므로 원본 텍스트로 폴백
+    return text || rawText;
+  }
+
+  // WHY: Gemini 무료 tier는 분당 요청 수 제한이 있어 429가 자주 발생함
+  private async retryWithBackoff(
+    fn: () => Promise<string>,
+    maxRetries = 3,
+  ): Promise<string> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        const result = await this.model.generateContent([
-          `${REFINE_PROMPT}\n\n${rawText}`,
-        ]);
-
-        const text = result.response.text().trim();
-
-        // WHY: LLM이 빈 응답을 반환할 수 있으므로 원본 텍스트로 폴백
-        if (!text) {
-          return rawText;
-        }
-
-        return text;
+        return await fn();
       } catch (error) {
         if (error instanceof HttpException) {
           throw error;

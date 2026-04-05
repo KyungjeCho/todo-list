@@ -69,7 +69,10 @@ export function useSpeechRecognition({
     }
   });
 
+  const hasErrorRef = useRef(false);
+
   useSpeechRecognitionEvent('error', (event) => {
+    hasErrorRef.current = true;
     setError(event.message || '음성 인식 오류가 발생했습니다.');
   });
 
@@ -79,7 +82,8 @@ export function useSpeechRecognition({
     clearSilenceTimer();
     flushInterim();
 
-    if (isListeningRef.current) {
+    // WHY: 에러로 인한 종료 시 재시작하면 무한 루프 발생 가능 — 에러 상태에서는 재시작하지 않음
+    if (isListeningRef.current && !hasErrorRef.current) {
       ExpoSpeechRecognitionModule.start({
         lang: 'ko-KR',
         continuous: true,
@@ -90,6 +94,7 @@ export function useSpeechRecognition({
 
   const start = useCallback(async () => {
     setError(null);
+    hasErrorRef.current = false;
     setInterimText('');
 
     const { granted } =
