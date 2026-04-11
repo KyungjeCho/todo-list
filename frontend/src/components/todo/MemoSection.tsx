@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import type { TodoMemo } from '../../types/todo';
 import { colors, typography, spacing, radius } from '../../theme';
 
@@ -22,6 +23,7 @@ export const MemoSection: React.FC<MemoSectionProps> = ({
   onUpdateMemo,
   onDeleteMemo,
 }) => {
+  const { t } = useTranslation();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
 
@@ -81,7 +83,7 @@ export const MemoSection: React.FC<MemoSectionProps> = ({
                 testID={`memo-delete-${memo.id}`}
                 onPress={() => onDeleteMemo?.(memo.id)}
                 style={styles.deleteButton}
-                accessibilityLabel="메모 삭제"
+                accessibilityLabel={t('todo.deleteMemo')}
                 accessibilityRole="button"
               >
                 <Text style={styles.deleteText}>&#10005;</Text>

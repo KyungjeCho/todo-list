@@ -1,6 +1,6 @@
 # todo-list Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-04-04
+Auto-generated from all feature plans. Last updated: 2026-04-10
 
 ## Active Technologies
 - Supabase (PostgreSQL) — 디스크 수준 AES-256 암호화, 추가 앱 레벨 암호화 없음 (001-todo-mobile-service)
@@ -79,7 +79,6 @@ cd frontend && npm test && npm run lint
 ## Recent Changes
 - 004-voice-input-screen: Added TypeScript 5.x (Frontend & Backend) + React Native (Expo ~55), expo-speech-recognition (신규), NestJS v11, @google/generative-ai
 - feature/003-share-button-update: Added TypeScript 5.x + React Native (Expo), expo-clipboard, react-native-safe-area-context
-- 002-uiux-update: Added TypeScript 5.x (Frontend & Backend) + React Native (Expo), react-native-gesture-handler, expo-blur, Zustand, NestJS
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

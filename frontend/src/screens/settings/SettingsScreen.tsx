@@ -8,6 +8,7 @@ import {
   ScrollView,
   Switch,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Svg, { Path, Circle, Line, Rect, Polyline } from 'react-native-svg';
 import { colors, typography, spacing, radius } from '../../theme';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -208,6 +209,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   isLoading,
   error,
 }) => {
+  const { t } = useTranslation();
   const [timePickerTarget, setTimePickerTarget] =
     useState<TimePickerTarget>(null);
   const [showTimezonePicker, setShowTimezonePicker] = useState(false);
@@ -272,7 +274,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
   return (
     <ScrollView style={styles.container} testID="settings-screen">
-      <Text style={styles.screenTitle}>설정</Text>
+      <Text style={styles.screenTitle}>{t('settings.title')}</Text>
 
       {error && (
         <View style={styles.errorContainer}>
@@ -281,14 +283,18 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       )}
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>알림 설정</Text>
+        <Text style={styles.sectionTitle}>
+          {t('settings.notificationSettings')}
+        </Text>
 
         <View style={styles.settingRow}>
           <View style={styles.iconContainer}>
             <BellIcon />
           </View>
           <View style={styles.settingInfo}>
-            <Text style={styles.settingLabel}>계획 알림</Text>
+            <Text style={styles.settingLabel}>
+              {t('settings.planNotification')}
+            </Text>
             <TouchableOpacity
               testID="plan-time-button"
               onPress={() => setTimePickerTarget('plan')}
@@ -301,7 +307,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   profile.planTime === null && styles.settingValueDisabled,
                 ]}
               >
-                {profile.planTime ?? '해제됨'}
+                {profile.planTime ?? t('common.disabled')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -319,7 +325,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             <BellIcon muted={profile.reviewTime === null} />
           </View>
           <View style={styles.settingInfo}>
-            <Text style={styles.settingLabel}>회고 알림</Text>
+            <Text style={styles.settingLabel}>
+              {t('settings.reviewNotification')}
+            </Text>
             <TouchableOpacity
               testID="review-time-button"
               onPress={() => setTimePickerTarget('review')}
@@ -332,7 +340,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   profile.reviewTime === null && styles.settingValueDisabled,
                 ]}
               >
-                {profile.reviewTime ?? '해제됨'}
+                {profile.reviewTime ?? t('common.disabled')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -359,7 +367,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       )}
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>지역 설정</Text>
+        <Text style={styles.sectionTitle}>{t('settings.regionSettings')}</Text>
 
         <TouchableOpacity
           testID="timezone-button"
@@ -370,7 +378,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             <GlobeIcon />
           </View>
           <Text style={[styles.settingLabel, styles.settingLabelFlex]}>
-            타임존
+            {t('settings.timezone')}
           </Text>
           <Text testID="timezone-value" style={styles.settingValue}>
             {(profile.timezone ?? '').split('/').pop() ?? profile.timezone}
@@ -401,14 +409,14 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>정보</Text>
+        <Text style={styles.sectionTitle}>{t('settings.info')}</Text>
 
         <TouchableOpacity style={styles.settingRow}>
           <View style={styles.iconContainer}>
             <DocumentIcon />
           </View>
           <Text style={[styles.settingLabel, styles.settingLabelFlex]}>
-            오픈소스 라이센스
+            {t('settings.openSourceLicense')}
           </Text>
           <ChevronRightIcon />
         </TouchableOpacity>
@@ -418,7 +426,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             <ShieldIcon />
           </View>
           <Text style={[styles.settingLabel, styles.settingLabelFlex]}>
-            개인정보 처리방침
+            {t('settings.privacyPolicy')}
           </Text>
           <ChevronRightIcon />
         </TouchableOpacity>
@@ -429,7 +437,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           <MailIcon />
         </View>
         <Text style={[styles.settingLabel, styles.settingLabelFlex]}>
-          연락처
+          {t('settings.contact')}
         </Text>
         <ChevronRightIcon />
       </TouchableOpacity>

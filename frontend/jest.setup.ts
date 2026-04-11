@@ -1,4 +1,8 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
+
+// WHY: i18n을 테스트 환경에서 초기화해야 useTranslation() 훅이 번역된 텍스트를 반환한다.
+import './src/i18n';
+
 jest.mock('@react-native-firebase/messaging', () => ({
   getMessaging: jest.fn().mockReturnValue({}),
   requestPermission: jest.fn().mockResolvedValue(1),

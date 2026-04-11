@@ -3,6 +3,7 @@ import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
 } from 'expo-speech-recognition';
+import i18n from '../../i18n';
 
 /** 음성 입력이 멈춘 뒤 interim 텍스트를 final로 확정하기까지 대기 시간 (ms) */
 const SILENCE_TIMEOUT_MS = 1500;
@@ -73,7 +74,7 @@ export function useSpeechRecognition({
 
   useSpeechRecognitionEvent('error', (event) => {
     hasErrorRef.current = true;
-    setError(event.message || '음성 인식 오류가 발생했습니다.');
+    setError(event.message || i18n.t('voice.speechError'));
   });
 
   // WHY: iOS는 60초 후 STT 세션이 자동 종료됨. 녹음 중이면 즉시 재시작하여 연속 인식 유지
@@ -100,7 +101,7 @@ export function useSpeechRecognition({
     const { granted } =
       await ExpoSpeechRecognitionModule.requestPermissionsAsync();
     if (!granted) {
-      setError('마이크 권한이 필요합니다.');
+      setError(i18n.t('voice.micPermissionRequired'));
       return;
     }
 

@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { Platform, PermissionsAndroid } from 'react-native';
+import i18n from '../../i18n';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import {
@@ -75,7 +76,7 @@ export function useAuth() {
         }
       } catch (err) {
         const message =
-          err instanceof Error ? err.message : '인증에 실패했습니다';
+          err instanceof Error ? err.message : i18n.t('auth.authFailed');
         setError(message);
       } finally {
         setLoading(false);
@@ -100,14 +101,14 @@ export function useAuth() {
           const message =
             profileErr instanceof Error
               ? profileErr.message
-              : '프로필 조회에 실패했습니다';
+              : i18n.t('auth.profileFetchFailed');
           setError(message);
         }
         return { isNewUser };
       } catch (err) {
         clearAuth();
         const message =
-          err instanceof Error ? err.message : '인증에 실패했습니다';
+          err instanceof Error ? err.message : i18n.t('auth.authFailed');
         setError(message);
         return { isNewUser: false };
       } finally {

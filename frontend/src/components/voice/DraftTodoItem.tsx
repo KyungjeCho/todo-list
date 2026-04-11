@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { DraftTodoStatus } from '../../features/voice/types';
 import type { DraftTodo } from '../../features/voice/types';
 import { colors, typography, spacing, radius } from '../../theme';
@@ -19,6 +20,7 @@ export const DraftTodoItem: React.FC<DraftTodoItemProps> = ({
   draft,
   onRemove,
 }) => {
+  const { t } = useTranslation();
   const displayText =
     draft.status === DraftTodoStatus.READY
       ? (draft.refinedText ?? draft.rawText)
@@ -39,7 +41,7 @@ export const DraftTodoItem: React.FC<DraftTodoItemProps> = ({
           <Text style={styles.checkIcon}>✓</Text>
         )}
         {draft.status === DraftTodoStatus.ERROR && (
-          <Text style={styles.errorLabel}>정리 실패</Text>
+          <Text style={styles.errorLabel}>{t('voice.refineFailed')}</Text>
         )}
         <Text
           style={[
@@ -54,7 +56,7 @@ export const DraftTodoItem: React.FC<DraftTodoItemProps> = ({
       <TouchableOpacity
         testID={`draft-remove-${draft.id}`}
         onPress={() => onRemove(draft.id)}
-        accessibilityLabel="삭제"
+        accessibilityLabel={t('common.delete')}
         style={styles.removeButton}
       >
         <Text style={styles.removeIcon}>✕</Text>

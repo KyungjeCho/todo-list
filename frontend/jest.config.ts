@@ -29,6 +29,7 @@ const config: Config = {
     '^expo-linking$': '<rootDir>/__mocks__/expo-linking.ts',
     '^expo-clipboard$': '<rootDir>/__mocks__/expo-clipboard.ts',
     '^expo-audio$': '<rootDir>/__mocks__/expo-audio.ts',
+    '^expo-localization$': '<rootDir>/__mocks__/expo-localization.ts',
     '^@react-native-community/datetimepicker$': '<rootDir>/__mocks__/@react-native-community/datetimepicker.tsx',
     '^react-native-svg$': '<rootDir>/__mocks__/react-native-svg.tsx',
     '^expo-linear-gradient$': '<rootDir>/__mocks__/expo-linear-gradient.tsx',

@@ -3,6 +3,8 @@ import { ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Svg, { Path, Rect, Circle, Line } from 'react-native-svg';
+import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
 import { colors, typography } from '../../theme';
 import type { MainTabParamList } from './types';
 import { CalendarScreen } from '../../screens/calendar/CalendarScreen';
@@ -49,7 +51,7 @@ function CalendarTab() {
       setMonthlySummary(data);
     } catch {
       if (requestId !== monthRequestIdRef.current) return;
-      setError('캘린더 데이터를 불러올 수 없습니다');
+      setError(i18n.t('navigation.calendarLoadFailed'));
     } finally {
       if (requestId === monthRequestIdRef.current) {
         setIsLoading(false);
@@ -68,7 +70,7 @@ function CalendarTab() {
       setDayStats(data.stats);
     } catch {
       if (requestId !== dayRequestIdRef.current) return;
-      setDayError('데이터를 불러올 수 없습니다');
+      setDayError(i18n.t('navigation.dataLoadFailed'));
     } finally {
       if (requestId === dayRequestIdRef.current) {
         setIsDayLoading(false);
@@ -125,6 +127,7 @@ interface MainTabNavigatorProps {
 export const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
   HomeComponent,
 }) => {
+  const { t } = useTranslation();
   return (
     <Tab.Navigator
       screenOptions={{
@@ -139,7 +142,7 @@ export const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
         name="Home"
         component={HomeComponent}
         options={{
-          tabBarLabel: '홈',
+          tabBarLabel: t('navigation.home'),
           tabBarIcon: ({ color }) => (
             <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
               <Path
@@ -165,7 +168,7 @@ export const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
         name="Calendar"
         component={CalendarTab}
         options={{
-          tabBarLabel: '캘린더',
+          tabBarLabel: t('navigation.calendar'),
           tabBarIcon: ({ color }) => (
             <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
               <Rect
@@ -215,7 +218,7 @@ export const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
         name="Settings"
         component={SettingsWrapper}
         options={{
-          tabBarLabel: '설정',
+          tabBarLabel: t('navigation.settings'),
           tabBarIcon: ({ color }) => (
             <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
               <Circle

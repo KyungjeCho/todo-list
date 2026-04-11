@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   InteractionManager,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { BlurView } from 'expo-blur';
 import { colors, typography, spacing, radius } from '../../theme';
 
@@ -28,6 +29,7 @@ export const InputOverlay: React.FC<InputOverlayProps> = ({
   onSubmit,
   onClose,
 }) => {
+  const { t } = useTranslation();
   const [text, setText] = useState('');
   const inputRef = useRef<TextInput>(null);
 
@@ -77,14 +79,18 @@ export const InputOverlay: React.FC<InputOverlayProps> = ({
             placeholderTextColor={colors.disabled}
             maxLength={255}
             style={styles.textInput}
-            accessibilityLabel={mode === 'todo' ? '할 일 입력' : '메모 입력'}
+            accessibilityLabel={
+              mode === 'todo' ? t('todo.todoInput') : t('todo.memoInput')
+            }
           />
           <TouchableOpacity
             testID="input-overlay-submit-button"
             onPress={handleSubmit}
             activeOpacity={0.8}
             style={styles.submitButton}
-            accessibilityLabel={mode === 'todo' ? '할 일 추가' : '메모 추가'}
+            accessibilityLabel={
+              mode === 'todo' ? t('todo.addTodo') : t('todo.addMemo')
+            }
             accessibilityRole="button"
           >
             <Text style={styles.submitIcon}>+</Text>

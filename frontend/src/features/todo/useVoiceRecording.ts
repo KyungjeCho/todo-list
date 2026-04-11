@@ -6,6 +6,7 @@ import {
   setAudioModeAsync,
   RecordingPresets,
 } from 'expo-audio';
+import i18n from '../../i18n';
 
 interface UseVoiceRecordingReturn {
   isRecording: boolean;
@@ -27,7 +28,7 @@ export function useVoiceRecording(): UseVoiceRecordingReturn {
     try {
       const permission = await requestRecordingPermissionsAsync();
       if (!permission.granted) {
-        setError('마이크 권한이 필요합니다');
+        setError(i18n.t('voice.micPermissionRequired'));
         return;
       }
 
@@ -40,7 +41,9 @@ export function useVoiceRecording(): UseVoiceRecordingReturn {
       recorder.record();
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '녹음 시작에 실패했습니다');
+      setError(
+        err instanceof Error ? err.message : i18n.t('voice.recordStartFailed'),
+      );
     }
   }, [recorder]);
 
@@ -53,7 +56,9 @@ export function useVoiceRecording(): UseVoiceRecordingReturn {
       await recorder.stop();
       setAudioUri(recorder.uri);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '녹음 중지에 실패했습니다');
+      setError(
+        err instanceof Error ? err.message : i18n.t('voice.recordStopFailed'),
+      );
     }
   }, [recorder, recorderState.isRecording]);
 

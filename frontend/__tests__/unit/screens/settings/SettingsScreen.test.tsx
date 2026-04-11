@@ -22,7 +22,7 @@ const mockProfile: UserProfile = {
   planTime: '08:00',
   reviewTime: '22:00',
   timezone: 'Asia/Seoul',
-  language: 'ko-KR',
+  language: 'ko',
 };
 
 describe('SettingsScreen', () => {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Svg, { Path } from 'react-native-svg';
 import { colors, typography, spacing, radius } from '../../theme';
 
@@ -21,17 +22,18 @@ const CheckmarkIcon: React.FC = () => (
   </Svg>
 );
 
-export const EmptyState: React.FC = () => (
-  <View testID="empty-state" style={styles.container}>
-    <View testID="empty-state-icon-container" style={styles.iconContainer}>
-      <CheckmarkIcon />
+export const EmptyState: React.FC = () => {
+  const { t } = useTranslation();
+  return (
+    <View testID="empty-state" style={styles.container}>
+      <View testID="empty-state-icon-container" style={styles.iconContainer}>
+        <CheckmarkIcon />
+      </View>
+      <Text style={styles.title}>{t('todo.emptyTitle')}</Text>
+      <Text style={styles.caption}>{t('todo.emptyCaption')}</Text>
     </View>
-    <Text style={styles.title}>오늘의 할 일이 없어요</Text>
-    <Text style={styles.caption}>
-      {'우측 하단의 + 버튼을 눌러\n오늘의 계획을 추가해보세요'}
-    </Text>
-  </View>
-);
+  );
+};
 
 const styles = StyleSheet.create({
   container: {

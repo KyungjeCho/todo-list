@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Share } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
+import i18n from '../../i18n';
 import type { Todo } from '../../types/todo';
 import { formatShareData } from './formatShareData';
 
@@ -44,7 +45,7 @@ export function useShareTodo(): UseShareTodoReturn {
       const message = formatShareData(todos, date);
       await Share.share({ message });
     } catch {
-      setError('공유에 실패했습니다');
+      setError(i18n.t('share.shareFailed'));
       if (errorTimerRef.current !== null) {
         clearTimeout(errorTimerRef.current);
       }
@@ -76,7 +77,7 @@ export function useShareTodo(): UseShareTodoReturn {
         setCopied(false);
       }, TOAST_DURATION_MS);
     } catch {
-      setError('클립보드 복사에 실패했습니다');
+      setError(i18n.t('share.clipboardFailed'));
       if (errorTimerRef.current !== null) {
         clearTimeout(errorTimerRef.current);
       }

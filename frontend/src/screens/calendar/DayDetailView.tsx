@@ -7,26 +7,9 @@ import {
   StyleSheet,
 } from 'react-native';
 import Svg, { Path, Circle as SvgCircle } from 'react-native-svg';
+import { useTranslation } from 'react-i18next';
 import type { Todo } from '../../types/todo';
 import { colors, typography, spacing, radius } from '../../theme';
-
-const WEEKDAY_NAMES = [
-  '일요일',
-  '월요일',
-  '화요일',
-  '수요일',
-  '목요일',
-  '금요일',
-  '토요일',
-];
-
-function formatDateDisplay(dateStr: string): string {
-  const d = new Date(dateStr);
-  const month = d.getMonth() + 1;
-  const day = d.getDate();
-  const weekday = WEEKDAY_NAMES[d.getDay()];
-  return `${month}월 ${day}일 ${weekday}`;
-}
 
 interface DayStats {
   total: number;
@@ -80,6 +63,16 @@ export const DayDetailView: React.FC<DayDetailViewProps> = ({
   isLoading = false,
   error,
 }) => {
+  const { t } = useTranslation();
+
+  const formatDateWithI18n = (dateStr: string): string => {
+    const d = new Date(dateStr);
+    const month = d.getMonth() + 1;
+    const day = d.getDate();
+    const weekdayKeys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+    const weekday = t(`calendar.dayOfWeekFull.${weekdayKeys[d.getDay()]}`);
+    return t('calendar.dateDisplay', { month, day, weekday });
+  };
   if (isLoading) {
     return (
       <View style={styles.container}>
@@ -105,7 +98,22 @@ export const DayDetailView: React.FC<DayDetailViewProps> = ({
       <View
         testID={`day-todo-item-${item.id}`}
         style={styles.todoItem}
-        accessibilityLabel={`${item.content}, ${isCompleted ? '완료' : item.isCarriedOver ? '이월' : '미완료'}`}
+        accessibilityLabel={
+          isCompleted
+            ? t('todo.statusLabel', {
+                content: item.content,
+                status: t('review.completed'),
+              })
+            : item.isCarriedOver
+              ? t('todo.statusLabelCarried', {
+                  content: item.content,
+                  status: t('common.incomplete'),
+                })
+              : t('todo.statusLabel', {
+                  content: item.content,
+                  status: t('common.incomplete'),
+                })
+        }
       >
         <View style={styles.checkboxContainer}>
           {isCompleted ? <CheckCircleIcon /> : <EmptyCircleIcon />}
@@ -120,7 +128,7 @@ export const DayDetailView: React.FC<DayDetailViewProps> = ({
             testID={`carried-over-badge-${item.id}`}
             style={styles.carriedOverLabel}
           >
-            이월
+            {t('common.carriedOver')}
           </Text>
         )}
       </View>
@@ -131,7 +139,7 @@ export const DayDetailView: React.FC<DayDetailViewProps> = ({
     <View style={styles.container}>
       <View testID="day-detail-stats" style={styles.headerRow}>
         <Text testID="day-detail-date" style={styles.dateHeader}>
-          {formatDateDisplay(date)}
+          {formatDateWithI18n(date)}
         </Text>
         {stats.total > 0 && (
           <View style={styles.progressBadge}>
@@ -142,9 +150,7 @@ export const DayDetailView: React.FC<DayDetailViewProps> = ({
 
       {todos.length === 0 ? (
         <View testID="day-detail-empty-state" style={styles.emptyState}>
-          <Text style={styles.emptyText}>
-            이 날에는 등록된 할 일이 없습니다
-          </Text>
+          <Text style={styles.emptyText}>{t('calendar.emptyDay')}</Text>
         </View>
       ) : (
         <FlatList

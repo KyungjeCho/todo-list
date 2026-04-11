@@ -2,6 +2,7 @@ import React, { useEffect, useCallback, useRef } from 'react';
 import { View, Text, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../app/navigation/types';
 import { useSpeechRecognition } from '../../features/voice/useSpeechRecognition';
@@ -16,12 +17,11 @@ type VoiceInputScreenProps = NativeStackScreenProps<
   'VoiceInput'
 >;
 
-const EMPTY_RESULT_MESSAGE = '등록할 할 일이 없습니다.';
-
 export const VoiceInputScreen: React.FC<VoiceInputScreenProps> = ({
   route,
   navigation,
 }) => {
+  const { t } = useTranslation();
   const { todoDate } = route.params;
   const { drafts, addDraft, removeDraft, confirmAll } = useVoiceTodoSession({
     todoDate,
@@ -47,12 +47,12 @@ export const VoiceInputScreen: React.FC<VoiceInputScreenProps> = ({
       e.preventDefault();
 
       Alert.alert(
-        '음성 입력 종료',
-        `입력 중인 할 일 ${drafts.length}개가 삭제됩니다.`,
+        t('voice.exitTitle'),
+        t('voice.exitMessage', { count: drafts.length }),
         [
-          { text: '취소', style: 'cancel' },
+          { text: t('common.cancel'), style: 'cancel' },
           {
-            text: '삭제',
+            text: t('common.delete'),
             style: 'destructive',
             onPress: () => {
               stop();
@@ -70,7 +70,7 @@ export const VoiceInputScreen: React.FC<VoiceInputScreenProps> = ({
     stop();
 
     if (drafts.length === 0) {
-      Alert.alert('알림', EMPTY_RESULT_MESSAGE);
+      Alert.alert(t('common.notification'), t('todo.noTodosToRegister'));
       isStoppingRef.current = true;
       navigation.goBack();
       return;
@@ -81,7 +81,7 @@ export const VoiceInputScreen: React.FC<VoiceInputScreenProps> = ({
       isStoppingRef.current = true;
       navigation.goBack();
     } catch {
-      Alert.alert('오류', '할 일 등록에 실패했습니다. 다시 시도해주세요.');
+      Alert.alert(t('common.error'), t('voice.registerFailed'));
     }
   }, [stop, drafts.length, confirmAll, navigation]);
 
@@ -95,12 +95,12 @@ export const VoiceInputScreen: React.FC<VoiceInputScreenProps> = ({
           <TouchableOpacity
             testID="voice-back-button"
             onPress={() => navigation.goBack()}
-            accessibilityLabel="뒤로가기"
+            accessibilityLabel={t('voice.goBack')}
             style={styles.backButton}
           >
             <Text style={styles.backIcon}>←</Text>
           </TouchableOpacity>
-          <Text style={styles.title}>음성 할 일 입력</Text>
+          <Text style={styles.title}>{t('voice.screenTitle')}</Text>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -113,7 +113,7 @@ export const VoiceInputScreen: React.FC<VoiceInputScreenProps> = ({
                 onPress={start}
                 style={styles.retryButton}
               >
-                <Text style={styles.retryText}>다시 시도</Text>
+                <Text style={styles.retryText}>{t('common.retry')}</Text>
               </TouchableOpacity>
             )}
           </View>

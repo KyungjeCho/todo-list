@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../../store/authStore';
 import { userApi } from '../../services/api/userApi';
 import { SettingsScreen } from '../../screens/settings/SettingsScreen';
+import i18n from '../../i18n';
 import { colors } from '../../theme';
 import type { UpdateSettingsRequest } from '../../types/user';
 
@@ -22,7 +23,9 @@ export const SettingsWrapper: React.FC = () => {
         return updated;
       } catch (err) {
         const message =
-          err instanceof Error ? err.message : '설정 변경에 실패했습니다';
+          err instanceof Error
+            ? err.message
+            : i18n.t('settings.settingsChangeFailed');
         setError(message);
         throw err;
       } finally {

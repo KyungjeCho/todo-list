@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -77,6 +78,7 @@ export const MainScreen: React.FC<MainScreenProps> = ({
   error,
   onRetry,
 }) => {
+  const { t } = useTranslation();
   const [isInputOverlayVisible, setIsInputOverlayVisible] = useState(false);
   const [expandedTodoId, setExpandedTodoId] = useState<string | null>(null);
   const [inputOverlayMode, setInputOverlayMode] = useState<'todo' | 'memo'>(
@@ -151,7 +153,7 @@ export const MainScreen: React.FC<MainScreenProps> = ({
                 onPress={onRetry}
                 style={styles.retryButton}
               >
-                <Text style={styles.retryText}>다시 시도</Text>
+                <Text style={styles.retryText}>{t('common.retry')}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -216,7 +218,7 @@ export const MainScreen: React.FC<MainScreenProps> = ({
                     onPress={handleFabAdd}
                     activeOpacity={0.8}
                     style={styles.fabButton}
-                    accessibilityLabel="할 일 추가"
+                    accessibilityLabel={t('main.addTodo')}
                     accessibilityRole="button"
                   >
                     <Text style={styles.fabIcon}>+</Text>
@@ -235,8 +237,8 @@ export const MainScreen: React.FC<MainScreenProps> = ({
           mode={inputOverlayMode}
           placeholder={
             inputOverlayMode === 'memo'
-              ? '메모를 입력하세요'
-              : '할 일을 입력하세요'
+              ? t('main.memoPlaceholder')
+              : t('main.todoPlaceholder')
           }
           onSubmit={handleOverlaySubmit}
           onClose={handleOverlayClose}

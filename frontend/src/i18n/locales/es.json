@@ -1,0 +1,168 @@
+{
+  "common": {
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "complete": "Hecho",
+    "retry": "Reintentar",
+    "share": "Compartir",
+    "save": "Guardar",
+    "confirm": "Aceptar",
+    "loading": "Cargando...",
+    "notification": "Notificación",
+    "error": "Error",
+    "disabled": "Desactivado",
+    "deactivate": "Desactivar",
+    "carriedOver": "Trasladado",
+    "incomplete": "Incompleto"
+  },
+  "auth": {
+    "continueWithGoogle": "Continuar con Google",
+    "continueWithNaver": "Continuar con Naver",
+    "continueWithKakao": "Continuar con Kakao",
+    "continueWithApple": "Continuar con Apple",
+    "subtitle": "Planifica tu día y reflexiona",
+    "authFailed": "Error de autenticación",
+    "profileFetchFailed": "Error al obtener el perfil"
+  },
+  "main": {
+    "addTodo": "Agregar tarea",
+    "todoPlaceholder": "Ingresa una tarea",
+    "memoPlaceholder": "Ingresa una nota",
+    "completionRate": "Progreso {{rate}}%"
+  },
+  "todo": {
+    "deleteTitle": "Eliminar",
+    "deleteMessage": "¿Eliminar \"{{content}}\"?",
+    "todoInput": "Entrada de tarea",
+    "memoInput": "Entrada de nota",
+    "addTodo": "Agregar tarea",
+    "addMemo": "Agregar nota",
+    "addMemoButton": "+ Nota",
+    "editTodo": "Editar tarea",
+    "deleteMemo": "Eliminar nota",
+    "collapse": "Contraer",
+    "carriedOverItem": "Elemento trasladado",
+    "statusAccessibility": {
+      "COMPLETED": "Completado",
+      "ACTIVE": "Activo",
+      "INACTIVE": "Inactivo",
+      "CARRIED_OVER": "Trasladado"
+    },
+    "statusLabel": "{{content}}, {{status}}",
+    "statusLabelCarried": "{{content}}, {{status}}, trasladado",
+    "dragDelete": "Zona de eliminación",
+    "dragDeleteInstruction": "Soltar aquí para eliminar",
+    "emptyTitle": "No hay tareas para hoy",
+    "emptyCaption": "Toca el botón + en la esquina inferior derecha\npara agregar tu plan del día",
+    "completeDay": "Completar agenda",
+    "completeDayAccessibility": "Completar la agenda de hoy",
+    "completeDayAlreadyDone": "La agenda de hoy ya está completada",
+    "completeDayResult": "Trasladado",
+    "noTodosToRegister": "No hay tareas para registrar."
+  },
+  "settings": {
+    "title": "Configuración",
+    "notificationSettings": "Configuración de notificaciones",
+    "planNotification": "Notificación de planificación",
+    "reviewNotification": "Notificación de reflexión",
+    "regionSettings": "Configuración regional",
+    "timezone": "Zona horaria",
+    "info": "Información",
+    "openSourceLicense": "Licencia de código abierto",
+    "privacyPolicy": "Política de privacidad",
+    "contact": "Contacto",
+    "settingsChangeFailed": "Error al cambiar la configuración",
+    "settingsSaveFailed": "Error al guardar la configuración"
+  },
+  "onboarding": {
+    "routineSetup": "Configurar rutina",
+    "routineSubtitle": "Establece tu hora de planificación y revisión diaria",
+    "planTime": "Hora de planificación",
+    "reviewTime": "Hora de reflexión"
+  },
+  "voice": {
+    "screenTitle": "Entrada de tarea por voz",
+    "exitTitle": "Finalizar entrada por voz",
+    "exitMessage": "Se eliminarán {{count}} tarea(s) en borrador.",
+    "registerFailed": "Error al registrar tareas. Inténtalo de nuevo.",
+    "goBack": "Volver",
+    "recording": "Grabando",
+    "stopRecording": "Detener grabación",
+    "speakPlaceholder": "Habla...",
+    "addByVoice": "Agregar tarea por voz",
+    "refineFailed": "Error de procesamiento",
+    "speechError": "Ocurrió un error de reconocimiento de voz.",
+    "micPermissionRequired": "Se requiere permiso de micrófono.",
+    "recordStartFailed": "Error al iniciar la grabación",
+    "recordStopFailed": "Error al detener la grabación"
+  },
+  "timezone": {
+    "searchPlaceholder": "Buscar zona horaria",
+    "noResults": "No se encontraron resultados"
+  },
+  "calendar": {
+    "title": "Calendario",
+    "prevMonth": "Mes anterior",
+    "nextMonth": "Mes siguiente",
+    "yearMonth": "{{month}} de {{year}}",
+    "dateWithCount": "{{day}}/{{month}}, {{count}} tarea(s)",
+    "dateOnly": "{{day}}/{{month}}",
+    "emptyMonth": "No hay tareas registradas este mes",
+    "emptyDay": "No hay tareas registradas en este día",
+    "dayOfWeekFull": {
+      "sun": "Domingo",
+      "mon": "Lunes",
+      "tue": "Martes",
+      "wed": "Miércoles",
+      "thu": "Jueves",
+      "fri": "Viernes",
+      "sat": "Sábado"
+    },
+    "dayOfWeekShort": {
+      "sun": "Dom",
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mié",
+      "thu": "Jue",
+      "fri": "Vie",
+      "sat": "Sáb"
+    },
+    "dateDisplay": "{{weekday}}, {{day}}/{{month}}"
+  },
+  "share": {
+    "noTodosToShare": "No hay tareas para compartir",
+    "copiedToClipboard": "Copiado al portapapeles",
+    "shareFailed": "Error al compartir",
+    "clipboardFailed": "Error al copiar al portapapeles",
+    "shareAction": "Compartir",
+    "copyClipboard": "Copiar al portapapeles",
+    "shareTitle": "Lista de tareas del {{date}}",
+    "shareHeader": "Lista de tareas del {{date}}"
+  },
+  "navigation": {
+    "home": "Inicio",
+    "calendar": "Calendario",
+    "settings": "Configuración",
+    "calendarLoadFailed": "No se pueden cargar los datos del calendario",
+    "dataLoadFailed": "No se pueden cargar los datos"
+  },
+  "error": {
+    "todoLoadFailed": "Error al cargar las tareas",
+    "todoAddFailed": "Error al agregar tarea",
+    "statusChangeFailed": "Error al cambiar el estado",
+    "editFailed": "Error al editar",
+    "deleteFailed": "Error al eliminar",
+    "completeDayFailed": "Error al completar la agenda",
+    "memoAddFailed": "Error al agregar nota",
+    "memoEditFailed": "Error al editar nota",
+    "memoDeleteFailed": "Error al eliminar nota"
+  },
+  "mode": {
+    "switchToPlan": "Cambiar al modo Plan",
+    "switchToReview": "Cambiar al modo Revisión"
+  },
+  "review": {
+    "completed": "Completado",
+    "incomplete": "Incompleto"
+  }
+}
