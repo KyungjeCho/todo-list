@@ -67,6 +67,8 @@
     "reviewNotification": "회고 알림",
     "regionSettings": "지역 설정",
     "timezone": "타임존",
+    "language": "언어",
+    "languageSaveFailed": "언어 저장에 실패했습니다. 다시 시도해주세요.",
     "info": "정보",
     "openSourceLicense": "오픈소스 라이센스",
     "privacyPolicy": "개인정보 처리방침",

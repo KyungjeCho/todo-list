@@ -98,17 +98,17 @@
 
 ### 테스트 (Red 단계)
 
-- [ ] T034 [P] [US2] 언어 선택 UI 테스트 — `frontend/__tests__/screens/settings/SettingsScreen.test.tsx` (언어 목록 표시, 원어명 표시, 선택 시 `i18n.changeLanguage` 호출, 서버 API 호출, 서버 저장 실패 시 로컬 UI 유지 + 에러 토스트 표시, 재시작 시 서버 저장값 복원)
-- [ ] T035 [P] [US2] 백엔드 언어 검증 테스트 — `backend/test/unit/user/update-settings.usecase.spec.ts` (`@IsIn` 검증: 유효 언어 성공, 비지원 언어 400 에러)
+- [x] T034 [P] [US2] 언어 선택 UI 테스트 — `frontend/__tests__/unit/screens/settings/SettingsScreen.language.test.tsx` (언어 목록 표시, 원어명 표시, 선택 시 `i18n.changeLanguage` 호출, 서버 API 호출, 서버 저장 실패 시 로컬 UI 유지 + 에러 토스트 표시, 재시작 시 서버 저장값 복원)
+- [x] T035 [P] [US2] 백엔드 언어 검증 테스트 — `backend/test/unit/user/application/update-settings.usecase.spec.ts` (`@IsIn` 검증: 유효 언어 성공, 비지원 언어 400 에러)
 
 ### 구현 (Green 단계)
 
-- [ ] T036 [US2] 백엔드 언어 검증 추가 — `backend/src/user/application/dto/update-settings.dto.ts` (`language` 필드에 `@IsIn(['ko', 'en', 'ja', 'es'])` 추가)
-- [ ] T037 [US2] 설정 화면에 언어 선택 UI 추가 — `frontend/src/screens/settings/SettingsScreen.tsx` (타임존 아래에 언어 항목 추가, 드롭다운 목록, 원어명 표시, `i18n.changeLanguage()` + API 호출 + authStore 갱신)
+- [x] T036 [US2] 백엔드 언어 검증 추가 — `backend/src/user/application/dto/update-settings.dto.ts` (`language` 필드에 `@IsIn(['ko', 'en', 'ja', 'es'])` 추가)
+- [x] T037 [US2] 설정 화면에 언어 선택 UI 추가 — `frontend/src/screens/settings/SettingsScreen.tsx` (타임존 아래에 언어 항목 추가, 드롭다운 목록, 원어명 표시, `i18n.changeLanguage()` + API 호출 + authStore 갱신)
 
 ### E2E 테스트
 
-- [ ] T038 [US2] Maestro E2E — `.maestro/settings/language-change.yaml` (설정 → 언어 → English 선택 → UI 영어 전환 확인)
+- [x] T038 [US2] Maestro E2E — `.maestro/settings/language-change.yaml` (설정 → 언어 → English 선택 → UI 영어 전환 확인)
 
 **체크포인트**: 설정에서 4개 언어 전환 가능, 즉시 반영, 서버 저장, 앱 재시작 시 유지
 

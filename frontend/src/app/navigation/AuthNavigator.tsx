@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import i18n from '../../i18n';
+import i18n, { SUPPORTED_LANGUAGES } from '../../i18n';
+import type { SupportedLanguage } from '../../i18n';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuthStore } from '../../store/authStore';
@@ -329,9 +330,17 @@ export const AuthNavigator: React.FC = () => {
 
   // WHY: 서버에 저장된 사용자 언어 설정이 변경되면 앱 전체 UI 언어를 동기화한다.
   // 디바이스 언어보다 서버 저장값이 우선이므로, 로그인 후 서버 값으로 전환한다.
+  // WHY: 서버에서 legacy 형식(ko-KR)이 올 수 있으므로 정규화 후 changeLanguage 호출
   useEffect(() => {
-    if (user?.language && user.language !== i18n.language) {
-      void i18n.changeLanguage(user.language);
+    if (user?.language) {
+      const base = user.language.split('-')[0];
+      const normalized: SupportedLanguage =
+        (SUPPORTED_LANGUAGES as readonly string[]).includes(base)
+          ? (base as SupportedLanguage)
+          : 'en';
+      if (normalized !== i18n.language) {
+        void i18n.changeLanguage(normalized);
+      }
     }
   }, [user?.language]);
 

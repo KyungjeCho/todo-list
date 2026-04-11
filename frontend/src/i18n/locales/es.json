@@ -67,6 +67,8 @@
     "reviewNotification": "Notificación de reflexión",
     "regionSettings": "Configuración regional",
     "timezone": "Zona horaria",
+    "language": "Idioma",
+    "languageSaveFailed": "Error al guardar el idioma. Inténtalo de nuevo.",
     "info": "Información",
     "openSourceLicense": "Licencia de código abierto",
     "privacyPolicy": "Política de privacidad",

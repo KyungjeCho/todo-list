@@ -67,6 +67,8 @@
     "reviewNotification": "Review Notification",
     "regionSettings": "Region Settings",
     "timezone": "Timezone",
+    "language": "Language",
+    "languageSaveFailed": "Failed to save language. Please try again.",
     "info": "Information",
     "openSourceLicense": "Open Source License",
     "privacyPolicy": "Privacy Policy",

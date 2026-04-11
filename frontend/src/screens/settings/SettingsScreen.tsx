@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,8 +7,24 @@ import {
   StyleSheet,
   ScrollView,
   Switch,
+  Alert,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import i18n from '../../i18n';
+import {
+  SUPPORTED_LANGUAGES,
+  LANGUAGE_LABELS,
+  type SupportedLanguage,
+} from '../../i18n';
+
+/** legacy 로케일 코드(ko-KR 등)를 SupportedLanguage로 정규화한다. */
+function normalizeLanguage(lang: string): SupportedLanguage {
+  const base = lang.split('-')[0];
+  if ((SUPPORTED_LANGUAGES as readonly string[]).includes(base)) {
+    return base as SupportedLanguage;
+  }
+  return 'en';
+}
 import Svg, { Path, Circle, Line, Rect, Polyline } from 'react-native-svg';
 import { colors, typography, spacing, radius } from '../../theme';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -188,6 +204,52 @@ function MailIcon() {
   );
 }
 
+function LanguageIcon() {
+  return (
+    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M5 8l6 6"
+        stroke={colors.onSurface}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M4 14l6-6 2-3"
+        stroke={colors.onSurface}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M2 5h12"
+        stroke={colors.onSurface}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+      />
+      <Path
+        d="M7 2v3"
+        stroke={colors.onSurface}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+      />
+      <Path
+        d="M22 22l-5-10-5 10"
+        stroke={colors.onSurface}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Path
+        d="M14 18h6"
+        stroke={colors.onSurface}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
+
 function ChevronRightIcon() {
   return (
     <Svg width={16} height={16} viewBox="0 0 24 24" fill="none">
@@ -213,6 +275,18 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   const [timePickerTarget, setTimePickerTarget] =
     useState<TimePickerTarget>(null);
   const [showTimezonePicker, setShowTimezonePicker] = useState(false);
+  const [showLanguagePicker, setShowLanguagePicker] = useState(false);
+  const [optimisticLanguage, setOptimisticLanguage] =
+    useState<SupportedLanguage | null>(null);
+
+  // WHY: profile.language가 외부에서 갱신되면 낙관적 오버라이드를 해제하여 props와 동기화
+  useEffect(() => {
+    setOptimisticLanguage(null);
+  }, [profile.language]);
+
+  // WHY: props(profile.language)가 source of truth, 사용자 선택 직후에만 낙관적 값으로 오버라이드
+  const displayLanguage =
+    optimisticLanguage ?? normalizeLanguage(profile.language);
 
   const handleTimeChange = async (
     event: { type?: string },
@@ -253,6 +327,17 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   const handleTimezoneSelect = async (timezone: string) => {
     setShowTimezonePicker(false);
     await onUpdateSettings({ timezone });
+  };
+
+  const handleLanguageSelect = async (language: SupportedLanguage) => {
+    setShowLanguagePicker(false);
+    setOptimisticLanguage(language);
+    await i18n.changeLanguage(language);
+    try {
+      await onUpdateSettings({ language });
+    } catch {
+      Alert.alert(t('common.error'), t('settings.languageSaveFailed'));
+    }
   };
 
   const getDateFromTimeStr = (timeStr: string | null): Date => {
@@ -401,6 +486,44 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   ]}
                 >
                   {tz}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+        <TouchableOpacity
+          testID="language-button"
+          style={styles.settingRow}
+          onPress={() => setShowLanguagePicker(!showLanguagePicker)}
+        >
+          <View style={styles.iconContainer}>
+            <LanguageIcon />
+          </View>
+          <Text style={[styles.settingLabel, styles.settingLabelFlex]}>
+            {t('settings.language')}
+          </Text>
+          <Text testID="language-value" style={styles.settingValue}>
+            {LANGUAGE_LABELS[displayLanguage]}
+          </Text>
+          <ChevronRightIcon />
+        </TouchableOpacity>
+
+        {showLanguagePicker && (
+          <View testID="language-picker">
+            {SUPPORTED_LANGUAGES.map((lang) => (
+              <TouchableOpacity
+                key={lang}
+                style={styles.timezoneOption}
+                onPress={() => handleLanguageSelect(lang)}
+              >
+                <Text
+                  style={[
+                    styles.timezoneText,
+                    lang === displayLanguage && styles.timezoneSelected,
+                  ]}
+                >
+                  {LANGUAGE_LABELS[lang]}
                 </Text>
               </TouchableOpacity>
             ))}

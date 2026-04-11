@@ -67,6 +67,8 @@
     "reviewNotification": "振り返り通知",
     "regionSettings": "地域設定",
     "timezone": "タイムゾーン",
+    "language": "言語",
+    "languageSaveFailed": "言語の保存に失敗しました。もう一度お試しください。",
     "info": "情報",
     "openSourceLicense": "オープンソースライセンス",
     "privacyPolicy": "プライバシーポリシー",
