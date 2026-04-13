@@ -193,14 +193,14 @@
 
 **목적**: 전체 스토리 통합 검증, 코드 정리, 문서 동기화
 
-- [ ] T060 [P] 번역 키 일치 최종 검증 — 4개 JSON 파일의 키 구조 일치 확인 스크립트 실행
-- [ ] T061 [P] 성능 검증 — 언어 전환 200ms 이내 확인 (SC-002: 설정에서 4개 언어 순환 전환 시 UI 반영 시간 측정)
-- [ ] T062 [P] 성능 검증 — 타임존 검색 필터링 100ms 이내 확인 (SC-005: TimezoneSelectScreen에서 입력 후 필터링 응답 시간 측정)
-- [ ] T063 [P] 스페인어(긴 텍스트) 기준 레이아웃 검증 — 전체 화면에서 텍스트 오버플로/레이아웃 깨짐 없는지 확인
-- [ ] T064 TypeScript 타입 오류 및 린트 확인 — `cd frontend && npm run lint && cd ../backend && npm run lint`
-- [ ] T065 전체 단위 테스트 통과 확인 — `cd frontend && npm test && cd ../backend && npm test`
-- [ ] T066 quickstart.md 검증 — quickstart.md의 모든 단계를 실행하여 동작 확인
-- [ ] T067 [P] CLAUDE.md 업데이트 — 005-i18n-timezone 기술 스택 정보 추가
+- [x] T060 [P] 번역 키 일치 최종 검증 — 4개 JSON 파일의 키 구조 일치 확인 스크립트 실행
+- [x] T061 [P] 성능 검증 — 언어 전환 200ms 이내 확인 (SC-002: 설정에서 4개 언어 순환 전환 시 UI 반영 시간 측정)
+- [x] T062 [P] 성능 검증 — 타임존 검색 필터링 100ms 이내 확인 (SC-005: TimezoneSelectScreen에서 입력 후 필터링 응답 시간 측정)
+- [x] T063 [P] 스페인어(긴 텍스트) 기준 레이아웃 검증 — 전체 화면에서 텍스트 오버플로/레이아웃 깨짐 없는지 확인
+- [x] T064 TypeScript 타입 오류 및 린트 확인 — `cd frontend && npm run lint && cd ../backend && npm run lint`
+- [x] T065 전체 단위 테스트 통과 확인 — `cd frontend && npm test && cd ../backend && npm test`
+- [x] T066 quickstart.md 검증 — quickstart.md의 모든 단계를 실행하여 동작 확인
+- [x] T067 [P] CLAUDE.md 업데이트 — 005-i18n-timezone 기술 스택 정보 추가
 
 ---
 
