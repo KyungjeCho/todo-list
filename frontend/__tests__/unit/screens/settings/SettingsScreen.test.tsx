@@ -9,10 +9,12 @@ import type { UserProfile } from 'src/types/user';
 
 const mockUpdateSettings = jest.fn();
 const mockGoBack = jest.fn();
+const mockNavigate = jest.fn();
 
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({
     goBack: mockGoBack,
+    navigate: mockNavigate,
   }),
 }));
 
@@ -235,7 +237,7 @@ describe('SettingsScreen', () => {
   });
 
   describe('타임존 선택', () => {
-    it('타임존 영역을 탭하면 타임존 선택 UI가 나타난다', () => {
+    it('타임존 항목을 탭하면 TimezoneSelect 화면으로 이동한다', () => {
       render(
         <SettingsScreen
           profile={mockProfile}
@@ -245,29 +247,8 @@ describe('SettingsScreen', () => {
 
       fireEvent.press(screen.getByTestId('timezone-button'));
 
-      expect(screen.getByTestId('timezone-picker')).toBeTruthy();
-    });
-
-    it('타임존을 변경하면 onUpdateSettings가 호출된다', async () => {
-      mockUpdateSettings.mockResolvedValue({
-        ...mockProfile,
-        timezone: 'America/New_York',
-      });
-
-      render(
-        <SettingsScreen
-          profile={mockProfile}
-          onUpdateSettings={mockUpdateSettings}
-        />,
-      );
-
-      fireEvent.press(screen.getByTestId('timezone-button'));
-      fireEvent.press(screen.getByText('America/New_York'));
-
-      await waitFor(() => {
-        expect(mockUpdateSettings).toHaveBeenCalledWith(
-          expect.objectContaining({ timezone: 'America/New_York' }),
-        );
+      expect(mockNavigate).toHaveBeenCalledWith('TimezoneSelect', {
+        current: 'Asia/Seoul',
       });
     });
   });

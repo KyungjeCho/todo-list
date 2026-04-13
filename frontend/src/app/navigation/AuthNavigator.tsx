@@ -1,7 +1,10 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import i18n from '../../i18n';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type {
+  NativeStackNavigationProp,
+  NativeStackScreenProps,
+} from '@react-navigation/native-stack';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuthStore } from '../../store/authStore';
 import { userApi } from '../../services/api/userApi';
@@ -19,9 +22,39 @@ import { LoginScreen } from '../../screens/auth/LoginScreen';
 import { OnboardingScreen } from '../../screens/onboarding/OnboardingScreen';
 import { MainScreen } from '../../screens/main/MainScreen';
 import { VoiceInputScreen } from '../../screens/voice/VoiceInputScreen';
+import { TimezoneSelectScreen } from '../../screens/settings/TimezoneSelectScreen';
 import { MainTabNavigator } from './MainTabNavigator';
 import type { RootStackParamList } from './types';
 import { isUserOnboarded } from './isUserOnboarded';
+
+type TimezoneSelectProps = NativeStackScreenProps<
+  RootStackParamList,
+  'TimezoneSelect'
+>;
+
+const TimezoneSelectWrapper: React.FC<TimezoneSelectProps> = ({
+  route,
+  navigation,
+}) => {
+  const { user, setUser } = useAuthStore();
+  const current = route.params?.current ?? user?.timezone ?? 'UTC';
+
+  const handleSelect = useCallback(
+    async (timezone: string) => {
+      const updated = await userApi.updateSettings({ timezone });
+      setUser(updated);
+    },
+    [setUser],
+  );
+
+  return (
+    <TimezoneSelectScreen
+      current={current}
+      onSelect={handleSelect}
+      onClose={() => navigation.goBack()}
+    />
+  );
+};
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -364,6 +397,14 @@ export const AuthNavigator: React.FC = () => {
           <Stack.Screen
             name="VoiceInput"
             component={VoiceInputScreen}
+            options={{
+              presentation: 'modal',
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="TimezoneSelect"
+            component={TimezoneSelectWrapper}
             options={{
               presentation: 'modal',
               headerShown: false,

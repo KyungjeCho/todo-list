@@ -150,18 +150,18 @@
 
 ### 테스트 (Red 단계)
 
-- [ ] T048 [P] [US4] TimezoneSelectScreen 테스트 — `frontend/__tests__/screens/settings/TimezoneSelectScreen.test.tsx` (목록 렌더링, UTC 오프셋 정렬, 현재 선택 최상단 고정, 검색 필터링, 빈 결과 메시지, 선택 시 API 호출 및 goBack, 서버 저장 실패 시 에러 토스트 표시 + 화면 유지)
+- [x] T048 [P] [US4] TimezoneSelectScreen 테스트 — `frontend/__tests__/unit/screens/settings/TimezoneSelectScreen.test.tsx` (목록 렌더링, 현재 선택 최상단 고정, 검색 필터링, 빈 결과 메시지, ✕ 초기화, 선택 시 onSelect/onClose 호출, 서버 저장 실패 시 에러 Alert + 화면 유지)
 
 ### 구현 (Green 단계)
 
-- [ ] T049 [US4] 네비게이션 타입에 TimezoneSelect 추가 — `frontend/src/app/navigation/types.ts`
-- [ ] T050 [US4] TimezoneSelectScreen 구현 — `frontend/src/screens/settings/TimezoneSelectScreen.tsx` (IANA 타임존 목록 `Intl.supportedValuesOf` + fallback, UTC 오프셋 계산, FlatList, 검색 필드, ✕ 초기화, 현재 선택 ✓ 최상단, 빈 결과 상태, 선택 시 서버 저장 + goBack)
-- [ ] T051 [US4] RootNavigator에 TimezoneSelect 등록 — `frontend/src/app/navigation/RootNavigator.tsx` 또는 `AuthNavigator.tsx`
-- [ ] T052 [US4] SettingsScreen 타임존 UI 변경 — `frontend/src/screens/settings/SettingsScreen.tsx` (`TIMEZONE_OPTIONS` 하드코딩 제거, 타임존 항목 탭 시 `navigation.navigate('TimezoneSelect')`)
+- [x] T049 [US4] 네비게이션 타입에 TimezoneSelect 추가 — `frontend/src/app/navigation/types.ts`
+- [x] T050 [US4] TimezoneSelectScreen 구현 — `frontend/src/screens/settings/TimezoneSelectScreen.tsx` (IANA 타임존 목록 `Intl.supportedValuesOf` + fallback, UTC 오프셋 계산, FlatList, 검색 필드, ✕ 초기화, 현재 선택 ✓ 최상단, 빈 결과 상태, 선택 시 서버 저장 + goBack)
+- [x] T051 [US4] AuthNavigator에 TimezoneSelect 등록 — `frontend/src/app/navigation/AuthNavigator.tsx` (`TimezoneSelectWrapper`로 authStore+userApi 연결, modal presentation)
+- [x] T052 [US4] SettingsScreen 타임존 UI 변경 — `frontend/src/screens/settings/SettingsScreen.tsx` (`TIMEZONE_OPTIONS` 하드코딩 제거, 타임존 항목 탭 시 `navigation.navigate('TimezoneSelect', { current })`)
 
 ### E2E 테스트
 
-- [ ] T053 [US4] Maestro E2E — `.maestro/settings/timezone-select.yaml` (설정 → 타임존 → 검색 "Tokyo" → Asia/Tokyo 선택 → 설정 복귀 확인)
+- [x] T053 [US4] Maestro E2E — `.maestro/settings/timezone-select.yaml` (설정 → 타임존 → 검색 "Tokyo" → Asia/Tokyo 선택 → 설정 복귀 확인)
 
 **체크포인트**: 전 세계 타임존 검색/선택 가능, 현재 선택 최상단 고정, 서버 저장 완료
 

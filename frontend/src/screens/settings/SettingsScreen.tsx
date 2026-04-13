@@ -10,6 +10,8 @@ import {
   Alert,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import i18n from '../../i18n';
 import {
   SUPPORTED_LANGUAGES,
@@ -20,19 +22,10 @@ import Svg, { Path, Circle, Line, Rect, Polyline } from 'react-native-svg';
 import { colors, typography, spacing, radius } from '../../theme';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import type { UserProfile, UpdateSettingsRequest } from '../../types/user';
+import type { RootStackParamList } from '../../app/navigation/types';
 
 const DEFAULT_PLAN_TIME = '08:00';
 const DEFAULT_REVIEW_TIME = '22:00';
-
-const TIMEZONE_OPTIONS = [
-  'Asia/Seoul',
-  'Asia/Tokyo',
-  'America/New_York',
-  'America/Los_Angeles',
-  'Europe/London',
-  'Europe/Paris',
-  'UTC',
-];
 
 interface SettingsScreenProps {
   profile: UserProfile;
@@ -265,9 +258,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   error,
 }) => {
   const { t } = useTranslation();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [timePickerTarget, setTimePickerTarget] =
     useState<TimePickerTarget>(null);
-  const [showTimezonePicker, setShowTimezonePicker] = useState(false);
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
   const [optimisticLanguage, setOptimisticLanguage] =
     useState<SupportedLanguage | null>(null);
@@ -316,9 +310,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     }
   };
 
-  const handleTimezoneSelect = async (timezone: string) => {
-    setShowTimezonePicker(false);
-    await onUpdateSettings({ timezone });
+  const handleTimezonePress = () => {
+    navigation.navigate('TimezoneSelect', {
+      current: profile.timezone ?? 'UTC',
+    });
   };
 
   const handleLogoutPress = () => {
@@ -467,7 +462,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         <TouchableOpacity
           testID="timezone-button"
           style={styles.settingRow}
-          onPress={() => setShowTimezonePicker(!showTimezonePicker)}
+          onPress={handleTimezonePress}
         >
           <View style={styles.iconContainer}>
             <GlobeIcon />
@@ -480,27 +475,6 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           </Text>
           <ChevronRightIcon />
         </TouchableOpacity>
-
-        {showTimezonePicker && (
-          <View testID="timezone-picker">
-            {TIMEZONE_OPTIONS.map((tz) => (
-              <TouchableOpacity
-                key={tz}
-                style={styles.timezoneOption}
-                onPress={() => handleTimezoneSelect(tz)}
-              >
-                <Text
-                  style={[
-                    styles.timezoneText,
-                    tz === profile.timezone && styles.timezoneSelected,
-                  ]}
-                >
-                  {tz}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
 
         <TouchableOpacity
           testID="language-button"
