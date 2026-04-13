@@ -1,10 +1,12 @@
+import type { SupportedLanguage } from 'src/i18n';
+
 export interface UserProfile {
   id: string;
   userName: string;
   planTime: string | null;
   reviewTime: string | null;
   timezone: string | null;
-  language: string;
+  language: SupportedLanguage;
 }
 
 export interface UpdateSettingsRequest {
@@ -12,7 +14,7 @@ export interface UpdateSettingsRequest {
   planTime?: string | null;
   reviewTime?: string | null;
   timezone?: string;
-  language?: string;
+  language?: SupportedLanguage;
 }
 
 export type OAuthProvider = 'google' | 'naver' | 'kakao' | 'apple';

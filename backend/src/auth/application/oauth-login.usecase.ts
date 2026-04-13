@@ -10,6 +10,8 @@ interface OAuthLoginInput {
   deviceType: string;
   redirectUri: string;
   deviceName?: string;
+  timezone?: string;
+  language?: string;
 }
 
 interface OAuthLoginOutput {
@@ -90,6 +92,8 @@ export class OAuthLoginUsecase {
         deviceType: input.deviceType,
         deviceName: input.deviceName,
         redirectUri: input.redirectUri,
+        timezone: input.timezone,
+        language: input.language,
       },
       this.getStateSecret(),
     );

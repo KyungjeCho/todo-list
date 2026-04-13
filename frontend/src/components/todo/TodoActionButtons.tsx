@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { colors, radius, spacing } from '../../theme';
 
 interface TodoActionButtonsProps {
@@ -13,36 +14,37 @@ export const TodoActionButtons: React.FC<TodoActionButtonsProps> = ({
   onDeactivate,
   onAddMemo,
 }) => {
+  const { t } = useTranslation();
   return (
     <View testID="action-buttons-container" style={styles.container}>
       <TouchableOpacity
         testID="action-delete-button"
         onPress={onDelete}
         style={styles.button}
-        accessibilityLabel="삭제"
+        accessibilityLabel={t('common.delete')}
         accessibilityRole="button"
       >
-        <Text style={styles.deleteText}>삭제</Text>
+        <Text style={styles.deleteText}>{t('common.delete')}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         testID="action-deactivate-button"
         onPress={onDeactivate}
         style={styles.button}
-        accessibilityLabel="비활성화"
+        accessibilityLabel={t('common.deactivate')}
         accessibilityRole="button"
       >
-        <Text style={styles.deactivateText}>비활성화</Text>
+        <Text style={styles.deactivateText}>{t('common.deactivate')}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
         testID="action-add-memo-button"
         onPress={onAddMemo}
         style={styles.button}
-        accessibilityLabel="메모 추가"
+        accessibilityLabel={t('todo.addMemo')}
         accessibilityRole="button"
       >
-        <Text style={styles.memoText}>+ 메모</Text>
+        <Text style={styles.memoText}>{t('todo.addMemoButton')}</Text>
       </TouchableOpacity>
     </View>
   );

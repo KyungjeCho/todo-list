@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { colors, typography, spacing } from '../../theme';
 
 interface LiveTranscriptProps {
@@ -11,11 +12,14 @@ export const LiveTranscript: React.FC<LiveTranscriptProps> = ({
   interimText,
   isListening,
 }) => {
+  const { t } = useTranslation();
   if (!isListening) return null;
 
   return (
     <View style={styles.container} testID="live-transcript">
-      <Text style={styles.text}>{interimText || '말씀하세요...'}</Text>
+      <Text style={styles.text}>
+        {interimText || t('voice.speakPlaceholder')}
+      </Text>
     </View>
   );
 };

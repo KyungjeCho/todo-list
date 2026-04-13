@@ -27,8 +27,11 @@
 | 4-1 | Review — 일정 완료 | 디자인 완료 | 성공 요약 (달성률) |
 | 4-2 | Review — 회고 완료 | 디자인 완료 | 읽기 전용 + 이월 표시 |
 | 5 | Calendar | 디자인 완료 | 월간 캘린더 + 일별 상세 (통합) |
+| 6 | Voice Input | 디자인 완료 | 음성 할 일 입력 (STT + 임시 목록 + 일괄 생성) |
 | 7 | Settings | 디자인 완료 | 알림/지역/정보/연락처 |
 | 7-1 | Contact | 디자인 완료 | 개발자 연락처 + 후원 링크 |
+| 7-2 | Settings — Language Expanded | 디자인 완료 | 언어 인라인 토글 (ko/en/ja/es) |
+| 8 | Timezone Select | 디자인 완료 | 전 세계 IANA 타임존 검색/선택 |
 
 ---
 
@@ -40,10 +43,14 @@ Login → Onboarding → Plan Mode ←→ Review Mode
                     Input Active      일정 완료
                     Item Expanded     회고 완료
                     Empty State
+                    Voice Input (마이크 FAB)
                          │
               Tab Bar: 홈 / 캘린더 / 설정
                               │         │
                           Calendar   Settings → Contact
+                                        │
+                                   Language Expanded (언어 탭)
+                                   Timezone Select (타임존 탭)
 ```
 
 ---

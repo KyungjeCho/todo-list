@@ -7,6 +7,7 @@ import { UserRepository } from '../infrastructure/user.repository';
 import type { UserProfileDto } from './dto';
 
 const TIME_FORMAT = /^([01]\d|2[0-3]):[0-5]\d$/;
+const SUPPORTED_LANGUAGES = ['ko', 'en', 'ja', 'es'] as const;
 
 function isValidTimezone(tz: string): boolean {
   try {
@@ -66,6 +67,11 @@ export class UpdateSettingsUsecase {
     }
 
     if (input.language !== undefined) {
+      if (
+        !(SUPPORTED_LANGUAGES as readonly string[]).includes(input.language)
+      ) {
+        throw new BadRequestException('INVALID_LANGUAGE');
+      }
       user.language = input.language;
     }
 

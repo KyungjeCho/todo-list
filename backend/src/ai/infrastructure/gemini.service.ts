@@ -14,8 +14,12 @@ export const SUPPORTED_AUDIO_MIME_TYPES = [
 const TRANSCRIBE_PROMPT =
   '이 오디오를 듣고 사용자가 말한 할 일(todo)을 간결한 한국어 문장으로 정리해줘. 부연 설명 없이 할 일 내용만 반환해.';
 
-const REFINE_PROMPT =
-  '다음 음성 인식 텍스트를 간결한 할 일(todo) 형태로 정리해줘. 부연 설명 없이 정리된 할 일 내용만 반환해.';
+const REFINE_PROMPTS: Record<string, string> = {
+  ko: '다음 음성 인식 텍스트를 간결한 할 일(todo) 형태로 정리해줘. 부연 설명 없이 정리된 할 일 내용만 반환해.',
+  en: 'Refine the following speech-recognized text into a concise todo item. Return only the refined todo without any explanation.',
+  ja: '次の音声認識テキストを簡潔なやること(todo)の形にまとめてください。説明は不要で、整理されたやることのみを返してください。',
+  es: 'Resume el siguiente texto de reconocimiento de voz en una tarea pendiente (todo) concisa. Devuelve solo la tarea refinada sin explicaciones.',
+};
 
 @Injectable()
 export class GeminiService {
@@ -69,10 +73,12 @@ export class GeminiService {
     return text;
   }
 
-  async refineText(rawText: string): Promise<string> {
+  async refineText(rawText: string, language?: string): Promise<string> {
+    const prompt = REFINE_PROMPTS[language ?? ''] ?? REFINE_PROMPTS.en;
+
     const text = await this.retryWithBackoff(async () => {
       const result = await this.model.generateContent([
-        `${REFINE_PROMPT}\n\n${rawText}`,
+        `${prompt}\n\n${rawText}`,
       ]);
       return result.response.text().trim();
     });

@@ -6,6 +6,7 @@ import {
   Text,
   StyleSheet,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { colors, typography, spacing } from '../../theme';
 
 interface AddTodoInputProps {
@@ -17,6 +18,7 @@ export const AddTodoInput: React.FC<AddTodoInputProps> = ({
   onAdd,
   isLoading = false,
 }) => {
+  const { t } = useTranslation();
   const [text, setText] = useState('');
 
   const handleSubmit = () => {
@@ -34,17 +36,17 @@ export const AddTodoInput: React.FC<AddTodoInputProps> = ({
         value={text}
         onChangeText={setText}
         onSubmitEditing={handleSubmit}
-        placeholder="할 일을 입력하세요"
+        placeholder={t('main.todoPlaceholder')}
         maxLength={255}
         editable={!isLoading}
-        accessibilityLabel="할 일 입력"
+        accessibilityLabel={t('todo.todoInput')}
         style={styles.input}
       />
       <TouchableOpacity
         testID="add-todo-button"
         onPress={handleSubmit}
         disabled={isLoading}
-        accessibilityLabel="할 일 추가"
+        accessibilityLabel={t('todo.addTodo')}
         accessibilityState={{ disabled: isLoading }}
         accessibilityRole="button"
         style={[styles.button, isLoading && styles.buttonDisabled]}

@@ -110,6 +110,32 @@ describe('LogoutUsecase', () => {
       ).rejects.toThrow();
     });
 
+    it('should skip device deletion when fcmToken is omitted', async () => {
+      const existingSession = {
+        id: 'session-id-1',
+        userAuthId: 'auth-id-1',
+        refreshToken: 'valid-refresh-token',
+      };
+
+      mockAuthRepository.findSessionByRefreshToken.mockResolvedValue(
+        existingSession,
+      );
+      mockAuthRepository.deleteSession.mockResolvedValue(undefined);
+
+      const result = await usecase.execute({
+        userAuthId: 'auth-id-1',
+        refreshToken: 'valid-refresh-token',
+      });
+
+      expect(result.message).toBe('Successfully logged out');
+      expect(mockAuthRepository.deleteSession).toHaveBeenCalledWith(
+        'session-id-1',
+      );
+      expect(
+        mockUserDeviceRepository.deleteByFcmTokenForOwner,
+      ).not.toHaveBeenCalled();
+    });
+
     it('should succeed even if FCM token does not exist', async () => {
       const existingSession = {
         id: 'session-id-1',

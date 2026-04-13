@@ -1,4 +1,10 @@
-import { IsOptional, IsString, MaxLength, Matches } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsIn,
+  MaxLength,
+  Matches,
+} from 'class-validator';
 
 export class UpdateSettingsDto {
   @IsString()
@@ -26,5 +32,6 @@ export class UpdateSettingsDto {
 
   @IsString()
   @IsOptional()
+  @IsIn(['ko', 'en', 'ja', 'es'])
   language?: string;
 }

@@ -5,7 +5,7 @@ import { UserDeviceRepository } from '../../notification/infrastructure/user-dev
 interface LogoutInput {
   userAuthId: string;
   refreshToken: string;
-  fcmToken: string;
+  fcmToken?: string;
 }
 
 interface LogoutOutput {
@@ -33,10 +33,12 @@ export class LogoutUsecase {
     }
 
     await this.authRepository.deleteSession(session.id);
-    await this.userDeviceRepository.deleteByFcmTokenForOwner(
-      input.fcmToken,
-      input.userAuthId,
-    );
+    if (input.fcmToken) {
+      await this.userDeviceRepository.deleteByFcmTokenForOwner(
+        input.fcmToken,
+        input.userAuthId,
+      );
+    }
 
     return { message: 'Successfully logged out' };
   }

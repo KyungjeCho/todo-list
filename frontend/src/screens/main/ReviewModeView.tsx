@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import type { Todo } from '../../types/todo';
 import { colors, typography, spacing, radius } from '../../theme';
 
@@ -28,6 +29,7 @@ export const ReviewModeView: React.FC<ReviewModeViewProps> = ({
   stats,
   onToggleComplete,
 }) => {
+  const { t } = useTranslation();
   const { completedTodos, incompleteTodos } = useMemo(() => {
     const completed: Todo[] = [];
     const incomplete: Todo[] = [];
@@ -48,7 +50,9 @@ export const ReviewModeView: React.FC<ReviewModeViewProps> = ({
       <View
         testID="review-progress-bar"
         accessibilityRole="progressbar"
-        accessibilityLabel={`진행률 ${stats.progressRate}%`}
+        accessibilityLabel={t('main.completionRate', {
+          rate: stats.progressRate,
+        })}
         style={styles.progressBarContainer}
       >
         <View
@@ -62,7 +66,7 @@ export const ReviewModeView: React.FC<ReviewModeViewProps> = ({
 
       <View testID="review-completed-section" style={styles.section}>
         <Text style={[styles.sectionTitle, styles.sectionTitleCompleted]}>
-          완료
+          {t('review.completed')}
         </Text>
         <FlatList
           data={completedTodos}
@@ -87,7 +91,7 @@ export const ReviewModeView: React.FC<ReviewModeViewProps> = ({
 
       <View testID="review-incomplete-section" style={styles.section}>
         <Text style={[styles.sectionTitle, styles.sectionTitleIncomplete]}>
-          미완료
+          {t('review.incomplete')}
         </Text>
         <FlatList
           data={incompleteTodos}
@@ -113,7 +117,9 @@ export const ReviewModeView: React.FC<ReviewModeViewProps> = ({
                 {item.content}
               </Text>
               {item.isCarriedOver && (
-                <Text style={styles.carriedOverBadge}>이월</Text>
+                <Text style={styles.carriedOverBadge}>
+                  {t('common.carriedOver')}
+                </Text>
               )}
             </View>
           )}

@@ -1,13 +1,13 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class LogoutDto {
   @IsString()
   @IsNotEmpty()
   refreshToken!: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  fcmToken!: string;
+  fcmToken?: string;
 }
 
 export class LogoutResponseDto {

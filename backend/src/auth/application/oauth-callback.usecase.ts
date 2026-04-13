@@ -6,6 +6,26 @@ import { TokenService } from '../infrastructure/token.service';
 import type { OAuthCallbackDto, OAuthCallbackResponseDto } from './dto';
 import { SESSION_EXPIRY_MS } from '../domain/auth.constants';
 
+const SUPPORTED_LANGUAGES = ['ko', 'en', 'ja', 'es'] as const;
+const DEFAULT_LANGUAGE = 'en';
+
+function sanitizeLanguage(value: string | undefined): string {
+  if (!value) return DEFAULT_LANGUAGE;
+  return (SUPPORTED_LANGUAGES as readonly string[]).includes(value)
+    ? value
+    : DEFAULT_LANGUAGE;
+}
+
+function sanitizeTimezone(value: string | undefined): string | null {
+  if (!value) return null;
+  try {
+    new Intl.DateTimeFormat(undefined, { timeZone: value });
+    return value;
+  } catch {
+    return null;
+  }
+}
+
 @Injectable()
 export class OAuthCallbackUsecase {
   constructor(
@@ -47,15 +67,16 @@ export class OAuthCallbackUsecase {
         providerUserEmail: input.providerUserEmail,
       });
 
-      // WHY: 신규 유저는 timezone null로 생성하여 온보딩에서 설정하도록 유도
+      // WHY: 디바이스에서 감지한 timezone/language를 받아 신규 유저에 적용.
+      // 미전달·무효값 fallback: timezone → null, language → 'en'
       const user = await this.userRepository.create({
         userAuthId,
         userName:
           input.providerUserName ||
           input.providerUserEmail?.split('@')[0] ||
           `user_${Date.now()}`,
-        timezone: null,
-        language: 'ko-KR',
+        timezone: sanitizeTimezone(input.timezone),
+        language: sanitizeLanguage(input.language),
       });
       userId = user.id;
       isNewUser = true;

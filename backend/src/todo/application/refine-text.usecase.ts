@@ -24,7 +24,10 @@ export class RefineTextUsecase {
       throw new NotFoundException('USER_NOT_FOUND');
     }
 
-    const refinedText = await this.geminiService.refineText(input.text);
+    const refinedText = await this.geminiService.refineText(
+      input.text,
+      user.language,
+    );
 
     return { refinedText };
   }

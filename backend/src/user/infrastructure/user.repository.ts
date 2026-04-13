@@ -17,14 +17,19 @@ export class UserRepository {
   async findAllWithTimezone(): Promise<
     (Pick<User, 'id' | 'planTime' | 'reviewTime'> & { timezone: string })[]
   > {
+    // WHY: timezone 자동 감지 실패 시 null 저장이 허용되므로 필터링하지 않고
+    // 'UTC'로 fallback한다. 그렇지 않으면 온보딩은 끝났는데(planTime/reviewTime 설정 완료)
+    // timezone이 null인 사용자가 스케줄 대상에서 영구 제외됨.
     const users = await this.userRepo
       .createQueryBuilder('user')
       .select(['user.id', 'user.planTime', 'user.reviewTime', 'user.timezone'])
-      .where('user.timezone IS NOT NULL')
       .getMany();
-    return users as (Pick<User, 'id' | 'planTime' | 'reviewTime'> & {
-      timezone: string;
-    })[];
+    return users.map((user) => ({
+      id: user.id,
+      planTime: user.planTime,
+      reviewTime: user.reviewTime,
+      timezone: user.timezone ?? 'UTC',
+    }));
   }
 
   async create(data: Partial<User>): Promise<User> {

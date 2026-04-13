@@ -27,7 +27,7 @@ describe('GetProfileUsecase', () => {
         planTime: '08:00',
         reviewTime: '22:00',
         timezone: 'Asia/Seoul',
-        language: 'ko-KR',
+        language: 'ko',
       };
 
       mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
@@ -40,7 +40,7 @@ describe('GetProfileUsecase', () => {
       expect(result.planTime).toBe('08:00');
       expect(result.reviewTime).toBe('22:00');
       expect(result.timezone).toBe('Asia/Seoul');
-      expect(result.language).toBe('ko-KR');
+      expect(result.language).toBe('ko');
     });
 
     it('should return profile with null planTime and reviewTime', async () => {
@@ -51,7 +51,7 @@ describe('GetProfileUsecase', () => {
         planTime: null,
         reviewTime: null,
         timezone: 'UTC',
-        language: 'en-US',
+        language: 'en',
       };
 
       mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);

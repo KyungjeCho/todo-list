@@ -4,6 +4,7 @@ export type RootStackParamList = {
   Main: undefined;
   Settings: undefined;
   VoiceInput: { todoDate: string };
+  TimezoneSelect: { current: string };
 };
 
 export type AuthStackParamList = {

@@ -1,0 +1,173 @@
+{
+  "common": {
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "complete": "完了",
+    "retry": "再試行",
+    "share": "共有",
+    "save": "保存",
+    "confirm": "確認",
+    "loading": "読み込み中...",
+    "notification": "通知",
+    "error": "エラー",
+    "disabled": "オフ",
+    "deactivate": "無効化",
+    "carriedOver": "繰り越し",
+    "incomplete": "未完了"
+  },
+  "auth": {
+    "continueWithGoogle": "Googleで続ける",
+    "continueWithNaver": "Naverで続ける",
+    "continueWithKakao": "Kakaoで続ける",
+    "continueWithApple": "Appleで続ける",
+    "subtitle": "一日を計画し、振り返りましょう",
+    "authFailed": "認証に失敗しました",
+    "profileFetchFailed": "プロフィールの取得に失敗しました"
+  },
+  "main": {
+    "addTodo": "タスクを追加",
+    "todoPlaceholder": "タスクを入力してください",
+    "memoPlaceholder": "メモを入力してください",
+    "completionRate": "進捗率 {{rate}}%"
+  },
+  "todo": {
+    "deleteTitle": "削除",
+    "deleteMessage": "「{{content}}」を削除しますか？",
+    "todoInput": "タスク入力",
+    "memoInput": "メモ入力",
+    "addTodo": "タスクを追加",
+    "addMemo": "メモを追加",
+    "addMemoButton": "+ メモ",
+    "editTodo": "タスクを編集",
+    "deleteMemo": "メモを削除",
+    "collapse": "折りたたむ",
+    "carriedOverItem": "繰り越し項目",
+    "statusAccessibility": {
+      "COMPLETED": "完了",
+      "ACTIVE": "進行中",
+      "INACTIVE": "無効",
+      "CARRIED_OVER": "繰り越し"
+    },
+    "statusLabel": "{{content}}、{{status}}",
+    "statusLabelCarried": "{{content}}、{{status}}、繰り越し",
+    "dragDelete": "削除エリア",
+    "dragDeleteInstruction": "ここにドロップして削除",
+    "emptyTitle": "今日のタスクはありません",
+    "emptyCaption": "右下の＋ボタンをタップして\n今日の計画を追加しましょう",
+    "completeDay": "スケジュール完了",
+    "completeDayAccessibility": "今日のスケジュールを完了",
+    "completeDayAlreadyDone": "今日のスケジュールはすでに完了しています",
+    "completeDayResult": "繰り越し済み",
+    "noTodosToRegister": "登録するタスクがありません。"
+  },
+  "settings": {
+    "title": "設定",
+    "notificationSettings": "通知設定",
+    "planNotification": "計画通知",
+    "reviewNotification": "振り返り通知",
+    "regionSettings": "地域設定",
+    "timezone": "タイムゾーン",
+    "language": "言語",
+    "languageSaveFailed": "言語の保存に失敗しました。もう一度お試しください。",
+    "info": "情報",
+    "openSourceLicense": "オープンソースライセンス",
+    "privacyPolicy": "プライバシーポリシー",
+    "contact": "お問い合わせ",
+    "settingsChangeFailed": "設定の変更に失敗しました",
+    "settingsSaveFailed": "設定の保存に失敗しました",
+    "logout": "ログアウト",
+    "logoutConfirmTitle": "ログアウト",
+    "logoutConfirmMessage": "本当にログアウトしますか？"
+  },
+  "onboarding": {
+    "routineSetup": "ルーティン設定",
+    "routineSubtitle": "一日の計画と振り返りの時間を設定してください",
+    "planTime": "計画時間",
+    "reviewTime": "振り返り時間"
+  },
+  "voice": {
+    "screenTitle": "音声タスク入力",
+    "exitTitle": "音声入力を終了",
+    "exitMessage": "入力中のタスク{{count}}件が削除されます。",
+    "registerFailed": "タスクの登録に失敗しました。もう一度お試しください。",
+    "goBack": "戻る",
+    "recording": "録音中",
+    "stopRecording": "録音停止",
+    "speakPlaceholder": "話してください...",
+    "addByVoice": "音声でタスクを追加",
+    "refineFailed": "整理に失敗",
+    "speechError": "音声認識エラーが発生しました。",
+    "micPermissionRequired": "マイクの権限が必要です。",
+    "recordStartFailed": "録音の開始に失敗しました",
+    "recordStopFailed": "録音の停止に失敗しました"
+  },
+  "timezone": {
+    "searchPlaceholder": "タイムゾーンを検索",
+    "noResults": "検索結果がありません"
+  },
+  "calendar": {
+    "title": "カレンダー",
+    "prevMonth": "前月",
+    "nextMonth": "翌月",
+    "yearMonth": "{{year}}年{{month}}月",
+    "dateWithCount": "{{month}}月{{day}}日、タスク{{count}}件",
+    "dateOnly": "{{month}}月{{day}}日",
+    "emptyMonth": "今月は登録されたタスクがありません",
+    "emptyDay": "この日は登録されたタスクがありません",
+    "dayOfWeekFull": {
+      "sun": "日曜日",
+      "mon": "月曜日",
+      "tue": "火曜日",
+      "wed": "水曜日",
+      "thu": "木曜日",
+      "fri": "金曜日",
+      "sat": "土曜日"
+    },
+    "dayOfWeekShort": {
+      "sun": "日",
+      "mon": "月",
+      "tue": "火",
+      "wed": "水",
+      "thu": "木",
+      "fri": "金",
+      "sat": "土"
+    },
+    "dateDisplay": "{{month}}月{{day}}日 {{weekday}}"
+  },
+  "share": {
+    "noTodosToShare": "共有するタスクがありません",
+    "copiedToClipboard": "クリップボードにコピーしました",
+    "shareFailed": "共有に失敗しました",
+    "clipboardFailed": "クリップボードへのコピーに失敗しました",
+    "shareAction": "共有する",
+    "copyClipboard": "クリップボードにコピー",
+    "shareTitle": "{{date}} タスクリスト",
+    "shareHeader": "{{date}} タスクリスト"
+  },
+  "navigation": {
+    "home": "ホーム",
+    "calendar": "カレンダー",
+    "settings": "設定",
+    "calendarLoadFailed": "カレンダーデータを読み込めません",
+    "dataLoadFailed": "データを読み込めません"
+  },
+  "error": {
+    "todoLoadFailed": "タスクの読み込みに失敗しました",
+    "todoAddFailed": "タスクの追加に失敗しました",
+    "statusChangeFailed": "ステータスの変更に失敗しました",
+    "editFailed": "編集に失敗しました",
+    "deleteFailed": "削除に失敗しました",
+    "completeDayFailed": "スケジュールの完了に失敗しました",
+    "memoAddFailed": "メモの追加に失敗しました",
+    "memoEditFailed": "メモの編集に失敗しました",
+    "memoDeleteFailed": "メモの削除に失敗しました"
+  },
+  "mode": {
+    "switchToPlan": "Planモードに切り替え",
+    "switchToReview": "Reviewモードに切り替え"
+  },
+  "review": {
+    "completed": "完了",
+    "incomplete": "未完了"
+  }
+}

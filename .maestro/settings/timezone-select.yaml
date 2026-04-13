@@ -1,0 +1,53 @@
+# T053 [US4] Maestro E2E: 설정 → 타임존 → 검색 "Tokyo" → Asia/Tokyo 선택 → 설정 복귀
+# WHY: 전용 TimezoneSelect 화면에서 검색/선택이 올바르게 동작하고 설정 화면에 반영되는지 검증
+
+appId: com.todolist.app
+
+tags:
+  - settings
+  - timezone
+  - i18n
+
+---
+
+# 메인 화면 진입 확인 (로그인 완료 상태 가정)
+- assertVisible:
+    id: "mode-toggle-button"
+
+# 설정 화면으로 이동
+- tapOn:
+    id: "tab-settings"
+
+# 설정 화면 및 타임존 항목 표시 확인
+- assertVisible:
+    id: "settings-screen"
+- assertVisible:
+    id: "timezone-button"
+
+# 타임존 항목을 눌러 TimezoneSelect 화면으로 이동
+- tapOn:
+    id: "timezone-button"
+
+# 타임존 선택 화면 렌더링 확인
+- assertVisible:
+    id: "timezone-select-screen"
+- assertVisible:
+    id: "timezone-search"
+
+# "Tokyo" 검색 → Asia/Tokyo 항목 표시 확인
+- tapOn:
+    id: "timezone-search"
+- inputText: "Tokyo"
+- assertVisible:
+    text: "Asia/Tokyo"
+
+# Asia/Tokyo 선택
+- tapOn:
+    text: "Asia/Tokyo"
+
+# 설정 화면으로 복귀 + 선택한 타임존이 반영되는지 확인
+- assertVisible:
+    id: "settings-screen"
+- assertVisible:
+    id: "timezone-value"
+    text: "Tokyo"

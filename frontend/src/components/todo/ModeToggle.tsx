@@ -1,5 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { colors, typography, spacing } from '../../theme';
 
 interface ModeToggleProps {
@@ -8,11 +9,14 @@ interface ModeToggleProps {
 }
 
 export const ModeToggle: React.FC<ModeToggleProps> = ({ mode, onToggle }) => {
+  const { t } = useTranslation();
   return (
     <TouchableOpacity
       testID="mode-toggle-button"
       onPress={onToggle}
-      accessibilityLabel={`${mode === 'PLAN' ? 'Review' : 'Plan'} 모드로 전환`}
+      accessibilityLabel={
+        mode === 'PLAN' ? t('mode.switchToReview') : t('mode.switchToPlan')
+      }
       accessibilityRole="button"
       style={styles.container}
     >

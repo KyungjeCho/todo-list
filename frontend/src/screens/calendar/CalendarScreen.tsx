@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { colors, typography, spacing, radius } from '../../theme';
 
 interface DaySummary {
@@ -43,7 +44,6 @@ function formatDate(year: number, month: number, day: number): string {
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
-const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
 const DAY_CELL_SIZE = 40;
 
 function getWeekdayColor(index: number): string {
@@ -72,6 +72,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
   onMonthChange,
   onDateSelect,
 }) => {
+  const { t } = useTranslation();
   const { year, month, days } = monthlySummary;
   const todayDate = getTodayDate();
 
@@ -122,7 +123,15 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
               isToday && !isSelected && styles.todayDay,
               isSelected && styles.selectedDay,
             ]}
-            accessibilityLabel={`${month}월 ${day}일${summary ? `, 할 일 ${summary.totalCount}개` : ''}`}
+            accessibilityLabel={
+              summary
+                ? t('calendar.dateWithCount', {
+                    month,
+                    day,
+                    count: summary.totalCount,
+                  })
+                : t('calendar.dateOnly', { month, day })
+            }
             accessibilityState={{ selected: isSelected }}
             onPress={() => onDateSelect?.(date)}
           >
@@ -166,7 +175,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.screenTitle}>캘린더</Text>
+      <Text style={styles.screenTitle}>{t('calendar.title')}</Text>
 
       {error && (
         <View testID="calendar-error-message" style={styles.errorContainer}>
@@ -178,31 +187,31 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
         <TouchableOpacity
           testID="calendar-prev-month"
           onPress={handlePrevMonth}
-          accessibilityLabel="이전 월"
+          accessibilityLabel={t('calendar.prevMonth')}
         >
           <Text style={styles.navButton}>{'<'}</Text>
         </TouchableOpacity>
 
         <Text testID="calendar-year-month" style={styles.yearMonth}>
-          {year}년 {month}월
+          {t('calendar.yearMonth', { year, month })}
         </Text>
 
         <TouchableOpacity
           testID="calendar-next-month"
           onPress={handleNextMonth}
-          accessibilityLabel="다음 월"
+          accessibilityLabel={t('calendar.nextMonth')}
         >
           <Text style={styles.navButton}>{'>'}</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.weekdayRow}>
-        {WEEKDAY_LABELS.map((label, index) => (
+        {['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'].map((day, index) => (
           <Text
-            key={label}
+            key={day}
             style={[styles.weekdayText, { color: getWeekdayColor(index) }]}
           >
-            {label}
+            {t(`calendar.dayOfWeekShort.${day}`)}
           </Text>
         ))}
       </View>
@@ -213,9 +222,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
 
       {days.length === 0 && (
         <View testID="calendar-empty-state" style={styles.emptyState}>
-          <Text style={styles.emptyText}>
-            이 달에는 등록된 할 일이 없습니다
-          </Text>
+          <Text style={styles.emptyText}>{t('calendar.emptyMonth')}</Text>
         </View>
       )}
     </View>

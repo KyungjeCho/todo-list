@@ -26,7 +26,7 @@ describe('UpdateSettingsUsecase', () => {
       planTime: '08:00',
       reviewTime: '22:00',
       timezone: 'Asia/Seoul',
-      language: 'ko-KR',
+      language: 'ko',
     };
 
     it('should update userName', async () => {
@@ -105,20 +105,49 @@ describe('UpdateSettingsUsecase', () => {
       expect(result.timezone).toBe('America/New_York');
     });
 
-    it('should update language', async () => {
+    it('should update language with valid supported language', async () => {
       mockUserRepository.findByUserAuthId.mockResolvedValue(existingUser);
       mockUserRepository.update.mockResolvedValue({
         ...existingUser,
-        language: 'en-US',
+        language: 'en',
       });
 
       const result = await usecase.execute({
         userAuthId,
-        language: 'en-US',
+        language: 'en',
       });
 
-      expect(result.language).toBe('en-US');
+      expect(result.language).toBe('en');
     });
+
+    it.each(['ko', 'en', 'ja', 'es'])(
+      'should accept valid language: %s',
+      async (lang) => {
+        mockUserRepository.findByUserAuthId.mockResolvedValue(existingUser);
+        mockUserRepository.update.mockResolvedValue({
+          ...existingUser,
+          language: lang,
+        });
+
+        const result = await usecase.execute({
+          userAuthId,
+          language: lang,
+        });
+
+        expect(result.language).toBe(lang);
+      },
+    );
+
+    it.each(['fr', 'zh', 'ko-KR', 'en-US', 'invalid', ''])(
+      'should throw BAD_REQUEST for unsupported language: %s',
+      async (lang) => {
+        mockUserRepository.findByUserAuthId.mockResolvedValue(existingUser);
+
+        await expect(
+          usecase.execute({ userAuthId, language: lang }),
+        ).rejects.toThrow();
+      },
+    );
 
     it('should update multiple fields at once (onboarding)', async () => {
       mockUserRepository.findByUserAuthId.mockResolvedValue(existingUser);

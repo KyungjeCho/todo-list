@@ -1,0 +1,37 @@
+# T033 [US1] Maestro E2E: 앱 실행 시 언어가 올바르게 표시되는지 확인
+# 설정 화면에서 i18n 번역 키가 올바르게 렌더링되는지 검증
+# WHY: 하드코딩 한국어 텍스트를 t() 호출로 교체한 후 실제 UI에서 번역이 정상 동작하는지 확인
+
+appId: com.todolist.app
+
+tags:
+  - settings
+  - i18n
+
+---
+
+# 메인 화면 진입 확인 (로그인 완료 상태 가정)
+- assertVisible:
+    id: "mode-toggle-button"
+
+# 설정 화면으로 이동
+- tapOn:
+    id: "tab-settings"
+
+# 설정 화면 주요 텍스트가 한국어로 표시되는지 확인 (기본 디바이스 언어 ko)
+- assertVisible:
+    id: "settings-notification-section"
+- assertVisible:
+    id: "settings-region-section"
+- assertVisible:
+    id: "settings-info-section"
+
+# 타임존 항목 표시 확인
+- assertVisible:
+    id: "settings-timezone"
+
+# 알림 설정 항목 표시 확인
+- assertVisible:
+    id: "settings-plan-notification"
+- assertVisible:
+    id: "settings-review-notification"

@@ -8,6 +8,8 @@ export class OAuthCallbackDto {
   deviceName?: string;
   userAgent?: string;
   ipAddress?: string;
+  timezone?: string;
+  language?: string;
 }
 
 export class OAuthCallbackResponseDto {

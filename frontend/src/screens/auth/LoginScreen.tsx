@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
+import { useTranslation } from 'react-i18next';
 import { colors, typography, spacing, radius } from '../../theme';
 import { useAuth } from '../../features/auth/useAuth';
 import { useAuthStore } from '../../store/authStore';
@@ -30,26 +31,26 @@ interface ProviderConfig {
 const PROVIDERS: ProviderConfig[] = [
   {
     key: 'google',
-    label: 'Google로 계속하기',
+    label: 'auth.continueWithGoogle',
     backgroundColor: colors.surface,
     textColor: colors.onSurface,
     borderColor: colors.border,
   },
   {
     key: 'naver',
-    label: '네이버로 계속하기',
+    label: 'auth.continueWithNaver',
     backgroundColor: '#03C75A',
     textColor: colors.surface,
   },
   {
     key: 'kakao',
-    label: '카카오로 계속하기',
+    label: 'auth.continueWithKakao',
     backgroundColor: '#FEE500',
     textColor: colors.onSurface,
   },
   {
     key: 'apple',
-    label: 'Apple로 계속하기',
+    label: 'auth.continueWithApple',
     backgroundColor: colors.onSurface,
     textColor: colors.surface,
   },
@@ -77,6 +78,7 @@ function CheckSquareIcon() {
 }
 
 export const LoginScreen: React.FC<LoginScreenProps> = (props) => {
+  const { t } = useTranslation();
   const auth = useAuth();
   const storeLoading = useAuthStore((s) => s.isLoading);
 
@@ -91,7 +93,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = (props) => {
       <View style={styles.brandSection}>
         <CheckSquareIcon />
         <Text style={styles.title}>TodoList</Text>
-        <Text style={styles.subtitle}>하루를 계획하고 돌아보세요</Text>
+        <Text style={styles.subtitle}>{t('auth.subtitle')}</Text>
       </View>
 
       {isLoading && (
@@ -110,7 +112,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = (props) => {
             <TouchableOpacity
               key={key}
               testID={`login-button-${key}`}
-              accessibilityLabel={label}
+              accessibilityLabel={t(label)}
               accessibilityRole="button"
               accessibilityState={{ disabled: isLoading }}
               disabled={isLoading}
@@ -122,7 +124,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = (props) => {
               onPress={() => onLogin?.(key)}
             >
               <Text style={[styles.buttonText, { color: textColor }]}>
-                {label}
+                {t(label)}
               </Text>
             </TouchableOpacity>
           ),

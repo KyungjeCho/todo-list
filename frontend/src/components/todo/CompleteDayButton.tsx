@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { colors, typography, spacing, radius } from '../../theme';
 
 interface CarriedOverResult {
@@ -32,6 +33,7 @@ export const CompleteDayButton: React.FC<CompleteDayButtonProps> = ({
   carriedOverResult,
   error,
 }) => {
+  const { t } = useTranslation();
   const disabled = isLoading || isCompleted;
 
   const handlePress = () => {
@@ -45,7 +47,7 @@ export const CompleteDayButton: React.FC<CompleteDayButtonProps> = ({
         testID="complete-day-button"
         onPress={handlePress}
         disabled={disabled}
-        accessibilityLabel="오늘의 일정 완료"
+        accessibilityLabel={t('todo.completeDayAccessibility')}
         accessibilityRole="button"
         accessibilityState={{ disabled: !!disabled }}
         style={[styles.button, disabled && styles.buttonDisabled]}
@@ -57,13 +59,13 @@ export const CompleteDayButton: React.FC<CompleteDayButtonProps> = ({
             size="small"
           />
         ) : (
-          <Text style={styles.buttonText}>일정 완료</Text>
+          <Text style={styles.buttonText}>{t('todo.completeDay')}</Text>
         )}
       </TouchableOpacity>
 
       {isCompleted && (
         <Text testID="already-completed-text" style={styles.completedText}>
-          오늘의 일정이 이미 완료되었습니다
+          {t('todo.completeDayAlreadyDone')}
         </Text>
       )}
 
@@ -71,7 +73,7 @@ export const CompleteDayButton: React.FC<CompleteDayButtonProps> = ({
 
       {carriedOverResult && carriedOverResult.carriedOverCount > 0 && (
         <View testID="carried-over-result" style={styles.resultContainer}>
-          <Text style={styles.resultTitle}>이월됨</Text>
+          <Text style={styles.resultTitle}>{t('todo.completeDayResult')}</Text>
           {carriedOverResult.carriedOverTodos.map((item) => (
             <Text key={item.fromTodoId} style={styles.resultItem}>
               {item.content}

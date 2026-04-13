@@ -303,13 +303,14 @@ describe('AuthController (Integration)', () => {
         isNewUser: false,
       });
 
+      const state = signTestState({});
       await request(app.getHttpServer() as App)
         .get('/auth/oauth/google/callback')
-        .query({ code: 'auth-code-123', state: signTestState({}) });
+        .query({ code: 'auth-code-123', state });
 
       expect(
         mockOAuthProviderService.exchangeCodeForProfile,
-      ).toHaveBeenCalledWith('google', 'auth-code-123');
+      ).toHaveBeenCalledWith('google', 'auth-code-123', state);
     });
   });
 

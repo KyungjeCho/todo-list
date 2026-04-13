@@ -11,6 +11,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import type { Todo } from '../../types/todo';
 import { useShareTodo } from '../../features/share/useShareTodo';
 import { colors, typography, spacing, radius } from '../../theme';
@@ -26,6 +27,7 @@ export function ShareButton({
   todos,
   date,
 }: ShareButtonProps): React.JSX.Element {
+  const { t } = useTranslation();
   const { shareTodos, copyToClipboard, isSharing, copied, error } =
     useShareTodo();
   const insets = useSafeAreaInsets();
@@ -43,7 +45,7 @@ export function ShareButton({
 
   const handlePress = () => {
     if (disabled) {
-      Alert.alert('알림', '공유할 할 일이 없습니다');
+      Alert.alert(t('common.notification'), t('share.noTodosToShare'));
       return;
     }
     setMenuVisible(true);
@@ -69,12 +71,12 @@ export function ShareButton({
         testID="share-button"
         style={[styles.button, disabled && styles.buttonDisabled]}
         onPress={handlePress}
-        accessibilityLabel="공유"
+        accessibilityLabel={t('common.share')}
       >
         <Text
           style={[styles.buttonText, disabled && styles.buttonTextDisabled]}
         >
-          공유
+          {t('common.share')}
         </Text>
       </TouchableOpacity>
 
@@ -93,7 +95,7 @@ export function ShareButton({
           pointerEvents="none"
         >
           <View testID="share-toast" style={styles.toast}>
-            <Text style={styles.toastText}>클립보드에 복사되었습니다</Text>
+            <Text style={styles.toastText}>{t('share.copiedToClipboard')}</Text>
           </View>
         </View>
       </Modal>
@@ -135,14 +137,14 @@ export function ShareButton({
               style={styles.menuItem}
               onPress={handleShareToOthers}
             >
-              <Text style={styles.menuText}>공유하기</Text>
+              <Text style={styles.menuText}>{t('share.shareAction')}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               testID="copy-to-clipboard"
               style={styles.menuItem}
               onPress={handleCopyToClipboard}
             >
-              <Text style={styles.menuText}>클립보드 복사</Text>
+              <Text style={styles.menuText}>{t('share.copyClipboard')}</Text>
             </TouchableOpacity>
           </View>
         </Pressable>

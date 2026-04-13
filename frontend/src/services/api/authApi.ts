@@ -13,6 +13,8 @@ export const authApi = {
     deviceType: DeviceType,
     redirectUri: string,
     deviceName?: string,
+    timezone?: string,
+    language?: string,
   ): string {
     const params = new URLSearchParams({
       deviceType,
@@ -23,6 +25,12 @@ export const authApi = {
     }
     if (deviceName) {
       params.set('deviceName', deviceName);
+    }
+    if (timezone) {
+      params.set('timezone', timezone);
+    }
+    if (language) {
+      params.set('language', language);
     }
     return `${config.apiBaseUrl}/auth/oauth/${provider}?${params.toString()}`;
   },
@@ -36,12 +44,11 @@ export const authApi = {
 
   async logout(
     refreshToken: string,
-    fcmToken: string,
+    fcmToken: string | null,
   ): Promise<{ message: string }> {
-    const response = await apiClient.post('/auth/logout', {
-      refreshToken,
-      fcmToken,
-    });
+    const body: { refreshToken: string; fcmToken?: string } = { refreshToken };
+    if (fcmToken) body.fcmToken = fcmToken;
+    const response = await apiClient.post('/auth/logout', body);
     return response.data;
   },
 };

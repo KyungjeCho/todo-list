@@ -8,6 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { useTranslation } from 'react-i18next';
 import type { Todo } from '../../types/todo';
 import { MemoSection } from './MemoSection';
 import { TodoActionButtons } from './TodoActionButtons';
@@ -39,6 +40,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   onUpdateMemo,
   onDeleteMemo,
 }) => {
+  const { t } = useTranslation();
   const [editText, setEditText] = useState(todo.content);
   const isCompleted = todo.status === 'COMPLETED';
   const isInactive = todo.status === 'INACTIVE';
@@ -67,15 +69,19 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   };
 
   const handleDelete = useCallback(() => {
-    Alert.alert('삭제', `"${todo.content}"를 삭제할까요?`, [
-      { text: '취소', style: 'cancel' },
-      {
-        text: '삭제',
-        style: 'destructive',
-        onPress: () => onDelete?.(todo.id),
-      },
-    ]);
-  }, [onDelete, todo.id, todo.content]);
+    Alert.alert(
+      t('todo.deleteTitle'),
+      t('todo.deleteMessage', { content: todo.content }),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: () => onDelete?.(todo.id),
+        },
+      ],
+    );
+  }, [onDelete, todo.id, todo.content, t]);
 
   const handleDeactivate = useCallback(() => {
     onDeactivate?.(todo.id);
@@ -92,7 +98,17 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   return (
     <TouchableOpacity
       testID={`todo-item-${todo.id}`}
-      accessibilityLabel={`${todo.content}, ${todo.status}${todo.isCarriedOver ? ', 이월' : ''}`}
+      accessibilityLabel={
+        todo.isCarriedOver
+          ? t('todo.statusLabelCarried', {
+              content: todo.content,
+              status: t(`todo.statusAccessibility.${todo.status}`),
+            })
+          : t('todo.statusLabel', {
+              content: todo.content,
+              status: t(`todo.statusAccessibility.${todo.status}`),
+            })
+      }
       activeOpacity={0.7}
       onPress={handleItemPress}
       style={[
@@ -115,10 +131,12 @@ export const TodoItem: React.FC<TodoItemProps> = ({
         {todo.isCarriedOver && (
           <View
             testID={`carried-over-badge-${todo.id}`}
-            accessibilityLabel="이월된 항목"
+            accessibilityLabel={t('todo.carriedOverItem')}
             style={styles.carriedOverBadge}
           >
-            <Text style={styles.carriedOverBadgeText}>이월</Text>
+            <Text style={styles.carriedOverBadgeText}>
+              {t('common.carriedOver')}
+            </Text>
           </View>
         )}
 
@@ -135,7 +153,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
                 isCompleted && styles.completedText,
                 isInactive && styles.inactiveText,
               ]}
-              accessibilityLabel="할 일 수정"
+              accessibilityLabel={t('todo.editTodo')}
             />
           ) : (
             <Text
@@ -177,7 +195,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
             testID={`chevron-up-${todo.id}`}
             onPress={handleCollapse}
             style={styles.chevronButton}
-            accessibilityLabel="접기"
+            accessibilityLabel={t('todo.collapse')}
             accessibilityRole="button"
           >
             <Text style={styles.chevronIcon}>▲</Text>

@@ -1,0 +1,173 @@
+{
+  "common": {
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "complete": "Done",
+    "retry": "Retry",
+    "share": "Share",
+    "save": "Save",
+    "confirm": "OK",
+    "loading": "Loading...",
+    "notification": "Notification",
+    "error": "Error",
+    "disabled": "Disabled",
+    "deactivate": "Deactivate",
+    "carriedOver": "Carried over",
+    "incomplete": "Incomplete"
+  },
+  "auth": {
+    "continueWithGoogle": "Continue with Google",
+    "continueWithNaver": "Continue with Naver",
+    "continueWithKakao": "Continue with Kakao",
+    "continueWithApple": "Continue with Apple",
+    "subtitle": "Plan your day and reflect",
+    "authFailed": "Authentication failed",
+    "profileFetchFailed": "Failed to fetch profile"
+  },
+  "main": {
+    "addTodo": "Add todo",
+    "todoPlaceholder": "Enter a todo",
+    "memoPlaceholder": "Enter a memo",
+    "completionRate": "Progress {{rate}}%"
+  },
+  "todo": {
+    "deleteTitle": "Delete",
+    "deleteMessage": "Delete \"{{content}}\"?",
+    "todoInput": "Todo input",
+    "memoInput": "Memo input",
+    "addTodo": "Add todo",
+    "addMemo": "Add memo",
+    "addMemoButton": "+ Memo",
+    "editTodo": "Edit todo",
+    "deleteMemo": "Delete memo",
+    "collapse": "Collapse",
+    "carriedOverItem": "Carried over item",
+    "statusAccessibility": {
+      "COMPLETED": "Completed",
+      "ACTIVE": "Active",
+      "INACTIVE": "Inactive",
+      "CARRIED_OVER": "Carried over"
+    },
+    "statusLabel": "{{content}}, {{status}}",
+    "statusLabelCarried": "{{content}}, {{status}}, carried over",
+    "dragDelete": "Delete zone",
+    "dragDeleteInstruction": "Drop here to delete",
+    "emptyTitle": "No todos for today",
+    "emptyCaption": "Tap the + button at the bottom right\nto add your plan for today",
+    "completeDay": "Complete day",
+    "completeDayAccessibility": "Mark today as done",
+    "completeDayAlreadyDone": "Today is already completed",
+    "completeDayResult": "Carried over",
+    "noTodosToRegister": "No todos to register."
+  },
+  "settings": {
+    "title": "Settings",
+    "notificationSettings": "Notification Settings",
+    "planNotification": "Plan Notification",
+    "reviewNotification": "Review Notification",
+    "regionSettings": "Region Settings",
+    "timezone": "Timezone",
+    "language": "Language",
+    "languageSaveFailed": "Failed to save language. Please try again.",
+    "info": "Information",
+    "openSourceLicense": "Open Source License",
+    "privacyPolicy": "Privacy Policy",
+    "contact": "Contact",
+    "settingsChangeFailed": "Failed to change settings",
+    "settingsSaveFailed": "Failed to save settings",
+    "logout": "Log out",
+    "logoutConfirmTitle": "Log out",
+    "logoutConfirmMessage": "Are you sure you want to log out?"
+  },
+  "onboarding": {
+    "routineSetup": "Set Routine",
+    "routineSubtitle": "Set your daily planning and review time",
+    "planTime": "Planning Time",
+    "reviewTime": "Review Time"
+  },
+  "voice": {
+    "screenTitle": "Voice Todo Input",
+    "exitTitle": "End Voice Input",
+    "exitMessage": "{{count}} draft todo(s) will be deleted.",
+    "registerFailed": "Failed to register todos. Please try again.",
+    "goBack": "Go back",
+    "recording": "Recording",
+    "stopRecording": "Stop recording",
+    "speakPlaceholder": "Speak...",
+    "addByVoice": "Add todo by voice",
+    "refineFailed": "Processing failed",
+    "speechError": "A speech recognition error occurred.",
+    "micPermissionRequired": "Microphone permission is required.",
+    "recordStartFailed": "Failed to start recording",
+    "recordStopFailed": "Failed to stop recording"
+  },
+  "timezone": {
+    "searchPlaceholder": "Search timezone",
+    "noResults": "No results found"
+  },
+  "calendar": {
+    "title": "Calendar",
+    "prevMonth": "Previous month",
+    "nextMonth": "Next month",
+    "yearMonth": "{{month}} {{year}}",
+    "dateWithCount": "{{month}}/{{day}}, {{count}} todo(s)",
+    "dateOnly": "{{month}}/{{day}}",
+    "emptyMonth": "No todos registered this month",
+    "emptyDay": "No todos registered on this day",
+    "dayOfWeekFull": {
+      "sun": "Sunday",
+      "mon": "Monday",
+      "tue": "Tuesday",
+      "wed": "Wednesday",
+      "thu": "Thursday",
+      "fri": "Friday",
+      "sat": "Saturday"
+    },
+    "dayOfWeekShort": {
+      "sun": "Sun",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat"
+    },
+    "dateDisplay": "{{weekday}}, {{month}}/{{day}}"
+  },
+  "share": {
+    "noTodosToShare": "No todos to share",
+    "copiedToClipboard": "Copied to clipboard",
+    "shareFailed": "Failed to share",
+    "clipboardFailed": "Failed to copy to clipboard",
+    "shareAction": "Share",
+    "copyClipboard": "Copy to clipboard",
+    "shareTitle": "Todo list for {{date}}",
+    "shareHeader": "Todo list for {{date}}"
+  },
+  "navigation": {
+    "home": "Home",
+    "calendar": "Calendar",
+    "settings": "Settings",
+    "calendarLoadFailed": "Cannot load calendar data",
+    "dataLoadFailed": "Cannot load data"
+  },
+  "error": {
+    "todoLoadFailed": "Failed to load todos",
+    "todoAddFailed": "Failed to add todo",
+    "statusChangeFailed": "Failed to change status",
+    "editFailed": "Failed to edit",
+    "deleteFailed": "Failed to delete",
+    "completeDayFailed": "Failed to complete day",
+    "memoAddFailed": "Failed to add memo",
+    "memoEditFailed": "Failed to edit memo",
+    "memoDeleteFailed": "Failed to delete memo"
+  },
+  "mode": {
+    "switchToPlan": "Switch to Plan mode",
+    "switchToReview": "Switch to Review mode"
+  },
+  "review": {
+    "completed": "Completed",
+    "incomplete": "Incomplete"
+  }
+}

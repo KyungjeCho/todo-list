@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { colors, typography } from '../../theme';
 
 interface TodoDragDeleteProps {
@@ -7,16 +8,17 @@ interface TodoDragDeleteProps {
 }
 
 export const TodoDragDelete: React.FC<TodoDragDeleteProps> = ({ isActive }) => {
+  const { t } = useTranslation();
   if (!isActive) return null;
 
   return (
     <View
       testID="drag-delete-zone"
       style={styles.container}
-      accessibilityLabel="삭제 영역"
+      accessibilityLabel={t('todo.dragDelete')}
     >
       <Text style={styles.icon}>&#128465;</Text>
-      <Text style={styles.text}>여기에 놓으면 삭제</Text>
+      <Text style={styles.text}>{t('todo.dragDeleteInstruction')}</Text>
     </View>
   );
 };

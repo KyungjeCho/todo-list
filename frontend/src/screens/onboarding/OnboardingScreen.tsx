@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
@@ -134,6 +135,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
   isLoading = false,
   error,
 }) => {
+  const { t } = useTranslation();
   const [planTime, setPlanTime] = useState('08:00');
   const [reviewTime, setReviewTime] = useState('22:00');
   const [showPicker, setShowPicker] = useState<'plan' | 'review' | null>(null);
@@ -167,10 +169,8 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
     >
       <View style={styles.brandSection}>
         <ClockIcon />
-        <Text style={styles.title}>루틴 설정</Text>
-        <Text style={styles.subtitle}>
-          하루의 계획과 회고 시간을 정해주세요
-        </Text>
+        <Text style={styles.title}>{t('onboarding.routineSetup')}</Text>
+        <Text style={styles.subtitle}>{t('onboarding.routineSubtitle')}</Text>
       </View>
 
       {isLoading && (
@@ -187,7 +187,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
         <View style={styles.section}>
           <View style={styles.labelRow}>
             <SunIcon />
-            <Text style={styles.label}>계획 시간</Text>
+            <Text style={styles.label}>{t('onboarding.planTime')}</Text>
           </View>
           <TouchableOpacity
             testID="plan-time-picker"
@@ -211,7 +211,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
         <View style={styles.section}>
           <View style={styles.labelRow}>
             <MoonIcon />
-            <Text style={styles.label}>회고 시간</Text>
+            <Text style={styles.label}>{t('onboarding.reviewTime')}</Text>
           </View>
           <TouchableOpacity
             testID="review-time-picker"
@@ -241,7 +241,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
         style={[styles.completeButton, isLoading && styles.disabledButton]}
         onPress={handleComplete}
       >
-        <Text style={styles.completeButtonText}>완료</Text>
+        <Text style={styles.completeButtonText}>{t('common.complete')}</Text>
       </TouchableOpacity>
     </LinearGradient>
   );

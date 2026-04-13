@@ -122,9 +122,84 @@ describe('GeminiService - refineText', () => {
         },
       });
 
-      const result = await service.refineText('장보기 해야 돼');
+      const result = await service.refineText('장보기 해야 돼', 'ko');
 
       expect(result).toBe('장보기');
+    });
+  });
+
+  describe('refineText 언어별 프롬프트 (T055)', () => {
+    it('한국어(ko) 호출 시 한국어 프롬프트를 사용한다', async () => {
+      mockGenerateContent.mockResolvedValue({
+        response: { text: () => '장보기' },
+      });
+
+      await service.refineText('장보기 해야지', 'ko');
+
+      const promptArg = mockGenerateContent.mock.calls[0][0][0] as string;
+      expect(promptArg).toMatch(/할 일|todo/);
+      expect(promptArg).toContain('장보기 해야지');
+    });
+
+    it('영어(en) 호출 시 영어 프롬프트를 사용한다', async () => {
+      mockGenerateContent.mockResolvedValue({
+        response: { text: () => 'Buy groceries' },
+      });
+
+      await service.refineText('I need to buy groceries', 'en');
+
+      const promptArg = mockGenerateContent.mock.calls[0][0][0] as string;
+      expect(promptArg.toLowerCase()).toContain('todo');
+      expect(promptArg).toContain('I need to buy groceries');
+    });
+
+    it('일본어(ja) 호출 시 일본어 프롬프트를 사용한다', async () => {
+      mockGenerateContent.mockResolvedValue({
+        response: { text: () => '買い物' },
+      });
+
+      await service.refineText('買い物しなきゃ', 'ja');
+
+      const promptArg = mockGenerateContent.mock.calls[0][0][0] as string;
+      expect(promptArg).toMatch(/やること|タスク|todo/i);
+      expect(promptArg).toContain('買い物しなきゃ');
+    });
+
+    it('스페인어(es) 호출 시 스페인어 프롬프트를 사용한다', async () => {
+      mockGenerateContent.mockResolvedValue({
+        response: { text: () => 'Comprar' },
+      });
+
+      await service.refineText('necesito comprar', 'es');
+
+      const promptArg = mockGenerateContent.mock.calls[0][0][0] as string;
+      expect(promptArg.toLowerCase()).toMatch(/tarea|pendiente|todo/);
+      expect(promptArg).toContain('necesito comprar');
+    });
+
+    it('미지원 언어 호출 시 영어 프롬프트로 fallback한다', async () => {
+      mockGenerateContent.mockResolvedValue({
+        response: { text: () => 'buy' },
+      });
+
+      await service.refineText('buy milk', 'fr');
+
+      const promptArg = mockGenerateContent.mock.calls[0][0][0] as string;
+      expect(promptArg.toLowerCase()).toContain('todo');
+      expect(promptArg).toContain('buy milk');
+    });
+
+    it('language 인자 미전달 시 영어 프롬프트로 fallback한다', async () => {
+      mockGenerateContent.mockResolvedValue({
+        response: { text: () => 'buy' },
+      });
+
+      await (
+        service as unknown as { refineText: (t: string) => Promise<string> }
+      ).refineText('buy milk');
+
+      const promptArg = mockGenerateContent.mock.calls[0][0][0] as string;
+      expect(promptArg.toLowerCase()).toContain('todo');
     });
   });
 });

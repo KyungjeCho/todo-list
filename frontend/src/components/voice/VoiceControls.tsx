@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { colors, typography, spacing } from '../../theme';
 
 interface VoiceControlsProps {
@@ -11,6 +12,7 @@ export const VoiceControls: React.FC<VoiceControlsProps> = ({
   isListening,
   onStop,
 }) => {
+  const { t } = useTranslation();
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -46,7 +48,7 @@ export const VoiceControls: React.FC<VoiceControlsProps> = ({
     <View style={styles.container} testID="voice-controls">
       <View style={styles.statusRow}>
         <View style={styles.recordingDot} />
-        <Text style={styles.recordingText}>녹음 중</Text>
+        <Text style={styles.recordingText}>{t('voice.recording')}</Text>
         <Text style={styles.timer} testID="voice-timer">
           {formatTime(elapsedSeconds)}
         </Text>
@@ -55,7 +57,7 @@ export const VoiceControls: React.FC<VoiceControlsProps> = ({
         testID="voice-stop-button"
         onPress={onStop}
         style={styles.stopButton}
-        accessibilityLabel="녹음 종료"
+        accessibilityLabel={t('voice.stopRecording')}
       >
         <View style={styles.stopIcon} />
       </TouchableOpacity>

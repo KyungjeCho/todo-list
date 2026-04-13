@@ -1,6 +1,10 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import i18n from '../../i18n';
+import type {
+  NativeStackNavigationProp,
+  NativeStackScreenProps,
+} from '@react-navigation/native-stack';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuthStore } from '../../store/authStore';
 import { userApi } from '../../services/api/userApi';
@@ -18,8 +22,39 @@ import { LoginScreen } from '../../screens/auth/LoginScreen';
 import { OnboardingScreen } from '../../screens/onboarding/OnboardingScreen';
 import { MainScreen } from '../../screens/main/MainScreen';
 import { VoiceInputScreen } from '../../screens/voice/VoiceInputScreen';
+import { TimezoneSelectScreen } from '../../screens/settings/TimezoneSelectScreen';
 import { MainTabNavigator } from './MainTabNavigator';
 import type { RootStackParamList } from './types';
+import { isUserOnboarded } from './isUserOnboarded';
+
+type TimezoneSelectProps = NativeStackScreenProps<
+  RootStackParamList,
+  'TimezoneSelect'
+>;
+
+const TimezoneSelectWrapper: React.FC<TimezoneSelectProps> = ({
+  route,
+  navigation,
+}) => {
+  const { user, setUser } = useAuthStore();
+  const current = route.params?.current ?? user?.timezone ?? 'UTC';
+
+  const handleSelect = useCallback(
+    async (timezone: string) => {
+      const updated = await userApi.updateSettings({ timezone });
+      setUser(updated);
+    },
+    [setUser],
+  );
+
+  return (
+    <TimezoneSelectScreen
+      current={current}
+      onSelect={handleSelect}
+      onClose={() => navigation.goBack()}
+    />
+  );
+};
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -40,7 +75,9 @@ const OnboardingWrapper: React.FC = () => {
         setUser(updatedUser);
       } catch (err) {
         const message =
-          err instanceof Error ? err.message : '설정 저장에 실패했습니다';
+          err instanceof Error
+            ? err.message
+            : i18n.t('settings.settingsSaveFailed');
         setError(message);
       } finally {
         setIsLoading(false);
@@ -99,7 +136,7 @@ const MainWrapper: React.FC = () => {
       setData(result);
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : '할 일을 불러오지 못했습니다';
+        err instanceof Error ? err.message : i18n.t('error.todoLoadFailed');
       setError(message);
     } finally {
       if (showLoading) setIsLoading(false);
@@ -129,7 +166,7 @@ const MainWrapper: React.FC = () => {
         await fetchTodos(selectedDate);
       } catch (err) {
         const message =
-          err instanceof Error ? err.message : '할 일 추가에 실패했습니다';
+          err instanceof Error ? err.message : i18n.t('error.todoAddFailed');
         setError(message);
       } finally {
         setIsAdding(false);
@@ -149,7 +186,9 @@ const MainWrapper: React.FC = () => {
         await fetchTodos(selectedDate);
       } catch (err) {
         const message =
-          err instanceof Error ? err.message : '상태 변경에 실패했습니다';
+          err instanceof Error
+            ? err.message
+            : i18n.t('error.statusChangeFailed');
         setError(message);
       }
     },
@@ -163,7 +202,7 @@ const MainWrapper: React.FC = () => {
         await fetchTodos(selectedDate);
       } catch (err) {
         const message =
-          err instanceof Error ? err.message : '수정에 실패했습니다';
+          err instanceof Error ? err.message : i18n.t('error.editFailed');
         setError(message);
       }
     },
@@ -180,7 +219,9 @@ const MainWrapper: React.FC = () => {
         await fetchTodos(selectedDate);
       } catch (err) {
         const message =
-          err instanceof Error ? err.message : '상태 변경에 실패했습니다';
+          err instanceof Error
+            ? err.message
+            : i18n.t('error.statusChangeFailed');
         setError(message);
       }
     },
@@ -194,7 +235,7 @@ const MainWrapper: React.FC = () => {
         await fetchTodos(selectedDate);
       } catch (err) {
         const message =
-          err instanceof Error ? err.message : '삭제에 실패했습니다';
+          err instanceof Error ? err.message : i18n.t('error.deleteFailed');
         setError(message);
       }
     },
@@ -211,7 +252,7 @@ const MainWrapper: React.FC = () => {
       await fetchTodos(selectedDate);
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : '일정 완료에 실패했습니다';
+        err instanceof Error ? err.message : i18n.t('error.completeDayFailed');
       setCompleteDayError(message);
     } finally {
       setIsCompleting(false);
@@ -225,7 +266,7 @@ const MainWrapper: React.FC = () => {
         await fetchTodos(selectedDate);
       } catch (err) {
         const message =
-          err instanceof Error ? err.message : '메모 추가에 실패했습니다';
+          err instanceof Error ? err.message : i18n.t('error.memoAddFailed');
         setError(message);
       }
     },
@@ -239,7 +280,7 @@ const MainWrapper: React.FC = () => {
         await fetchTodos(selectedDate);
       } catch (err) {
         const message =
-          err instanceof Error ? err.message : '메모 수정에 실패했습니다';
+          err instanceof Error ? err.message : i18n.t('error.memoEditFailed');
         setError(message);
       }
     },
@@ -253,7 +294,7 @@ const MainWrapper: React.FC = () => {
         await fetchTodos(selectedDate);
       } catch (err) {
         const message =
-          err instanceof Error ? err.message : '메모 삭제에 실패했습니다';
+          err instanceof Error ? err.message : i18n.t('error.memoDeleteFailed');
         setError(message);
       }
     },
@@ -320,8 +361,15 @@ const MainTabScreen: React.FC = () => {
 export const AuthNavigator: React.FC = () => {
   const { isAuthenticated, isLoading, user } = useAuthStore();
 
-  // WHY: 신규 유저는 timezone이 null로 내려옴. undefined와 null 모두 체크해야 온보딩을 건너뛰지 않음
-  const isOnboarded = user?.timezone != null;
+  // WHY: 서버에 저장된 사용자 언어 설정이 변경되면 앱 전체 UI 언어를 동기화한다.
+  // 디바이스 언어보다 서버 저장값이 우선이므로, 로그인 후 서버 값으로 전환한다.
+  useEffect(() => {
+    if (user?.language && user.language !== i18n.language) {
+      void i18n.changeLanguage(user.language);
+    }
+  }, [user?.language]);
+
+  const isOnboarded = isUserOnboarded(user);
 
   // WHY: 로그인 직후 프로필 로딩 중에는 user가 null이므로 온보딩으로 잘못 리다이렉트됨.
   // 프로필 로딩이 완료될 때까지 Auth 화면을 유지하여 플리커 방지
@@ -349,6 +397,14 @@ export const AuthNavigator: React.FC = () => {
           <Stack.Screen
             name="VoiceInput"
             component={VoiceInputScreen}
+            options={{
+              presentation: 'modal',
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen
+            name="TimezoneSelect"
+            component={TimezoneSelectWrapper}
             options={{
               presentation: 'modal',
               headerShown: false,

@@ -1,4 +1,5 @@
 import type { Todo, TodoStatus } from '../../types/todo';
+import i18n from '../../i18n';
 
 const STATUS_ICONS: Record<TodoStatus, string> = {
   COMPLETED: '✓',
@@ -15,7 +16,7 @@ export function formatShareData(todos: Todo[], date: string): string {
     return '';
   }
 
-  const header = `${date} 할 일 목록`;
+  const header = i18n.t('share.shareHeader', { date });
   const lines = todos.map((todo) => {
     const icon = STATUS_ICONS[todo.status];
     return `${icon} ${todo.content}`;
@@ -28,5 +29,5 @@ export function formatShareData(todos: Todo[], date: string): string {
  * 공유 제목을 생성한다.
  */
 export function formatShareTitle(date: string): string {
-  return `${date} 할 일 목록`;
+  return i18n.t('share.shareTitle', { date });
 }

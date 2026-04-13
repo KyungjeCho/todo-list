@@ -23,6 +23,7 @@ describe('RefineTextUsecase', () => {
   it('사용자 확인 후 Gemini로 텍스트를 정리하여 반환한다', async () => {
     mockUserRepository.findByUserAuthId.mockResolvedValue({
       id: 'user-id-1',
+      language: 'ko',
     });
     mockGeminiService.refineText.mockResolvedValue('내일까지 장보기');
 
@@ -37,6 +38,61 @@ describe('RefineTextUsecase', () => {
     );
     expect(mockGeminiService.refineText).toHaveBeenCalledWith(
       '장보기 가야 돼 내일까지',
+      'ko',
+    );
+  });
+
+  it('사용자 언어가 영어면 en으로 GeminiService에 전달한다', async () => {
+    mockUserRepository.findByUserAuthId.mockResolvedValue({
+      id: 'user-id-1',
+      language: 'en',
+    });
+    mockGeminiService.refineText.mockResolvedValue('Buy groceries');
+
+    await usecase.execute({
+      userAuthId: 'test-user-auth-id',
+      text: 'I need to buy groceries',
+    });
+
+    expect(mockGeminiService.refineText).toHaveBeenCalledWith(
+      'I need to buy groceries',
+      'en',
+    );
+  });
+
+  it('사용자 언어가 일본어면 ja로 전달한다', async () => {
+    mockUserRepository.findByUserAuthId.mockResolvedValue({
+      id: 'user-id-1',
+      language: 'ja',
+    });
+    mockGeminiService.refineText.mockResolvedValue('買い物');
+
+    await usecase.execute({
+      userAuthId: 'test-user-auth-id',
+      text: '買い物しなきゃ',
+    });
+
+    expect(mockGeminiService.refineText).toHaveBeenCalledWith(
+      '買い物しなきゃ',
+      'ja',
+    );
+  });
+
+  it('사용자 언어가 스페인어면 es로 전달한다', async () => {
+    mockUserRepository.findByUserAuthId.mockResolvedValue({
+      id: 'user-id-1',
+      language: 'es',
+    });
+    mockGeminiService.refineText.mockResolvedValue('Comprar');
+
+    await usecase.execute({
+      userAuthId: 'test-user-auth-id',
+      text: 'necesito comprar',
+    });
+
+    expect(mockGeminiService.refineText).toHaveBeenCalledWith(
+      'necesito comprar',
+      'es',
     );
   });
 
@@ -54,6 +110,7 @@ describe('RefineTextUsecase', () => {
   it('Gemini 에러를 그대로 전파한다', async () => {
     mockUserRepository.findByUserAuthId.mockResolvedValue({
       id: 'user-id-1',
+      language: 'ko',
     });
     const error = new Error('Gemini API failure');
     mockGeminiService.refineText.mockRejectedValue(error);

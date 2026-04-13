@@ -2,6 +2,7 @@ import React from 'react';
 import { TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import Svg, { Path, Line, Rect } from 'react-native-svg';
 import type { RootStackParamList } from '../../app/navigation/types';
 import { colors } from '../../theme';
@@ -58,6 +59,7 @@ export const VoiceTodoButton: React.FC<VoiceTodoButtonProps> = ({
   todoDate,
   disabled = false,
 }) => {
+  const { t } = useTranslation();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
@@ -68,7 +70,7 @@ export const VoiceTodoButton: React.FC<VoiceTodoButtonProps> = ({
   return (
     <TouchableOpacity
       testID="voice-todo-button"
-      accessibilityLabel="음성으로 할 일 추가"
+      accessibilityLabel={t('voice.addByVoice')}
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={handlePress}
