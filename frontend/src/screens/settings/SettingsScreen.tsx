@@ -16,15 +16,6 @@ import {
   LANGUAGE_LABELS,
   type SupportedLanguage,
 } from '../../i18n';
-
-/** legacy 로케일 코드(ko-KR 등)를 SupportedLanguage로 정규화한다. */
-function normalizeLanguage(lang: string): SupportedLanguage {
-  const base = lang.split('-')[0];
-  if ((SUPPORTED_LANGUAGES as readonly string[]).includes(base)) {
-    return base as SupportedLanguage;
-  }
-  return 'en';
-}
 import Svg, { Path, Circle, Line, Rect, Polyline } from 'react-native-svg';
 import { colors, typography, spacing, radius } from '../../theme';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -47,6 +38,7 @@ interface SettingsScreenProps {
   profile: UserProfile;
   onUpdateSettings: (data: UpdateSettingsRequest) => Promise<UserProfile>;
   onNavigateContact?: () => void;
+  onLogout?: () => void | Promise<void>;
   isLoading?: boolean;
   error?: string;
 }
@@ -268,6 +260,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   profile,
   onUpdateSettings,
   onNavigateContact,
+  onLogout,
   isLoading,
   error,
 }) => {
@@ -285,8 +278,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   }, [profile.language]);
 
   // WHY: props(profile.language)가 source of truth, 사용자 선택 직후에만 낙관적 값으로 오버라이드
-  const displayLanguage =
-    optimisticLanguage ?? normalizeLanguage(profile.language);
+  const displayLanguage = optimisticLanguage ?? profile.language;
 
   const handleTimeChange = async (
     event: { type?: string },
@@ -327,6 +319,24 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   const handleTimezoneSelect = async (timezone: string) => {
     setShowTimezonePicker(false);
     await onUpdateSettings({ timezone });
+  };
+
+  const handleLogoutPress = () => {
+    if (!onLogout) return;
+    Alert.alert(
+      t('settings.logoutConfirmTitle'),
+      t('settings.logoutConfirmMessage'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('settings.logout'),
+          style: 'destructive',
+          onPress: () => {
+            void onLogout();
+          },
+        },
+      ],
+    );
   };
 
   const handleLanguageSelect = async (language: SupportedLanguage) => {
@@ -565,6 +575,16 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
         <ChevronRightIcon />
       </TouchableOpacity>
 
+      {onLogout && (
+        <TouchableOpacity
+          testID="logout-button"
+          style={styles.logoutButton}
+          onPress={handleLogoutPress}
+        >
+          <Text style={styles.logoutText}>{t('settings.logout')}</Text>
+        </TouchableOpacity>
+      )}
+
       <Text style={styles.versionText}>TodoList v1.0.0</Text>
     </ScrollView>
   );
@@ -625,6 +645,19 @@ const styles = StyleSheet.create({
   },
   timezoneText: { ...typography.body, color: colors.onSurface },
   timezoneSelected: { fontWeight: '700', color: colors.primary },
+  logoutButton: {
+    marginTop: spacing.xl,
+    paddingVertical: spacing.lg,
+    alignItems: 'center',
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.error,
+  },
+  logoutText: {
+    ...typography.body,
+    color: colors.error,
+    fontWeight: '600',
+  },
   versionText: {
     ...typography.caption,
     color: colors.muted,

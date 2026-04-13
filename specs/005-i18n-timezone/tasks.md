@@ -122,21 +122,21 @@
 
 ### 테스트 (Red 단계)
 
-- [ ] T039 [P] [US7] 백엔드 OAuth 콜백 테스트 — `backend/test/unit/auth/oauth-callback-i18n.spec.ts` (유효한 timezone/language 저장, 무효한 timezone → null, 무효한 language → 'en', 미전달 시 기본값)
-- [ ] T040 [P] [US3] 프론트엔드 useAuth 테스트 — `frontend/__tests__/features/auth/useAuth.test.ts` (OAuth 리다이렉트 URL에 timezone/language 파라미터 포함 확인)
-- [ ] T041 [P] [US3] 온보딩 조건 테스트 — `frontend/__tests__/app/navigation/AuthNavigator.test.tsx` (planTime/reviewTime null → 온보딩 표시, 둘 다 설정됨 → 메인 표시)
+- [x] T039 [P] [US7] 백엔드 OAuth 콜백 테스트 — `backend/test/unit/auth/oauth-callback-i18n.spec.ts` (유효한 timezone/language 저장, 무효한 timezone → null, 무효한 language → 'en', 미전달 시 기본값)
+- [x] T040 [P] [US3] 프론트엔드 useAuth 테스트 — `frontend/__tests__/features/auth/useAuth.test.ts` (OAuth 리다이렉트 URL에 timezone/language 파라미터 포함 확인)
+- [x] T041 [P] [US3] 온보딩 조건 테스트 — `frontend/__tests__/app/navigation/AuthNavigator.test.tsx` (planTime/reviewTime null → 온보딩 표시, 둘 다 설정됨 → 메인 표시)
 
 ### 구현 (Green 단계)
 
-- [ ] T042 [US7] 백엔드 OAuthCallbackDto 수정 — `backend/src/auth/application/dto/oauth-callback.dto.ts` (`timezone?: string`, `language?: string` 필드 추가)
-- [ ] T043 [US7] 백엔드 auth.controller 수정 — `backend/src/auth/auth.controller.ts` (OAuth 콜백에서 timezone/language 쿼리 파라미터 수신 후 usecase에 전달)
-- [ ] T044 [US7] 백엔드 oauth-callback.usecase 수정 — `backend/src/auth/application/oauth-callback.usecase.ts` (language 유효성 검증 `['ko','en','ja','es']`, timezone `Intl.DateTimeFormat` 검증, 신규 사용자 생성 시 적용)
-- [ ] T045 [US3] 프론트엔드 useAuth 수정 — `frontend/src/features/auth/useAuth.ts` (OAuth 리다이렉트 URL에 `timezone=` + `language=` 쿼리 파라미터 추가, `getLocales()` + `getCalendars()` 사용)
-- [ ] T046 [US3] 온보딩 조건 변경 — `frontend/src/app/navigation/AuthNavigator.tsx` (`user?.timezone != null` → `user?.planTime != null && user?.reviewTime != null`)
+- [x] T042 [US7] 백엔드 OAuthCallbackDto 수정 — `backend/src/auth/application/dto/oauth-callback.dto.ts` (`timezone?: string`, `language?: string` 필드 추가)
+- [x] T043 [US7] 백엔드 auth.controller 수정 — `backend/src/auth/auth.controller.ts` (OAuth 콜백에서 timezone/language 쿼리 파라미터 수신 후 usecase에 전달)
+- [x] T044 [US7] 백엔드 oauth-callback.usecase 수정 — `backend/src/auth/application/oauth-callback.usecase.ts` (language 유효성 검증 `['ko','en','ja','es']`, timezone `Intl.DateTimeFormat` 검증, 신규 사용자 생성 시 적용)
+- [x] T045 [US3] 프론트엔드 useAuth 수정 — `frontend/src/features/auth/useAuth.ts` (OAuth 리다이렉트 URL에 `timezone=` + `language=` 쿼리 파라미터 추가, `getLocales()` + `getCalendars()` 사용)
+- [x] T046 [US3] 온보딩 조건 변경 — `frontend/src/app/navigation/AuthNavigator.tsx` (`user?.timezone != null` → `user?.planTime != null && user?.reviewTime != null`)
 
 ### DB 마이그레이션
 
-- [ ] T047 [US7] DB 마이그레이션 생성 — `backend/src/migration/xxxx-update-language-format.ts` (`'ko-KR'` → `'ko'` 변환, 미매핑 값 → `'en'`, 기본값 `'en'`으로 변경)
+- [x] T047 [US7] DB 마이그레이션 생성 — `backend/src/common/migrations/1744502400000-UpdateLanguageFormat.ts` (`'ko-KR'` → `'ko'` 변환, 미매핑 값 → `'en'`, 기본값 `'en'`으로 변경)
 
 **체크포인트**: 신규 가입 시 timezone/language 자동 전송, 온보딩에서 타임존 단계 제거, 기존 사용자 language 데이터 마이그레이션 완료
 

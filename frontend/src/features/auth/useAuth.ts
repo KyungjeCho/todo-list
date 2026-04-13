@@ -1,8 +1,10 @@
 import { useCallback, useState } from 'react';
 import { Platform, PermissionsAndroid } from 'react-native';
-import i18n from '../../i18n';
+import i18n, { SUPPORTED_LANGUAGES } from '../../i18n';
+import type { SupportedLanguage } from '../../i18n';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
+import { getLocales, getCalendars } from 'expo-localization';
 import {
   getMessaging,
   getToken,
@@ -12,6 +14,19 @@ import { authApi } from '../../services/api/authApi';
 import { userApi } from '../../services/api/userApi';
 import { useAuthStore } from '../../store/authStore';
 import type { OAuthProvider, DeviceType } from '../../types/user';
+
+/** WHY: 디바이스 로케일 감지값이 지원 언어에 없으면 'en'으로 fallback */
+function detectSignupLanguage(): SupportedLanguage {
+  const code = getLocales()[0]?.languageCode ?? 'en';
+  return (SUPPORTED_LANGUAGES as readonly string[]).includes(code)
+    ? (code as SupportedLanguage)
+    : 'en';
+}
+
+/** WHY: 캘린더 정보의 IANA timezone을 우선, 없으면 undefined를 반환하여 서버가 null로 저장 */
+function detectSignupTimezone(): string | undefined {
+  return getCalendars()[0]?.timeZone ?? undefined;
+}
 
 /** WHY: FCM 토큰 획득 실패가 로그인을 막으면 안 됨. 알림은 부가 기능 */
 async function getOptionalFcmToken(): Promise<string | null> {
@@ -56,6 +71,9 @@ export function useAuth() {
           fcmToken,
           deviceType,
           redirectUri,
+          undefined,
+          detectSignupTimezone(),
+          detectSignupLanguage(),
         );
         const result = await WebBrowser.openAuthSessionAsync(url, redirectUri);
 
@@ -119,7 +137,7 @@ export function useAuth() {
   );
 
   const logout = useCallback(
-    async (refreshToken: string, fcmToken: string) => {
+    async (refreshToken: string, fcmToken: string | null = null) => {
       setLoading(true);
       try {
         await authApi.logout(refreshToken, fcmToken);

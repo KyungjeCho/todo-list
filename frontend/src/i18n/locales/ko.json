@@ -74,7 +74,10 @@
     "privacyPolicy": "개인정보 처리방침",
     "contact": "연락처",
     "settingsChangeFailed": "설정 변경에 실패했습니다",
-    "settingsSaveFailed": "설정 저장에 실패했습니다"
+    "settingsSaveFailed": "설정 저장에 실패했습니다",
+    "logout": "로그아웃",
+    "logoutConfirmTitle": "로그아웃",
+    "logoutConfirmMessage": "정말 로그아웃하시겠습니까?"
   },
   "onboarding": {
     "routineSetup": "루틴 설정",

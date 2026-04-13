@@ -1,7 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import i18n, { SUPPORTED_LANGUAGES } from '../../i18n';
-import type { SupportedLanguage } from '../../i18n';
+import i18n from '../../i18n';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuthStore } from '../../store/authStore';
@@ -22,6 +21,7 @@ import { MainScreen } from '../../screens/main/MainScreen';
 import { VoiceInputScreen } from '../../screens/voice/VoiceInputScreen';
 import { MainTabNavigator } from './MainTabNavigator';
 import type { RootStackParamList } from './types';
+import { isUserOnboarded } from './isUserOnboarded';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -330,22 +330,13 @@ export const AuthNavigator: React.FC = () => {
 
   // WHY: 서버에 저장된 사용자 언어 설정이 변경되면 앱 전체 UI 언어를 동기화한다.
   // 디바이스 언어보다 서버 저장값이 우선이므로, 로그인 후 서버 값으로 전환한다.
-  // WHY: 서버에서 legacy 형식(ko-KR)이 올 수 있으므로 정규화 후 changeLanguage 호출
   useEffect(() => {
-    if (user?.language) {
-      const base = user.language.split('-')[0];
-      const normalized: SupportedLanguage =
-        (SUPPORTED_LANGUAGES as readonly string[]).includes(base)
-          ? (base as SupportedLanguage)
-          : 'en';
-      if (normalized !== i18n.language) {
-        void i18n.changeLanguage(normalized);
-      }
+    if (user?.language && user.language !== i18n.language) {
+      void i18n.changeLanguage(user.language);
     }
   }, [user?.language]);
 
-  // WHY: 신규 유저는 timezone이 null로 내려옴. undefined와 null 모두 체크해야 온보딩을 건너뛰지 않음
-  const isOnboarded = user?.timezone != null;
+  const isOnboarded = isUserOnboarded(user);
 
   // WHY: 로그인 직후 프로필 로딩 중에는 user가 null이므로 온보딩으로 잘못 리다이렉트됨.
   // 프로필 로딩이 완료될 때까지 Auth 화면을 유지하여 플리커 방지

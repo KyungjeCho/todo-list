@@ -104,7 +104,7 @@ describe('UserController (Integration)', () => {
         planTime: '08:00',
         reviewTime: '22:00',
         timezone: 'Asia/Seoul',
-        language: 'ko-KR',
+        language: 'ko',
       };
 
       mockGetProfileUsecase.execute.mockResolvedValue(mockProfile);
@@ -119,7 +119,7 @@ describe('UserController (Integration)', () => {
       expect(response.body.planTime).toBe('08:00');
       expect(response.body.reviewTime).toBe('22:00');
       expect(response.body.timezone).toBe('Asia/Seoul');
-      expect(response.body.language).toBe('ko-KR');
+      expect(response.body.language).toBe('ko');
     });
 
     it('should return profile with null time fields', async () => {
@@ -129,7 +129,7 @@ describe('UserController (Integration)', () => {
         planTime: null,
         reviewTime: null,
         timezone: 'UTC',
-        language: 'en-US',
+        language: 'en',
       };
 
       mockGetProfileUsecase.execute.mockResolvedValue(mockProfile);
@@ -173,7 +173,7 @@ describe('UserController (Integration)', () => {
         planTime: '08:00',
         reviewTime: '22:00',
         timezone: 'Asia/Seoul',
-        language: 'ko-KR',
+        language: 'ko',
       };
 
       mockUpdateSettingsUsecase.execute.mockResolvedValue(updatedProfile);
@@ -194,7 +194,7 @@ describe('UserController (Integration)', () => {
         planTime: '09:00',
         reviewTime: '22:00',
         timezone: 'Asia/Seoul',
-        language: 'ko-KR',
+        language: 'ko',
       };
 
       mockUpdateSettingsUsecase.execute.mockResolvedValue(updatedProfile);
@@ -215,7 +215,7 @@ describe('UserController (Integration)', () => {
         planTime: null,
         reviewTime: '22:00',
         timezone: 'Asia/Seoul',
-        language: 'ko-KR',
+        language: 'ko',
       };
 
       mockUpdateSettingsUsecase.execute.mockResolvedValue(updatedProfile);
@@ -236,7 +236,7 @@ describe('UserController (Integration)', () => {
         planTime: '07:00',
         reviewTime: '23:00',
         timezone: 'Asia/Tokyo',
-        language: 'ko-KR',
+        language: 'ko',
       };
 
       mockUpdateSettingsUsecase.execute.mockResolvedValue(updatedProfile);

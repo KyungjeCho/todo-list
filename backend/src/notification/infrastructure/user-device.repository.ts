@@ -20,13 +20,18 @@ export class UserDeviceRepository {
     deviceType: string;
     deviceName?: string;
   }): Promise<void> {
+    // WHY: fcm_token 유니크 인덱스가 soft-delete 무시(WHERE 절 없음)이므로
+    // 로그아웃으로 soft-deleted된 행을 포함해 조회하고, 존재하면 복원(deletedAt=null)한다.
+    // 이렇게 하지 않으면 재로그인 시 동일 토큰 INSERT에서 unique constraint 위반 발생.
     const existing = await this.deviceRepo.findOne({
       where: { fcmToken: data.fcmToken },
+      withDeleted: true,
     });
 
     if (existing) {
       existing.userId = data.userId;
       existing.deviceType = data.deviceType;
+      existing.deletedAt = null;
       if (data.deviceName !== undefined) {
         existing.deviceName = data.deviceName ?? null;
       }

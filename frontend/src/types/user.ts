@@ -6,8 +6,7 @@ export interface UserProfile {
   planTime: string | null;
   reviewTime: string | null;
   timezone: string | null;
-  /** 서버에서 legacy 형식(ko-KR)이 올 수 있으므로 string으로 수신, UI에서 normalizeLanguage()로 정규화 */
-  language: string;
+  language: SupportedLanguage;
 }
 
 export interface UpdateSettingsRequest {

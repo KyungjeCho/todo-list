@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 export interface OAuthUserProfile {
@@ -13,23 +13,31 @@ type Provider = (typeof VALID_PROVIDERS)[number];
 
 @Injectable()
 export class OAuthProviderService {
+  private readonly logger = new Logger(OAuthProviderService.name);
+
   constructor(private readonly configService: ConfigService) {}
 
   async exchangeCodeForProfile(
     provider: string,
     code: string,
+    state?: string,
   ): Promise<OAuthUserProfile> {
     if (!VALID_PROVIDERS.includes(provider as Provider)) {
       throw new BadRequestException('INVALID_PROVIDER');
     }
 
-    const tokenData = await this.exchangeCode(provider as Provider, code);
+    const tokenData = await this.exchangeCode(
+      provider as Provider,
+      code,
+      state,
+    );
     return this.fetchUserProfile(provider as Provider, tokenData.accessToken);
   }
 
   private async exchangeCode(
     provider: Provider,
     code: string,
+    state?: string,
   ): Promise<{ accessToken: string }> {
     const tokenUrl = this.getTokenUrl(provider);
     const clientId =
@@ -39,26 +47,61 @@ export class OAuthProviderService {
     const callbackUrl =
       this.configService.get<string>(`oauth.${provider}.callbackUrl`) || '';
 
-    const body = new URLSearchParams({
+    // WHY: 프로바이더별 토큰 교환 스펙이 다름.
+    // - Naver: state 필수, redirect_uri 없음 (공식 문서 기준)
+    // - Google/Kakao/Apple: redirect_uri 필수
+    const params: Record<string, string> = {
       grant_type: 'authorization_code',
       client_id: clientId,
       client_secret: clientSecret,
-      redirect_uri: callbackUrl,
       code,
-    });
+    };
+    if (provider === 'naver') {
+      if (!state) {
+        throw new BadRequestException('OAUTH_CODE_EXCHANGE_FAILED');
+      }
+      params.state = state;
+    } else {
+      params.redirect_uri = callbackUrl;
+    }
+    const body = new URLSearchParams(params);
 
     const response = await fetch(tokenUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: 'application/json',
+      },
       body: body.toString(),
     });
 
+    const rawText = await response.text();
+
     if (!response.ok) {
+      this.logger.error(
+        `[${provider}] token exchange HTTP ${response.status}: ${rawText.slice(0, 500)}`,
+      );
       throw new BadRequestException('OAUTH_CODE_EXCHANGE_FAILED');
     }
 
-    const data = (await response.json()) as { access_token?: string };
+    let data: {
+      access_token?: string;
+      error?: string;
+      error_description?: string;
+    };
+    try {
+      data = JSON.parse(rawText) as typeof data;
+    } catch {
+      this.logger.error(
+        `[${provider}] token exchange non-JSON response: ${rawText.slice(0, 500)}`,
+      );
+      throw new BadRequestException('OAUTH_CODE_EXCHANGE_FAILED');
+    }
+
     if (!data.access_token) {
+      this.logger.error(
+        `[${provider}] token exchange no access_token. error=${data.error} desc=${data.error_description}`,
+      );
       throw new BadRequestException('OAUTH_CODE_EXCHANGE_FAILED');
     }
 
@@ -72,11 +115,23 @@ export class OAuthProviderService {
     const { url, headers } = this.getUserInfoConfig(provider, accessToken);
 
     const response = await fetch(url, { headers });
+    const rawText = await response.text();
     if (!response.ok) {
+      this.logger.error(
+        `[${provider}] profile fetch HTTP ${response.status}: ${rawText.slice(0, 500)}`,
+      );
       throw new BadRequestException('OAUTH_PROFILE_FETCH_FAILED');
     }
 
-    const data = (await response.json()) as Record<string, unknown>;
+    let data: Record<string, unknown>;
+    try {
+      data = JSON.parse(rawText) as Record<string, unknown>;
+    } catch {
+      this.logger.error(
+        `[${provider}] profile fetch non-JSON: ${rawText.slice(0, 500)}`,
+      );
+      throw new BadRequestException('OAUTH_PROFILE_FETCH_FAILED');
+    }
     return this.parseProfile(provider, data);
   }
 

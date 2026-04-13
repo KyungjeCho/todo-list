@@ -43,6 +43,8 @@ export class AuthController {
     @Query('deviceType') deviceType: string,
     @Query('redirectUri') redirectUri: string,
     @Query('deviceName') deviceName: string | undefined,
+    @Query('timezone') timezone: string | undefined,
+    @Query('language') language: string | undefined,
     @Res() res: Response,
   ): Promise<void> {
     const validatedRedirectUri = this.validateRedirectUri(redirectUri);
@@ -52,6 +54,8 @@ export class AuthController {
       deviceType,
       redirectUri: validatedRedirectUri,
       deviceName,
+      timezone,
+      language,
     });
     res.redirect(302, result.redirectUrl);
   }
@@ -96,6 +100,7 @@ export class AuthController {
     const userProfile = await this.oauthProviderService.exchangeCodeForProfile(
       provider,
       code,
+      state,
     );
 
     const result = await this.oauthCallbackUsecase.execute({
@@ -108,6 +113,8 @@ export class AuthController {
       deviceName: stateData.deviceName as string | undefined,
       userAgent: req.headers['user-agent'] ?? undefined,
       ipAddress: req.ip ?? undefined,
+      timezone: stateData.timezone as string | undefined,
+      language: stateData.language as string | undefined,
     });
 
     const clientRedirectUri = this.validateRedirectUri(

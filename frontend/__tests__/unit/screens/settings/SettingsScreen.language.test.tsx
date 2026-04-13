@@ -171,38 +171,6 @@ describe('SettingsScreen 언어 선택', () => {
     expect(screen.getByTestId('language-value').props.children).toBe('Español');
   });
 
-  it('legacy 형식(ko-KR)이 서버에서 오면 정규화하여 한국어로 표시된다', () => {
-    const legacyProfile: UserProfile = {
-      ...mockProfile,
-      language: 'ko-KR',
-    };
-
-    render(
-      <SettingsScreen
-        profile={legacyProfile}
-        onUpdateSettings={mockUpdateSettings}
-      />,
-    );
-
-    expect(screen.getByTestId('language-value').props.children).toBe('한국어');
-  });
-
-  it('비지원 legacy 형식이 서버에서 오면 English로 fallback된다', () => {
-    const unsupportedProfile: UserProfile = {
-      ...mockProfile,
-      language: 'zh-CN',
-    };
-
-    render(
-      <SettingsScreen
-        profile={unsupportedProfile}
-        onUpdateSettings={mockUpdateSettings}
-      />,
-    );
-
-    expect(screen.getByTestId('language-value').props.children).toBe('English');
-  });
-
   it('외부에서 profile.language가 갱신되면 낙관적 값을 해제하고 props에 따라 표시된다', async () => {
     mockUpdateSettings.mockResolvedValue({
       ...mockProfile,

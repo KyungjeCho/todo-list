@@ -74,7 +74,10 @@
     "privacyPolicy": "プライバシーポリシー",
     "contact": "お問い合わせ",
     "settingsChangeFailed": "設定の変更に失敗しました",
-    "settingsSaveFailed": "設定の保存に失敗しました"
+    "settingsSaveFailed": "設定の保存に失敗しました",
+    "logout": "ログアウト",
+    "logoutConfirmTitle": "ログアウト",
+    "logoutConfirmMessage": "本当にログアウトしますか？"
   },
   "onboarding": {
     "routineSetup": "ルーティン設定",

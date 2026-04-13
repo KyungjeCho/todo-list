@@ -74,7 +74,10 @@
     "privacyPolicy": "Política de privacidad",
     "contact": "Contacto",
     "settingsChangeFailed": "Error al cambiar la configuración",
-    "settingsSaveFailed": "Error al guardar la configuración"
+    "settingsSaveFailed": "Error al guardar la configuración",
+    "logout": "Cerrar sesión",
+    "logoutConfirmTitle": "Cerrar sesión",
+    "logoutConfirmMessage": "¿Seguro que quieres cerrar sesión?"
   },
   "onboarding": {
     "routineSetup": "Configurar rutina",

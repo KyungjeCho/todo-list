@@ -53,9 +53,9 @@ describe('User Entity', () => {
     expect(entity.timezone).toBe('Asia/Seoul');
   });
 
-  it('should have language property (BCP-47)', () => {
-    entity.language = 'ko-KR';
-    expect(entity.language).toBe('ko-KR');
+  it('should have language property (BCP-47 language subtag)', () => {
+    entity.language = 'ko';
+    expect(entity.language).toBe('ko');
   });
 
   it('should inherit audit fields from BaseEntity', () => {

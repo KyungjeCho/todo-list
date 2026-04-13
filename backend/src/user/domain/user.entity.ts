@@ -20,7 +20,7 @@ export class User extends BaseEntity {
   @Column({ name: 'timezone', type: 'varchar', length: 64, nullable: true })
   timezone!: string | null;
 
-  @Column({ name: 'language', type: 'varchar', length: 10 })
+  @Column({ name: 'language', type: 'varchar', length: 10, default: 'en' })
   language!: string;
 
   @OneToOne(() => UserAuth, (auth) => auth.user)
