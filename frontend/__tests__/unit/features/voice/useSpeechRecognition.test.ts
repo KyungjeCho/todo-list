@@ -13,6 +13,7 @@ jest.mock('expo-speech-recognition', () => ({
   useSpeechRecognitionEvent: mockUseSpeechRecognitionEvent,
 }));
 
+import i18n from 'src/i18n';
 import { useSpeechRecognition } from 'src/features/voice/useSpeechRecognition';
 
 describe('useSpeechRecognition', () => {
@@ -33,7 +34,95 @@ describe('useSpeechRecognition', () => {
     jest.useRealTimers();
   });
 
+  afterAll(async () => {
+    await i18n.changeLanguage('ko');
+  });
+
+  describe('언어별 STT locale 매핑 (T054)', () => {
+    it('한국어 설정 시 ko-KR로 STT를 시작한다', async () => {
+      await i18n.changeLanguage('ko');
+      const { result } = renderHook(() =>
+        useSpeechRecognition({ onFinal: jest.fn() }),
+      );
+
+      await act(async () => {
+        await result.current.start();
+      });
+
+      expect(mockStart).toHaveBeenCalledWith(
+        expect.objectContaining({ lang: 'ko-KR' }),
+      );
+    });
+
+    it('영어 설정 시 en-US로 STT를 시작한다', async () => {
+      await i18n.changeLanguage('en');
+      const { result } = renderHook(() =>
+        useSpeechRecognition({ onFinal: jest.fn() }),
+      );
+
+      await act(async () => {
+        await result.current.start();
+      });
+
+      expect(mockStart).toHaveBeenCalledWith(
+        expect.objectContaining({ lang: 'en-US' }),
+      );
+    });
+
+    it('일본어 설정 시 ja-JP로 STT를 시작한다', async () => {
+      await i18n.changeLanguage('ja');
+      const { result } = renderHook(() =>
+        useSpeechRecognition({ onFinal: jest.fn() }),
+      );
+
+      await act(async () => {
+        await result.current.start();
+      });
+
+      expect(mockStart).toHaveBeenCalledWith(
+        expect.objectContaining({ lang: 'ja-JP' }),
+      );
+    });
+
+    it('스페인어 설정 시 es-ES로 STT를 시작한다', async () => {
+      await i18n.changeLanguage('es');
+      const { result } = renderHook(() =>
+        useSpeechRecognition({ onFinal: jest.fn() }),
+      );
+
+      await act(async () => {
+        await result.current.start();
+      });
+
+      expect(mockStart).toHaveBeenCalledWith(
+        expect.objectContaining({ lang: 'es-ES' }),
+      );
+    });
+
+    it('end 이벤트로 재시작 시 현재 언어 locale을 사용한다', async () => {
+      await i18n.changeLanguage('ja');
+      const { result } = renderHook(() =>
+        useSpeechRecognition({ onFinal: jest.fn() }),
+      );
+
+      await act(async () => {
+        await result.current.start();
+      });
+
+      mockStart.mockClear();
+
+      act(() => {
+        capturedListeners['end']?.({});
+      });
+
+      expect(mockStart).toHaveBeenCalledWith(
+        expect.objectContaining({ lang: 'ja-JP' }),
+      );
+    });
+  });
+
   it('start 호출 시 ExpoSpeechRecognitionModule.start를 호출한다', async () => {
+    await i18n.changeLanguage('ko');
     const { result } = renderHook(() =>
       useSpeechRecognition({ onFinal: jest.fn() }),
     );

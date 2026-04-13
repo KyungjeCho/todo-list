@@ -175,15 +175,15 @@
 
 ### 테스트 (Red 단계)
 
-- [ ] T054 [P] [US5] STT 언어 연동 테스트 — `frontend/__tests__/features/voice/useSpeechRecognition.test.ts` (사용자 언어에 따른 STT locale 매핑: ko→ko-KR, en→en-US, ja→ja-JP, es→es-ES)
-- [ ] T055 [P] [US5] 백엔드 GeminiService 테스트 — `backend/test/unit/ai/gemini.service.spec.ts` (`refineText` 언어별 프롬프트 사용 확인, 미지원 언어 시 영어 fallback)
-- [ ] T056 [P] [US5] 백엔드 RefineTextUsecase 테스트 — `backend/test/unit/todo/refine-text.usecase.spec.ts` (사용자 language를 GeminiService에 전달 확인)
+- [x] T054 [P] [US5] STT 언어 연동 테스트 — `frontend/__tests__/unit/features/voice/useSpeechRecognition.test.ts` (사용자 언어에 따른 STT locale 매핑: ko→ko-KR, en→en-US, ja→ja-JP, es→es-ES)
+- [x] T055 [P] [US5] 백엔드 GeminiService 테스트 — `backend/test/unit/ai/infrastructure/gemini.service.refine.spec.ts` (`refineText` 언어별 프롬프트 사용 확인, 미지원 언어 시 영어 fallback)
+- [x] T056 [P] [US5] 백엔드 RefineTextUsecase 테스트 — `backend/test/unit/todo/application/refine-text.usecase.spec.ts` (사용자 language를 GeminiService에 전달 확인)
 
 ### 구현 (Green 단계)
 
-- [ ] T057 [US5] 프론트엔드 STT 언어 연동 — `frontend/src/features/voice/useSpeechRecognition.ts` (88행, 111행의 `'ko-KR'` → `STT_LOCALE_MAP[i18n.language]`)
-- [ ] T058 [US5] 백엔드 GeminiService 언어별 프롬프트 — `backend/src/ai/infrastructure/gemini.service.ts` (`REFINE_PROMPTS` Record 추가, `refineText(rawText, language)` 시그니처 변경)
-- [ ] T059 [US5] 백엔드 RefineTextUsecase 언어 전달 — `backend/src/todo/application/refine-text.usecase.ts` (`user.language`를 `geminiService.refineText(input.text, user.language)`에 전달)
+- [x] T057 [US5] 프론트엔드 STT 언어 연동 — `frontend/src/features/voice/useSpeechRecognition.ts` (88행, 111행의 `'ko-KR'` → `STT_LOCALE_MAP[i18n.language]`)
+- [x] T058 [US5] 백엔드 GeminiService 언어별 프롬프트 — `backend/src/ai/infrastructure/gemini.service.ts` (`REFINE_PROMPTS` Record 추가, `refineText(rawText, language)` 시그니처 변경)
+- [x] T059 [US5] 백엔드 RefineTextUsecase 언어 전달 — `backend/src/todo/application/refine-text.usecase.ts` (`user.language`를 `geminiService.refineText(input.text, user.language)`에 전달)
 
 **체크포인트**: 4개 언어 모두 STT 인식 + LLM refine 동작 확인
 

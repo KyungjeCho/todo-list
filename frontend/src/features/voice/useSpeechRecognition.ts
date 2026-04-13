@@ -3,7 +3,12 @@ import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
 } from 'expo-speech-recognition';
-import i18n from '../../i18n';
+import i18n, { STT_LOCALE_MAP, type SupportedLanguage } from '../../i18n';
+
+function getSttLocale(): string {
+  const lang = i18n.language as SupportedLanguage;
+  return STT_LOCALE_MAP[lang] ?? STT_LOCALE_MAP.en;
+}
 
 /** 음성 입력이 멈춘 뒤 interim 텍스트를 final로 확정하기까지 대기 시간 (ms) */
 const SILENCE_TIMEOUT_MS = 1500;
@@ -86,7 +91,7 @@ export function useSpeechRecognition({
     // WHY: 에러로 인한 종료 시 재시작하면 무한 루프 발생 가능 — 에러 상태에서는 재시작하지 않음
     if (isListeningRef.current && !hasErrorRef.current) {
       ExpoSpeechRecognitionModule.start({
-        lang: 'ko-KR',
+        lang: getSttLocale(),
         continuous: true,
         interimResults: true,
       });
@@ -109,7 +114,7 @@ export function useSpeechRecognition({
     setIsListening(true);
 
     ExpoSpeechRecognitionModule.start({
-      lang: 'ko-KR',
+      lang: getSttLocale(),
       continuous: true,
       interimResults: true,
     });
