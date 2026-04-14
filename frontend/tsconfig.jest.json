@@ -3,7 +3,8 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "src/*": ["src/*"]
+      "src/*": ["src/*"],
+      "expo-audio": ["__mocks__/expo-audio.ts"]
     },
     "jsx": "react-jsx",
     "skipLibCheck": true

@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback, useRef } from 'react';
-import { View, Text, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { View, Text, Alert, StyleSheet } from 'react-native';
+import { SoundPressable } from '../../components/common/SoundPressable';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -92,14 +93,14 @@ export const VoiceInputScreen: React.FC<VoiceInputScreenProps> = ({
     >
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity
+          <SoundPressable
             testID="voice-back-button"
             onPress={() => navigation.goBack()}
             accessibilityLabel={t('voice.goBack')}
             style={styles.backButton}
           >
             <Text style={styles.backIcon}>←</Text>
-          </TouchableOpacity>
+          </SoundPressable>
           <Text style={styles.title}>{t('voice.screenTitle')}</Text>
           <View style={styles.headerSpacer} />
         </View>
@@ -108,13 +109,13 @@ export const VoiceInputScreen: React.FC<VoiceInputScreenProps> = ({
           <View style={styles.errorContainer} testID="voice-error">
             <Text style={styles.errorText}>{error}</Text>
             {!isListening && (
-              <TouchableOpacity
+              <SoundPressable
                 testID="voice-retry-button"
                 onPress={start}
                 style={styles.retryButton}
               >
                 <Text style={styles.retryText}>{t('common.retry')}</Text>
-              </TouchableOpacity>
+              </SoundPressable>
             )}
           </View>
         )}

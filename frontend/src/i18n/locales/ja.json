@@ -77,7 +77,9 @@
     "settingsSaveFailed": "設定の保存に失敗しました",
     "logout": "ログアウト",
     "logoutConfirmTitle": "ログアウト",
-    "logoutConfirmMessage": "本当にログアウトしますか？"
+    "logoutConfirmMessage": "本当にログアウトしますか？",
+    "soundFeedback": "サウンド / フィードバック",
+    "buttonClickSound": "ボタンのクリック音"
   },
   "onboarding": {
     "routineSetup": "ルーティン設定",

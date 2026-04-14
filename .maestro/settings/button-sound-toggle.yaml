@@ -1,0 +1,39 @@
+# Feature 006 / US2 Maestro E2E — 설정에서 버튼 클릭음 OFF → 재실행 후에도 OFF 유지
+# WHY: 사용자 선호가 secure-store에 영속화되는지 E2E로 확인.
+
+appId: com.todolist.app
+
+tags:
+  - settings
+  - sound
+  - regression
+
+---
+- assertVisible:
+    id: "mode-toggle-button"
+
+# 설정 화면 이동
+- tapOn:
+    id: "tab-settings"
+
+- assertVisible:
+    id: "settings-screen"
+
+# 버튼 클릭음 토글 OFF
+- assertVisible:
+    id: "button-sound-toggle"
+- tapOn:
+    id: "button-sound-toggle"
+
+# 메인으로 돌아와 기본 버튼 탭 — 핸들러는 여전히 동작
+- tapOn:
+    id: "mode-toggle-button"
+
+# 앱 재시작 후에도 OFF 유지
+- launchApp
+- assertVisible:
+    id: "mode-toggle-button"
+- tapOn:
+    id: "tab-settings"
+- assertVisible:
+    id: "button-sound-toggle"

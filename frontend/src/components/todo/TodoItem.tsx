@@ -1,17 +1,11 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-} from 'react-native';
+import { View, Text, TextInput, StyleSheet, Alert } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 import type { Todo } from '../../types/todo';
 import { MemoSection } from './MemoSection';
 import { TodoActionButtons } from './TodoActionButtons';
+import { SoundPressable } from '../common/SoundPressable';
 import { colors, spacing, radius } from '../../theme';
 
 interface TodoItemProps {
@@ -96,7 +90,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
   }, [onExpand]);
 
   return (
-    <TouchableOpacity
+    <SoundPressable
       testID={`todo-item-${todo.id}`}
       accessibilityLabel={
         todo.isCarriedOver
@@ -118,7 +112,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
       ]}
     >
       <View style={styles.row}>
-        <TouchableOpacity
+        <SoundPressable
           testID={`todo-checkbox-${todo.id}`}
           onPress={() => onToggleComplete?.(todo.id)}
           accessibilityRole="checkbox"
@@ -126,7 +120,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
           style={[styles.checkbox, isCompleted && styles.checkboxChecked]}
         >
           {isCompleted && <Text style={styles.checkmark}>&#10003;</Text>}
-        </TouchableOpacity>
+        </SoundPressable>
 
         {todo.isCarriedOver && (
           <View
@@ -191,7 +185,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
         )}
 
         {isExpanded && (
-          <TouchableOpacity
+          <SoundPressable
             testID={`chevron-up-${todo.id}`}
             onPress={handleCollapse}
             style={styles.chevronButton}
@@ -199,7 +193,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
             accessibilityRole="button"
           >
             <Text style={styles.chevronIcon}>▲</Text>
-          </TouchableOpacity>
+          </SoundPressable>
         )}
       </View>
 
@@ -221,7 +215,7 @@ export const TodoItem: React.FC<TodoItemProps> = ({
           />
         </>
       )}
-    </TouchableOpacity>
+    </SoundPressable>
   );
 };
 

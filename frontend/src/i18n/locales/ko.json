@@ -77,7 +77,9 @@
     "settingsSaveFailed": "설정 저장에 실패했습니다",
     "logout": "로그아웃",
     "logoutConfirmTitle": "로그아웃",
-    "logoutConfirmMessage": "정말 로그아웃하시겠습니까?"
+    "logoutConfirmMessage": "정말 로그아웃하시겠습니까?",
+    "soundFeedback": "소리/피드백",
+    "buttonClickSound": "버튼 클릭음"
   },
   "onboarding": {
     "routineSetup": "루틴 설정",

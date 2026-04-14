@@ -1,12 +1,7 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ActivityIndicator,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { SoundPressable } from '../common/SoundPressable';
 import { colors, typography, spacing, radius } from '../../theme';
 
 interface CarriedOverResult {
@@ -43,7 +38,7 @@ export const CompleteDayButton: React.FC<CompleteDayButtonProps> = ({
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
+      <SoundPressable
         testID="complete-day-button"
         onPress={handlePress}
         disabled={disabled}
@@ -61,7 +56,7 @@ export const CompleteDayButton: React.FC<CompleteDayButtonProps> = ({
         ) : (
           <Text style={styles.buttonText}>{t('todo.completeDay')}</Text>
         )}
-      </TouchableOpacity>
+      </SoundPressable>
 
       {isCompleted && (
         <Text testID="already-completed-text" style={styles.completedText}>

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { colors, typography, spacing } from '../../theme';
+import { SoundPressable } from '../common/SoundPressable';
 
 interface VoiceControlsProps {
   isListening: boolean;
@@ -53,14 +54,14 @@ export const VoiceControls: React.FC<VoiceControlsProps> = ({
           {formatTime(elapsedSeconds)}
         </Text>
       </View>
-      <TouchableOpacity
+      <SoundPressable
         testID="voice-stop-button"
         onPress={onStop}
         style={styles.stopButton}
         accessibilityLabel={t('voice.stopRecording')}
       >
         <View style={styles.stopIcon} />
-      </TouchableOpacity>
+      </SoundPressable>
     </View>
   );
 };

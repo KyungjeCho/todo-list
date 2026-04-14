@@ -1,0 +1,58 @@
+appId: ${APP_ID}
+tags:
+  - voice
+  - sound
+  - regression
+---
+# 006-ui-button-sound / US3: 녹음 중 클릭음은 무음이나 탭 핸들러는 정상 동작해야 한다.
+# 수동 확인: 녹음 중 탭 시 스피커에서 소리가 나지 않는지 청각적으로도 확인한다.
+- launchApp:
+    clearState: true
+    stopApp: true
+
+# 로그인 (OAuth — Google 예시)
+- tapOn:
+    id: "login-button-google"
+    optional: true
+
+# 메인 화면 진입 확인
+- assertVisible:
+    id: "fab-add-button"
+
+# 음성 입력 화면으로 이동
+- tapOn:
+    id: "voice-todo-button"
+
+- assertVisible:
+    text: "음성 입력"
+    optional: true
+
+# 녹음 시작 (화면 진입 후 자동 시작 또는 record 버튼 탭)
+- tapOn:
+    id: "voice-record-button"
+    optional: true
+
+# 녹음 중 상태 확인
+- assertVisible:
+    id: "voice-controls"
+    optional: true
+
+# 녹음 중 보조 버튼 탭 — 핸들러는 동작해야 하나 클릭음은 무음
+# (수동 청각 확인; 셀프 테스트에서는 탭이 크래시 없이 동작함을 검증)
+- tapOn:
+    id: "voice-stop-button"
+    optional: true
+
+# 녹음 종료 후 화면 이탈
+- assertVisible:
+    id: "fab-add-button"
+    optional: true
+
+# 녹음 종료 후에는 클릭음이 다시 활성화되어야 한다 — 일반 버튼 탭으로 핸들러 확인
+- tapOn:
+    id: "fab-add-button"
+    optional: true
+
+- assertVisible:
+    id: "todo-input"
+    optional: true

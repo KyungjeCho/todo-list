@@ -1,13 +1,8 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ActivityIndicator,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { colors, typography, spacing, radius } from '../../theme';
+import { SoundPressable } from '../../components/common/SoundPressable';
 
 interface DaySummary {
   date: string;
@@ -116,7 +111,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
 
       cells.push(
         <View key={date} style={styles.dayCellWrapper}>
-          <TouchableOpacity
+          <SoundPressable
             testID={`calendar-day-${date}`}
             style={[
               styles.dayCell,
@@ -144,7 +139,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
             >
               {day}
             </Text>
-          </TouchableOpacity>
+          </SoundPressable>
           {summary && (
             <View
               testID={`day-indicator-${date}`}
@@ -184,25 +179,25 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
       )}
 
       <View style={styles.header}>
-        <TouchableOpacity
+        <SoundPressable
           testID="calendar-prev-month"
           onPress={handlePrevMonth}
           accessibilityLabel={t('calendar.prevMonth')}
         >
           <Text style={styles.navButton}>{'<'}</Text>
-        </TouchableOpacity>
+        </SoundPressable>
 
         <Text testID="calendar-year-month" style={styles.yearMonth}>
           {t('calendar.yearMonth', { year, month })}
         </Text>
 
-        <TouchableOpacity
+        <SoundPressable
           testID="calendar-next-month"
           onPress={handleNextMonth}
           accessibilityLabel={t('calendar.nextMonth')}
         >
           <Text style={styles.navButton}>{'>'}</Text>
-        </TouchableOpacity>
+        </SoundPressable>
       </View>
 
       <View style={styles.weekdayRow}>

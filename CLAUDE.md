@@ -12,6 +12,7 @@ Auto-generated from all feature plans. Last updated: 2026-04-13
 - Supabase (PostgreSQL) via TypeORM — 기존 Todo 테이블 재사용, 스키마 변경 없음 (004-voice-input-screen)
 - TypeScript 5.x (Frontend & Backend) + i18next, react-i18next, expo-localization (신규), Intl.supportedValuesOf 타임존 API (005-i18n-timezone)
 - Supabase (PostgreSQL) via TypeORM — `language` 컬럼 형식 마이그레이션 (ko-KR → ko, 기본값 en) (005-i18n-timezone)
+- TypeScript 5.9 (Frontend) (feature/006-ui-button-sound)
 
 - TypeScript 5.x (Frontend & Backend) (001-todo-mobile-service)
 - React Native (Expo) — iOS/Android 크로스 플랫폼
@@ -79,9 +80,9 @@ cd frontend && npm test && npm run lint
 - `hotfix/*`: 긴급 수정
 
 ## Recent Changes
+- feature/006-ui-button-sound: Added TypeScript 5.9 (Frontend)
 - 005-i18n-timezone: Added i18next/react-i18next, expo-localization, 4개 언어(ko/en/ja/es) 지원, 전 세계 IANA 타임존 선택, STT 언어 연동, Gemini refine 언어별 프롬프트
 - 004-voice-input-screen: Added TypeScript 5.x (Frontend & Backend) + React Native (Expo ~55), expo-speech-recognition (신규), NestJS v11, @google/generative-ai
-- feature/003-share-button-update: Added TypeScript 5.x + React Native (Expo), expo-clipboard, react-native-safe-area-context
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

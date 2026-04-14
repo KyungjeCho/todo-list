@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ActivityIndicator,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +7,7 @@ import { colors, typography, spacing, radius } from '../../theme';
 import { useAuth } from '../../features/auth/useAuth';
 import { useAuthStore } from '../../store/authStore';
 import type { OAuthProvider } from '../../types/user';
+import { SoundPressable } from '../../components/common/SoundPressable';
 
 interface LoginScreenProps {
   onLogin?: (provider: OAuthProvider) => void;
@@ -109,7 +104,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = (props) => {
       <View style={styles.buttonContainer}>
         {PROVIDERS.map(
           ({ key, label, backgroundColor, textColor, borderColor }) => (
-            <TouchableOpacity
+            <SoundPressable
               key={key}
               testID={`login-button-${key}`}
               accessibilityLabel={t(label)}
@@ -126,7 +121,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = (props) => {
               <Text style={[styles.buttonText, { color: textColor }]}>
                 {t(label)}
               </Text>
-            </TouchableOpacity>
+            </SoundPressable>
           ),
         )}
       </View>

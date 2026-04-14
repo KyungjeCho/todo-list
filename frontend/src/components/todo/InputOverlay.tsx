@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   TouchableWithoutFeedback,
   StyleSheet,
   Platform,
@@ -12,6 +11,7 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { BlurView } from 'expo-blur';
+import { SoundPressable } from '../common/SoundPressable';
 import { colors, typography, spacing, radius } from '../../theme';
 
 interface InputOverlayProps {
@@ -83,7 +83,7 @@ export const InputOverlay: React.FC<InputOverlayProps> = ({
               mode === 'todo' ? t('todo.todoInput') : t('todo.memoInput')
             }
           />
-          <TouchableOpacity
+          <SoundPressable
             testID="input-overlay-submit-button"
             onPress={handleSubmit}
             activeOpacity={0.8}
@@ -94,7 +94,7 @@ export const InputOverlay: React.FC<InputOverlayProps> = ({
             accessibilityRole="button"
           >
             <Text style={styles.submitIcon}>+</Text>
-          </TouchableOpacity>
+          </SoundPressable>
         </View>
       </KeyboardAvoidingView>
     </View>

@@ -1,13 +1,8 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, TextInput, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { TodoMemo } from '../../types/todo';
+import { SoundPressable } from '../common/SoundPressable';
 import { colors, typography, spacing, radius } from '../../theme';
 
 interface MemoSectionProps {
@@ -48,7 +43,7 @@ export const MemoSection: React.FC<MemoSectionProps> = ({
   return (
     <View style={styles.container} testID={`memo-section-${todoId}`}>
       {memos.map((memo) => (
-        <TouchableOpacity
+        <SoundPressable
           key={memo.id}
           testID={`memo-item-${memo.id}`}
           onPress={() => handleStartEdit(memo)}
@@ -65,13 +60,13 @@ export const MemoSection: React.FC<MemoSectionProps> = ({
                 autoFocus
                 style={styles.editInput}
               />
-              <TouchableOpacity
+              <SoundPressable
                 testID={`memo-edit-confirm-${memo.id}`}
                 onPress={() => handleConfirmEdit(memo.id)}
                 style={styles.confirmButton}
               >
                 <Text style={styles.confirmText}>&#10003;</Text>
-              </TouchableOpacity>
+              </SoundPressable>
             </View>
           ) : (
             <>
@@ -79,7 +74,7 @@ export const MemoSection: React.FC<MemoSectionProps> = ({
                 <Text style={styles.noteIcon}>📄</Text>
                 <Text style={styles.memoText}>{memo.content}</Text>
               </View>
-              <TouchableOpacity
+              <SoundPressable
                 testID={`memo-delete-${memo.id}`}
                 onPress={() => onDeleteMemo?.(memo.id)}
                 style={styles.deleteButton}
@@ -87,10 +82,10 @@ export const MemoSection: React.FC<MemoSectionProps> = ({
                 accessibilityRole="button"
               >
                 <Text style={styles.deleteText}>&#10005;</Text>
-              </TouchableOpacity>
+              </SoundPressable>
             </>
           )}
-        </TouchableOpacity>
+        </SoundPressable>
       ))}
     </View>
   );

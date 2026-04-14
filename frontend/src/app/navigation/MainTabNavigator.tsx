@@ -6,6 +6,7 @@ import Svg, { Path, Rect, Circle, Line } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
 import { colors, typography } from '../../theme';
+import { soundService } from '../../features/sound/soundService';
 import type { MainTabParamList } from './types';
 import { CalendarScreen } from '../../screens/calendar/CalendarScreen';
 import { DayDetailView } from '../../screens/calendar/DayDetailView';
@@ -136,6 +137,11 @@ export const MainTabNavigator: React.FC<MainTabNavigatorProps> = ({
         tabBarInactiveTintColor: colors.disabled,
         tabBarStyle: tabStyles.tabBar,
         tabBarLabelStyle: tabStyles.tabBarLabel,
+      }}
+      screenListeners={{
+        tabPress: () => {
+          soundService.play();
+        },
       }}
     >
       <Tab.Screen

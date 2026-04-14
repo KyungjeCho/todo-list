@@ -248,7 +248,7 @@ todolist://auth/callback?error=AUTHENTICATION_FAILED
   "planTime": "08:00",
   "reviewTime": "22:00",
   "timezone": "Asia/Seoul",
-  "language": "ko-KR"
+  "language": "ko"
 }
 ```
 
@@ -274,7 +274,7 @@ todolist://auth/callback?error=AUTHENTICATION_FAILED
   "planTime": "07:30",
   "reviewTime": "21:00",
   "timezone": "Asia/Seoul",
-  "language": "ko-KR"
+  "language": "ko"
 }
 ```
 
@@ -284,7 +284,7 @@ todolist://auth/callback?error=AUTHENTICATION_FAILED
 | planTime | string\|null | N | 계획 알림 시간 (HH:mm). null로 설정 시 알림 해제 |
 | reviewTime | string\|null | N | 회고 알림 시간 (HH:mm). null로 설정 시 알림 해제 |
 | timezone | string | N | IANA timezone |
-| language | string | N | BCP-47 언어 코드 (예: ko-KR, en-US) |
+| language | string | N | 언어 코드 (`ko` / `en` / `ja` / `es`) |
 
 **Response 200:**
 
@@ -295,7 +295,7 @@ todolist://auth/callback?error=AUTHENTICATION_FAILED
   "planTime": "07:30",
   "reviewTime": "21:00",
   "timezone": "Asia/Seoul",
-  "language": "ko-KR"
+  "language": "ko"
 }
 ```
 
@@ -305,6 +305,46 @@ todolist://auth/callback?error=AUTHENTICATION_FAILED
 | --- | --- | --- |
 | 400 | INVALID_TIME_FORMAT | 시간 형식 오류 |
 | 400 | INVALID_TIMEZONE | 유효하지 않은 timezone |
+
+---
+
+### 2.3 디바이스 등록
+
+FCM 토큰을 로그인 이후에도 별도로 등록/갱신할 수 있는 엔드포인트입니다. OAuth 콜백 흐름(1.1~1.2)에서 자동 등록되지만, 토큰 재발급/앱 재설치/권한 재요청 등으로 FCM 토큰이 바뀐 경우 클라이언트가 직접 호출합니다.
+
+**POST** `/users/me/devices`
+
+**Auth:** Bearer Token
+
+**Request Body:**
+
+```json
+{
+  "fcmToken": "dGVzdC1mY20tdG9rZW4...",
+  "deviceType": "IOS",
+  "deviceName": "iPhone 16 Pro"
+}
+```
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| fcmToken | string | Y | FCM 디바이스 토큰 |
+| deviceType | string | Y | `IOS` / `ANDROID` |
+| deviceName | string | N | 디바이스 이름 |
+
+**Response 201:**
+
+```json
+{
+  "message": "Device registered"
+}
+```
+
+**Errors:**
+
+| Status | Code | 상황 |
+| --- | --- | --- |
+| 400 | USER_NOT_FOUND | 인증 토큰의 사용자를 찾을 수 없음 |
 
 ---
 
@@ -419,45 +459,23 @@ todolist://auth/callback?error=AUTHENTICATION_FAILED
 
 ---
 
-### 3.3 음성으로 할 일 생성
+### 3.3 음성으로 할 일 생성 (Deprecated)
 
-음성 데이터를 Gemini Flash 멀티모달 API로 처리하여 할 일을 생성합니다. (FR-03)
+> **Deprecated (004-voice-input-screen):** 서버 측 Gemini 멀티모달 음성 처리는 제거되었습니다. 클라이언트 내장 STT(expo-speech-recognition)로 음성을 텍스트화하고, 필요 시 `POST /todos/refine`으로 문장을 정제한 뒤, `POST /todos` 또는 `POST /todos/batch`로 저장하는 흐름을 사용합니다.
 
 **POST** `/todos/voice`
 
 **Auth:** Bearer Token
 
-**Content-Type:** `multipart/form-data`
-
-**Request Body:**
-
-| Field | Type | Required | Description |
-| --- | --- | --- | --- |
-| audio | file | Y | 음성 파일 (wav, m4a, mp3) |
-| todoDate | string | N | 날짜 (YYYY-MM-DD), 기본 오늘 |
-
-**Response 201:**
+**Response 410:** `ENDPOINT_DEPRECATED`
 
 ```json
 {
-  "id": "550e8400-e29b-41d4-a716-446655440004",
-  "content": "오후 3시 팀 미팅 참석",
-  "rawText": "오후 3시에 팀 미팅 가야 되는데",
-  "status": "ACTIVE",
-  "isCarriedOver": false,
-  "todoDate": "2026-03-25",
-  "memos": [],
-  "createdAt": "2026-03-25T09:00:00.000Z",
-  "updatedAt": "2026-03-25T09:00:00.000Z"
+  "statusCode": 410,
+  "code": "ENDPOINT_DEPRECATED",
+  "message": "이 엔드포인트는 더 이상 사용되지 않습니다. 디바이스 내장 STT + POST /todos/refine 조합으로 대체되었습니다."
 }
 ```
-
-**Errors:**
-
-| Status | Code | 상황 |
-| --- | --- | --- |
-| 400 | INVALID_AUDIO_FORMAT | 지원하지 않는 오디오 형식 |
-| 500 | VOICE_AI_API_ERROR | Gemini 음성 AI API 호출 실패 |
 
 ---
 
@@ -571,6 +589,106 @@ todolist://auth/callback?error=AUTHENTICATION_FAILED
 | --- | --- | --- |
 | 404 | TODO_NOT_FOUND | 존재하지 않는 할 일 |
 | 403 | FORBIDDEN | 타인의 할 일 삭제 시도 |
+
+---
+
+### 3.7 할 일 일괄 생성
+
+여러 개의 할 일을 한 번에 생성합니다. 음성 입력 화면에서 다중 항목을 한꺼번에 저장하거나, 클라이언트에서 임시 보관 중이던 할 일을 모아 전송할 때 사용합니다. 트랜잭션 단위로 처리되어 하나라도 실패하면 전체 롤백됩니다.
+
+**POST** `/todos/batch`
+
+**Auth:** Bearer Token
+
+**Request Body:**
+
+```json
+{
+  "todos": [
+    { "content": "ERD 설계", "todoDate": "2026-03-25" },
+    { "content": "PRD 리뷰", "todoDate": "2026-03-25" }
+  ]
+}
+```
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| todos | array | Y | 생성할 할 일 목록 (min 1, max 20) |
+| todos[].content | string | Y | 할 일 내용 (max 255자) |
+| todos[].todoDate | string | Y | 날짜 (YYYY-MM-DD) |
+
+**Response 201:**
+
+```json
+{
+  "created": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440010",
+      "content": "ERD 설계",
+      "status": "ACTIVE",
+      "isCarriedOver": false,
+      "todoDate": "2026-03-25",
+      "memos": [],
+      "createdAt": "2026-03-25T09:00:00.000Z",
+      "updatedAt": "2026-03-25T09:00:00.000Z"
+    }
+  ]
+}
+```
+
+**Errors:**
+
+| Status | Code | 상황 |
+| --- | --- | --- |
+| 400 | BAD_REQUEST | todos 누락 / 배열 길이 범위 외 (0 또는 21+) |
+| 400 | CONTENT_REQUIRED | content 누락 또는 빈 문자열 |
+| 400 | CONTENT_TOO_LONG | content 255자 초과 |
+
+---
+
+### 3.8 AI 텍스트 정제
+
+STT로 받은 원문을 Gemini API로 정제하여 자연스러운 할 일 문장으로 변환합니다. 사용자의 `language` 설정에 따라 프롬프트 언어가 결정됩니다. (FR-03, 004-voice-input-screen)
+
+**POST** `/todos/refine`
+
+**Auth:** Bearer Token
+
+**Rate Limit:**
+
+| Scope | Limit |
+| --- | --- |
+| short | 1회 / 1초 |
+| medium | 30회 / 60초 |
+
+**Request Body:**
+
+```json
+{
+  "text": "오후 3시에 팀 미팅 가야 되는데"
+}
+```
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| text | string | Y | 정제할 원문 (max 500자) |
+
+**Response 200:**
+
+```json
+{
+  "refinedText": "오후 3시 팀 미팅 참석"
+}
+```
+
+**Errors:**
+
+| Status | Code | 상황 |
+| --- | --- | --- |
+| 400 | BAD_REQUEST | text 누락 / 500자 초과 |
+| 404 | USER_NOT_FOUND | 인증 토큰의 사용자를 찾을 수 없음 |
+| 429 | THROTTLER_EXCEPTION | 호출 빈도 제한 초과 |
+| 500 | AI_API_ERROR | Gemini API 호출 실패 |
 
 ---
 
@@ -784,9 +902,12 @@ todolist://auth/callback?error=AUTHENTICATION_FAILED
 | Auth | POST | /auth/logout | 로그아웃 | - | P0 |
 | User | GET | /users/me | 프로필 조회 | - | P0 |
 | User | PATCH | /users/me/settings | 프로필 설정 변경 (온보딩 포함) | FR-16, FR-17 | P0 |
+| User | POST | /users/me/devices | FCM 디바이스 등록/갱신 | - | P1 |
 | Todo | GET | /todos?date= | 할 일 목록 조회 | FR-01 | P0 |
 | Todo | POST | /todos | 할 일 생성 | FR-02 | P0 |
-| Todo | POST | /todos/voice | 음성 할 일 생성 | FR-03 | P1 |
+| Todo | POST | /todos/batch | 할 일 일괄 생성 | FR-02, FR-03 | P1 |
+| Todo | POST | /todos/refine | AI 텍스트 정제 | FR-03 | P1 |
+| Todo | ~~POST~~ | ~~/todos/voice~~ | ~~음성 할 일 생성~~ (Deprecated) | ~~FR-03~~ | - |
 | Todo | PATCH | /todos/:id | 할 일 수정 | FR-04 | P0 |
 | Todo | PATCH | /todos/:id/status | 상태 변경 | FR-05, FR-08 | P0 |
 | Todo | DELETE | /todos/:id | 할 일 삭제 | FR-06 | P0 |

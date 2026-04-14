@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  TouchableOpacity,
   Modal,
   View,
   Text,
@@ -14,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import type { Todo } from '../../types/todo';
 import { useShareTodo } from '../../features/share/useShareTodo';
+import { SoundPressable } from '../common/SoundPressable';
 import { colors, typography, spacing, radius } from '../../theme';
 
 const TOAST_VERTICAL_RATIO = 0.65;
@@ -67,7 +67,7 @@ export function ShareButton({
 
   return (
     <View>
-      <TouchableOpacity
+      <SoundPressable
         testID="share-button"
         style={[styles.button, disabled && styles.buttonDisabled]}
         onPress={handlePress}
@@ -78,7 +78,7 @@ export function ShareButton({
         >
           {t('common.share')}
         </Text>
-      </TouchableOpacity>
+      </SoundPressable>
 
       <Modal
         visible={copied}
@@ -132,20 +132,20 @@ export function ShareButton({
           onPress={handleDismiss}
         >
           <View testID="share-menu" style={styles.menu}>
-            <TouchableOpacity
+            <SoundPressable
               testID="share-to-others"
               style={styles.menuItem}
               onPress={handleShareToOthers}
             >
               <Text style={styles.menuText}>{t('share.shareAction')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
+            </SoundPressable>
+            <SoundPressable
               testID="copy-to-clipboard"
               style={styles.menuItem}
               onPress={handleCopyToClipboard}
             >
               <Text style={styles.menuText}>{t('share.copyClipboard')}</Text>
-            </TouchableOpacity>
+            </SoundPressable>
           </View>
         </Pressable>
       </Modal>
