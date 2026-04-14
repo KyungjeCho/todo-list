@@ -1,5 +1,6 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { SoundPressable } from '../common/SoundPressable';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
@@ -68,7 +69,7 @@ export const VoiceTodoButton: React.FC<VoiceTodoButtonProps> = ({
   };
 
   return (
-    <TouchableOpacity
+    <SoundPressable
       testID="voice-todo-button"
       accessibilityLabel={t('voice.addByVoice')}
       accessibilityState={{ disabled }}
@@ -77,7 +78,7 @@ export const VoiceTodoButton: React.FC<VoiceTodoButtonProps> = ({
       style={[styles.button, disabled && styles.disabledButton]}
     >
       <MicIcon />
-    </TouchableOpacity>
+    </SoundPressable>
   );
 };
 

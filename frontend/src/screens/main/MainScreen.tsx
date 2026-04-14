@@ -5,9 +5,9 @@ import {
   Text,
   FlatList,
   ActivityIndicator,
-  TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+import { SoundPressable } from '../../components/common/SoundPressable';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { Todo } from '../../types/todo';
 import type { CompleteDayResponse } from '../../services/api/todoApi';
@@ -148,13 +148,13 @@ export const MainScreen: React.FC<MainScreenProps> = ({
           <View testID="main-error-message" style={styles.errorContainer}>
             <Text style={styles.errorText}>{error}</Text>
             {onRetry && (
-              <TouchableOpacity
+              <SoundPressable
                 testID="retry-button"
                 onPress={onRetry}
                 style={styles.retryButton}
               >
                 <Text style={styles.retryText}>{t('common.retry')}</Text>
-              </TouchableOpacity>
+              </SoundPressable>
             )}
           </View>
         )}
@@ -213,7 +213,7 @@ export const MainScreen: React.FC<MainScreenProps> = ({
             {!isInputOverlayVisible && (
               <View style={styles.fabContainer}>
                 {onAddTodo && (
-                  <TouchableOpacity
+                  <SoundPressable
                     testID="fab-add-button"
                     onPress={handleFabAdd}
                     activeOpacity={0.8}
@@ -222,7 +222,7 @@ export const MainScreen: React.FC<MainScreenProps> = ({
                     accessibilityRole="button"
                   >
                     <Text style={styles.fabIcon}>+</Text>
-                  </TouchableOpacity>
+                  </SoundPressable>
                 )}
                 <VoiceTodoButton todoDate={date} />
               </View>

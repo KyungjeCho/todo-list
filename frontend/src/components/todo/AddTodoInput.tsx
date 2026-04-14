@@ -1,12 +1,7 @@
 import React, { useState } from 'react';
-import {
-  View,
-  TextInput,
-  TouchableOpacity,
-  Text,
-  StyleSheet,
-} from 'react-native';
+import { View, TextInput, Text, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { SoundPressable } from '../common/SoundPressable';
 import { colors, typography, spacing } from '../../theme';
 
 interface AddTodoInputProps {
@@ -42,7 +37,7 @@ export const AddTodoInput: React.FC<AddTodoInputProps> = ({
         accessibilityLabel={t('todo.todoInput')}
         style={styles.input}
       />
-      <TouchableOpacity
+      <SoundPressable
         testID="add-todo-button"
         onPress={handleSubmit}
         disabled={isLoading}
@@ -52,7 +47,7 @@ export const AddTodoInput: React.FC<AddTodoInputProps> = ({
         style={[styles.button, isLoading && styles.buttonDisabled]}
       >
         <Text style={styles.buttonText}>+</Text>
-      </TouchableOpacity>
+      </SoundPressable>
     </View>
   );
 };

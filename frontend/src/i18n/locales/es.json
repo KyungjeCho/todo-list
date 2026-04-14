@@ -77,7 +77,9 @@
     "settingsSaveFailed": "Error al guardar la configuración",
     "logout": "Cerrar sesión",
     "logoutConfirmTitle": "Cerrar sesión",
-    "logoutConfirmMessage": "¿Seguro que quieres cerrar sesión?"
+    "logoutConfirmMessage": "¿Seguro que quieres cerrar sesión?",
+    "soundFeedback": "Sonido / Retroalimentación",
+    "buttonClickSound": "Sonido de clic del botón"
   },
   "onboarding": {
     "routineSetup": "Configurar rutina",

@@ -33,6 +33,7 @@ const config: Config = {
     '^@react-native-community/datetimepicker$': '<rootDir>/__mocks__/@react-native-community/datetimepicker.tsx',
     '^react-native-svg$': '<rootDir>/__mocks__/react-native-svg.tsx',
     '^expo-linear-gradient$': '<rootDir>/__mocks__/expo-linear-gradient.tsx',
+    '\\.(mp3|wav|m4a|ogg)$': '<rootDir>/__mocks__/audio-asset.ts',
   },
 };
 

@@ -4,10 +4,10 @@ import {
   Text,
   TextInput,
   FlatList,
-  TouchableOpacity,
   StyleSheet,
   Alert,
 } from 'react-native';
+import { SoundPressable } from '../../components/common/SoundPressable';
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -97,13 +97,13 @@ export const TimezoneSelectScreen: React.FC<TimezoneSelectScreenProps> = ({
       edges={['top']}
     >
       <View style={styles.header}>
-        <TouchableOpacity
+        <SoundPressable
           testID="timezone-select-close"
           onPress={onClose}
           style={styles.closeButton}
         >
           <CloseIcon />
-        </TouchableOpacity>
+        </SoundPressable>
         <Text style={styles.title}>{t('settings.timezone')}</Text>
         <View style={styles.closeButton} />
       </View>
@@ -120,13 +120,13 @@ export const TimezoneSelectScreen: React.FC<TimezoneSelectScreenProps> = ({
           autoCorrect={false}
         />
         {query !== '' && (
-          <TouchableOpacity
+          <SoundPressable
             testID="timezone-search-clear"
             onPress={() => setQuery('')}
             style={styles.clearButton}
           >
             <Text style={styles.clearText}>✕</Text>
-          </TouchableOpacity>
+          </SoundPressable>
         )}
       </View>
 
@@ -161,7 +161,7 @@ export const TimezoneSelectScreen: React.FC<TimezoneSelectScreenProps> = ({
           renderItem={({ item, index }) => {
             const selected = item.tz === current;
             return (
-              <TouchableOpacity
+              <SoundPressable
                 testID={`timezone-item-${index}`}
                 style={styles.item}
                 onPress={() => handleSelect(item.tz)}
@@ -186,7 +186,7 @@ export const TimezoneSelectScreen: React.FC<TimezoneSelectScreenProps> = ({
                     ✓
                   </Text>
                 )}
-              </TouchableOpacity>
+              </SoundPressable>
             );
           }}
         />

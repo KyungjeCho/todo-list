@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
   ScrollView,
@@ -23,6 +22,9 @@ import { colors, typography, spacing, radius } from '../../theme';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import type { UserProfile, UpdateSettingsRequest } from '../../types/user';
 import type { RootStackParamList } from '../../app/navigation/types';
+import { SoundPressable } from '../../components/common/SoundPressable';
+import { useSoundStore } from '../../store/soundStore';
+import { soundService } from '../../features/sound/soundService';
 
 const DEFAULT_PLAN_TIME = '08:00';
 const DEFAULT_REVIEW_TIME = '22:00';
@@ -189,6 +191,51 @@ function MailIcon() {
   );
 }
 
+function SpeakerIcon({ muted }: { muted?: boolean }) {
+  const stroke = muted ? colors.disabled : colors.onSurface;
+  return (
+    <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M11 5L6 9H2v6h4l5 4V5z"
+        stroke={stroke}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {muted ? (
+        <>
+          <Line
+            x1={23}
+            y1={9}
+            x2={17}
+            y2={15}
+            stroke={stroke}
+            strokeWidth={1.5}
+            strokeLinecap="round"
+          />
+          <Line
+            x1={17}
+            y1={9}
+            x2={23}
+            y2={15}
+            stroke={stroke}
+            strokeWidth={1.5}
+            strokeLinecap="round"
+          />
+        </>
+      ) : (
+        <Path
+          d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14"
+          stroke={stroke}
+          strokeWidth={1.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      )}
+    </Svg>
+  );
+}
+
 function LanguageIcon() {
   return (
     <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
@@ -265,6 +312,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
   const [optimisticLanguage, setOptimisticLanguage] =
     useState<SupportedLanguage | null>(null);
+  const buttonSoundEnabled = useSoundStore((s) => s.enabled);
 
   // WHY: profile.language가 외부에서 갱신되면 낙관적 오버라이드를 해제하여 props와 동기화
   useEffect(() => {
@@ -385,7 +433,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             <Text style={styles.settingLabel}>
               {t('settings.planNotification')}
             </Text>
-            <TouchableOpacity
+            <SoundPressable
               testID="plan-time-button"
               onPress={() => setTimePickerTarget('plan')}
               disabled={profile.planTime === null}
@@ -399,12 +447,15 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               >
                 {profile.planTime ?? t('common.disabled')}
               </Text>
-            </TouchableOpacity>
+            </SoundPressable>
           </View>
           <Switch
             testID="plan-notification-toggle"
             value={profile.planTime !== null}
-            onValueChange={handleTogglePlanNotification}
+            onValueChange={() => {
+              soundService.play();
+              void handleTogglePlanNotification();
+            }}
             trackColor={{ false: colors.border, true: colors.primary }}
             thumbColor={colors.surface}
           />
@@ -418,7 +469,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             <Text style={styles.settingLabel}>
               {t('settings.reviewNotification')}
             </Text>
-            <TouchableOpacity
+            <SoundPressable
               testID="review-time-button"
               onPress={() => setTimePickerTarget('review')}
               disabled={profile.reviewTime === null}
@@ -432,12 +483,40 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
               >
                 {profile.reviewTime ?? t('common.disabled')}
               </Text>
-            </TouchableOpacity>
+            </SoundPressable>
           </View>
           <Switch
             testID="review-notification-toggle"
             value={profile.reviewTime !== null}
-            onValueChange={handleToggleReviewNotification}
+            onValueChange={() => {
+              soundService.play();
+              void handleToggleReviewNotification();
+            }}
+            trackColor={{ false: colors.border, true: colors.primary }}
+            thumbColor={colors.surface}
+          />
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('settings.soundFeedback')}</Text>
+
+        <View style={styles.settingRow}>
+          <View style={styles.iconContainer}>
+            <SpeakerIcon muted={!buttonSoundEnabled} />
+          </View>
+          <Text style={[styles.settingLabel, styles.settingLabelFlex]}>
+            {t('settings.buttonClickSound')}
+          </Text>
+          <Switch
+            testID="button-sound-toggle"
+            value={buttonSoundEnabled}
+            onValueChange={(next) => {
+              // WHY: 상태를 먼저 반영해야 OFF→ON 전환에서도 play()가 새 enabled 값을
+              //      읽어 사용자가 기대하는 즉각적인 클릭음 피드백을 들을 수 있다.
+              void useSoundStore.getState().setEnabled(next);
+              soundService.play();
+            }}
             trackColor={{ false: colors.border, true: colors.primary }}
             thumbColor={colors.surface}
           />
@@ -459,7 +538,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t('settings.regionSettings')}</Text>
 
-        <TouchableOpacity
+        <SoundPressable
           testID="timezone-button"
           style={styles.settingRow}
           onPress={handleTimezonePress}
@@ -474,9 +553,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             {(profile.timezone ?? '').split('/').pop() ?? profile.timezone}
           </Text>
           <ChevronRightIcon />
-        </TouchableOpacity>
+        </SoundPressable>
 
-        <TouchableOpacity
+        <SoundPressable
           testID="language-button"
           style={styles.settingRow}
           onPress={() => setShowLanguagePicker(!showLanguagePicker)}
@@ -491,12 +570,12 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             {LANGUAGE_LABELS[displayLanguage]}
           </Text>
           <ChevronRightIcon />
-        </TouchableOpacity>
+        </SoundPressable>
 
         {showLanguagePicker && (
           <View testID="language-picker">
             {SUPPORTED_LANGUAGES.map((lang) => (
-              <TouchableOpacity
+              <SoundPressable
                 key={lang}
                 style={styles.timezoneOption}
                 onPress={() => handleLanguageSelect(lang)}
@@ -509,7 +588,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 >
                   {LANGUAGE_LABELS[lang]}
                 </Text>
-              </TouchableOpacity>
+              </SoundPressable>
             ))}
           </View>
         )}
@@ -518,7 +597,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t('settings.info')}</Text>
 
-        <TouchableOpacity style={styles.settingRow}>
+        <SoundPressable style={styles.settingRow}>
           <View style={styles.iconContainer}>
             <DocumentIcon />
           </View>
@@ -526,9 +605,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             {t('settings.openSourceLicense')}
           </Text>
           <ChevronRightIcon />
-        </TouchableOpacity>
+        </SoundPressable>
 
-        <TouchableOpacity style={styles.settingRow}>
+        <SoundPressable style={styles.settingRow}>
           <View style={styles.iconContainer}>
             <ShieldIcon />
           </View>
@@ -536,10 +615,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             {t('settings.privacyPolicy')}
           </Text>
           <ChevronRightIcon />
-        </TouchableOpacity>
+        </SoundPressable>
       </View>
 
-      <TouchableOpacity style={styles.settingRow} onPress={onNavigateContact}>
+      <SoundPressable style={styles.settingRow} onPress={onNavigateContact}>
         <View style={styles.iconContainer}>
           <MailIcon />
         </View>
@@ -547,16 +626,16 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
           {t('settings.contact')}
         </Text>
         <ChevronRightIcon />
-      </TouchableOpacity>
+      </SoundPressable>
 
       {onLogout && (
-        <TouchableOpacity
+        <SoundPressable
           testID="logout-button"
           style={styles.logoutButton}
           onPress={handleLogoutPress}
         >
           <Text style={styles.logoutText}>{t('settings.logout')}</Text>
-        </TouchableOpacity>
+        </SoundPressable>
       )}
 
       <Text style={styles.versionText}>TodoList v1.0.0</Text>

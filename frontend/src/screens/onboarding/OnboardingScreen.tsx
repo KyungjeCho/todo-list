@@ -3,11 +3,11 @@ import { useTranslation } from 'react-i18next';
 import {
   View,
   Text,
-  TouchableOpacity,
   ActivityIndicator,
   Platform,
   StyleSheet,
 } from 'react-native';
+import { SoundPressable } from '../../components/common/SoundPressable';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path, Circle, Polyline } from 'react-native-svg';
 import DateTimePicker, {
@@ -189,13 +189,13 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
             <SunIcon />
             <Text style={styles.label}>{t('onboarding.planTime')}</Text>
           </View>
-          <TouchableOpacity
+          <SoundPressable
             testID="plan-time-picker"
             style={styles.timeButton}
             onPress={() => setShowPicker('plan')}
           >
             <Text style={styles.timeText}>{planTime}</Text>
-          </TouchableOpacity>
+          </SoundPressable>
           {showPicker === 'plan' && (
             <DateTimePicker
               testID="plan-time-native-picker"
@@ -213,13 +213,13 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
             <MoonIcon />
             <Text style={styles.label}>{t('onboarding.reviewTime')}</Text>
           </View>
-          <TouchableOpacity
+          <SoundPressable
             testID="review-time-picker"
             style={styles.timeButton}
             onPress={() => setShowPicker('review')}
           >
             <Text style={styles.timeText}>{reviewTime}</Text>
-          </TouchableOpacity>
+          </SoundPressable>
           {showPicker === 'review' && (
             <DateTimePicker
               testID="review-time-native-picker"
@@ -233,7 +233,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
         </View>
       </View>
 
-      <TouchableOpacity
+      <SoundPressable
         testID="onboarding-complete-button"
         accessibilityRole="button"
         accessibilityState={{ disabled: isLoading }}
@@ -242,7 +242,7 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
         onPress={handleComplete}
       >
         <Text style={styles.completeButtonText}>{t('common.complete')}</Text>
-      </TouchableOpacity>
+      </SoundPressable>
     </LinearGradient>
   );
 };

@@ -1,13 +1,8 @@
 import React, { useMemo } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { Todo } from '../../types/todo';
+import { SoundPressable } from '../../components/common/SoundPressable';
 import { colors, typography, spacing, radius } from '../../theme';
 
 interface Stats {
@@ -74,7 +69,7 @@ export const ReviewModeView: React.FC<ReviewModeViewProps> = ({
           scrollEnabled={false}
           renderItem={({ item }) => (
             <View style={styles.todoRow}>
-              <TouchableOpacity
+              <SoundPressable
                 testID={`review-checkbox-${item.id}`}
                 onPress={() => onToggleComplete?.(item.id)}
                 accessibilityRole="checkbox"
@@ -82,7 +77,7 @@ export const ReviewModeView: React.FC<ReviewModeViewProps> = ({
                 style={[styles.checkbox, styles.checkboxChecked]}
               >
                 <Text style={styles.checkmark}>&#10003;</Text>
-              </TouchableOpacity>
+              </SoundPressable>
               <Text style={styles.completedText}>{item.content}</Text>
             </View>
           )}
@@ -100,7 +95,7 @@ export const ReviewModeView: React.FC<ReviewModeViewProps> = ({
           renderItem={({ item }) => (
             <View style={styles.todoRow}>
               {item.status !== 'CARRIED_OVER' && (
-                <TouchableOpacity
+                <SoundPressable
                   testID={`review-checkbox-${item.id}`}
                   onPress={() => onToggleComplete?.(item.id)}
                   accessibilityRole="checkbox"

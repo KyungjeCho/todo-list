@@ -1,0 +1,22 @@
+# Feature 006 / US1 Maestro E2E — 주요 버튼 탭 시 클릭음 재생 후 크래시 없음 확인
+# WHY: Maestro는 오디오 출력을 직접 검증할 수 없으므로, SoundPressable 래핑 후에도
+#      onPress 핸들러가 정상 동작함을 확인한다. 사운드 자체는 quickstart §3A–C 수동 검증.
+
+appId: com.todolist.app
+
+tags:
+  - settings
+  - sound
+  - regression
+
+---
+- assertVisible:
+    id: "mode-toggle-button"
+
+# 메인 화면의 주요 버튼 탭 — 탭 후 크래시 없음 확인
+- tapOn:
+    id: "voice-todo-button"
+
+# VoiceInput 화면 또는 권한 다이얼로그까지 이동하면 핸들러 동작 OK
+- assertVisible:
+    id: "voice-input-screen"

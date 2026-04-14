@@ -1,15 +1,10 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ActivityIndicator,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { DraftTodoStatus } from '../../features/voice/types';
 import type { DraftTodo } from '../../features/voice/types';
 import { colors, typography, spacing, radius } from '../../theme';
+import { SoundPressable } from '../common/SoundPressable';
 
 interface DraftTodoItemProps {
   draft: DraftTodo;
@@ -53,14 +48,14 @@ export const DraftTodoItem: React.FC<DraftTodoItemProps> = ({
           {displayText}
         </Text>
       </View>
-      <TouchableOpacity
+      <SoundPressable
         testID={`draft-remove-${draft.id}`}
         onPress={() => onRemove(draft.id)}
         accessibilityLabel={t('common.delete')}
         style={styles.removeButton}
       >
         <Text style={styles.removeIcon}>✕</Text>
-      </TouchableOpacity>
+      </SoundPressable>
     </View>
   );
 };

@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { SoundPressable } from '../common/SoundPressable';
 import { colors, radius, spacing } from '../../theme';
 
 interface TodoActionButtonsProps {
@@ -17,7 +18,7 @@ export const TodoActionButtons: React.FC<TodoActionButtonsProps> = ({
   const { t } = useTranslation();
   return (
     <View testID="action-buttons-container" style={styles.container}>
-      <TouchableOpacity
+      <SoundPressable
         testID="action-delete-button"
         onPress={onDelete}
         style={styles.button}
@@ -25,9 +26,9 @@ export const TodoActionButtons: React.FC<TodoActionButtonsProps> = ({
         accessibilityRole="button"
       >
         <Text style={styles.deleteText}>{t('common.delete')}</Text>
-      </TouchableOpacity>
+      </SoundPressable>
 
-      <TouchableOpacity
+      <SoundPressable
         testID="action-deactivate-button"
         onPress={onDeactivate}
         style={styles.button}
@@ -35,9 +36,9 @@ export const TodoActionButtons: React.FC<TodoActionButtonsProps> = ({
         accessibilityRole="button"
       >
         <Text style={styles.deactivateText}>{t('common.deactivate')}</Text>
-      </TouchableOpacity>
+      </SoundPressable>
 
-      <TouchableOpacity
+      <SoundPressable
         testID="action-add-memo-button"
         onPress={onAddMemo}
         style={styles.button}
@@ -45,7 +46,7 @@ export const TodoActionButtons: React.FC<TodoActionButtonsProps> = ({
         accessibilityRole="button"
       >
         <Text style={styles.memoText}>{t('todo.addMemoButton')}</Text>
-      </TouchableOpacity>
+      </SoundPressable>
     </View>
   );
 };

@@ -12,6 +12,8 @@ import {
 } from '@expo-google-fonts/noto-sans';
 import { AuthNavigator } from './src/app/navigation/AuthNavigator';
 import { useAuthStore } from './src/store/authStore';
+import { useSoundStore } from './src/store/soundStore';
+import { soundService } from './src/features/sound/soundService';
 
 export default function App() {
   const [isReady, setIsReady] = useState(false);
@@ -25,7 +27,11 @@ export default function App() {
   });
 
   useEffect(() => {
-    restoreTokens().finally(() => setIsReady(true));
+    Promise.allSettled([
+      restoreTokens(),
+      useSoundStore.getState().hydrate(),
+      soundService.preload(),
+    ]).finally(() => setIsReady(true));
   }, [restoreTokens]);
 
   if (!isReady || !fontsLoaded) {
