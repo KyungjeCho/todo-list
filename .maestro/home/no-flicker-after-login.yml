@@ -1,0 +1,30 @@
+# T014 [US1] Maestro E2E: 로그인 직후 Main 1회 렌더 — 중간 Onboarding 프레임 없음
+# WHY: FR-003 — 프로필 로딩 중 Onboarding 으로 찰나 전환 후 Main 으로 재전환하는
+#       플리커가 Issue 1 의 근본 증상. LoadingSplash 로 단락하여 Main 으로 직접 전환됨을 검증.
+
+appId: com.todolist.app
+
+tags:
+  - home
+  - onboarding
+  - regression
+
+---
+
+- runFlow: ../auth/login.yml
+
+# 로딩 스플래시는 허용되지만 Onboarding 은 중간 프레임으로라도 노출되지 않아야 한다
+- assertNotVisible:
+    text: "루틴 설정"
+- assertNotVisible:
+    id: "onboarding-complete-button"
+
+# Main 최종 진입 확인
+- extendedWaitUntil:
+    visible:
+      id: "main-screen"
+    timeout: 8000
+
+# 진입 후에도 Onboarding 플래시는 없음
+- assertNotVisible:
+    text: "루틴 설정"

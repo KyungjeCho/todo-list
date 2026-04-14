@@ -19,6 +19,7 @@ describe('AuthStore', () => {
     reviewTime: '22:00',
     timezone: 'Asia/Seoul',
     language: 'ko',
+    hasCompletedOnboarding: true,
   };
 
   beforeEach(() => {

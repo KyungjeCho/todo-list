@@ -263,6 +263,52 @@ describe('NotificationSchedulerUsecase', () => {
       });
     });
 
+    describe('DB time 포맷 정규화', () => {
+      it("PostgreSQL time 컬럼이 'HH:mm:ss' 로 돌려줘도 PLAN 알림이 발송된다", async () => {
+        // WHY: PG time 타입은 ':ss' 를 붙여 반환한다. 스케줄러가 HH:mm 만 비교하면
+        // 실환경에서 영영 일치하지 않아 알림이 전혀 발사되지 않는다(회귀 재발 방지).
+        const now = new Date('2026-03-28T23:00:00Z'); // Seoul 08:00
+
+        const user = {
+          id: 'user-1',
+          planTime: '08:00:00',
+          reviewTime: '22:00:00',
+          timezone: 'Asia/Seoul',
+        };
+
+        mockUserRepository.findAllWithTimezone.mockResolvedValue([user]);
+        mockSendNotificationUsecase.execute.mockResolvedValue(undefined);
+
+        await usecase.execute(now);
+
+        expect(mockSendNotificationUsecase.execute).toHaveBeenCalledWith(
+          'user-1',
+          'PLAN',
+        );
+      });
+
+      it("PostgreSQL time 컬럼이 'HH:mm:ss' 로 돌려줘도 REVIEW 알림이 발송된다", async () => {
+        const now = new Date('2026-03-28T13:15:00Z'); // Seoul 22:15
+
+        const user = {
+          id: 'user-1',
+          planTime: '08:00:00',
+          reviewTime: '22:15:00',
+          timezone: 'Asia/Seoul',
+        };
+
+        mockUserRepository.findAllWithTimezone.mockResolvedValue([user]);
+        mockSendNotificationUsecase.execute.mockResolvedValue(undefined);
+
+        await usecase.execute(now);
+
+        expect(mockSendNotificationUsecase.execute).toHaveBeenCalledWith(
+          'user-1',
+          'REVIEW',
+        );
+      });
+    });
+
     describe('edge cases', () => {
       it('사용자가 없으면 아무 알림도 발송하지 않는다', async () => {
         const now = new Date('2026-03-28T23:00:00Z');

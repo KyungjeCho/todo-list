@@ -24,6 +24,7 @@ export class GetProfileUsecase {
       reviewTime: user.reviewTime,
       timezone: user.timezone,
       language: user.language,
+      hasCompletedOnboarding: user.hasCompletedOnboarding,
     };
   }
 }

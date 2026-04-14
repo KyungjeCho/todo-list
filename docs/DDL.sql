@@ -1,3 +1,7 @@
+-- NOTE: 이 파일은 소스 오브 트루스(source of truth)이다. 실제 DB 반영은
+-- `backend/src/common/migrations/` 아래 TypeORM 마이그레이션을 통해 이루어진다(`npm run migration:run`).
+-- 스키마 변경 시 반드시 DDL.sql 업데이트 + 마이그레이션 파일 추가 쌍을 유지한다.
+
 -- Table: TODOLIST_TODO, Column: status
 CREATE TYPE TODOLIST_TODO_STATUS AS ENUM ('ACTIVE', 'INACTIVE', 'COMPLETED', 'CARRIED_OVER');
 
@@ -30,8 +34,12 @@ CREATE TABLE TODOLIST_USER (
 	plan_time TIME NULL,
 	review_time TIME NULL,
 	timezone VARCHAR(64) NOT NULL DEFAULT 'UTC',
-	language VARCHAR(10) NOT NULL
+	language VARCHAR(10) NOT NULL,
+	has_completed_onboarding BOOLEAN NOT NULL DEFAULT FALSE
 );
+
+-- 기존 사용자 전원 완료 처리 (feature 007 마이그레이션 시점에 실행됨)
+UPDATE TODOLIST_USER SET has_completed_onboarding = TRUE;
 
 -- Indexes for FK role columns
 CREATE UNIQUE INDEX ux_user_userAuthId ON TODOLIST_USER (user_auth_id);

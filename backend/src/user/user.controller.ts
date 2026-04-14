@@ -4,6 +4,7 @@ import {
   Post,
   Patch,
   Body,
+  HttpCode,
   UseGuards,
   UseFilters,
   Req,
@@ -11,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { GetProfileUsecase } from './application/get-profile.usecase';
 import { UpdateSettingsUsecase } from './application/update-settings.usecase';
+import { CompleteOnboardingUsecase } from './application/complete-onboarding.usecase';
 import { RegisterDeviceUsecase } from '../notification/application/register-device.usecase';
 import { UserRepository } from './infrastructure/user.repository';
 import { JwtAuthGuard } from '../auth/infrastructure/jwt-auth.guard';
@@ -25,6 +27,7 @@ export class UserController {
   constructor(
     private readonly getProfileUsecase: GetProfileUsecase,
     private readonly updateSettingsUsecase: UpdateSettingsUsecase,
+    private readonly completeOnboardingUsecase: CompleteOnboardingUsecase,
     private readonly registerDeviceUsecase: RegisterDeviceUsecase,
     private readonly userRepository: UserRepository,
   ) {}
@@ -32,6 +35,14 @@ export class UserController {
   @Get('me')
   async getProfile(@Req() req: AuthenticatedRequest) {
     return this.getProfileUsecase.execute({
+      userAuthId: req.user.userAuthId,
+    });
+  }
+
+  @Post('me/onboarding/complete')
+  @HttpCode(200)
+  async completeOnboarding(@Req() req: AuthenticatedRequest) {
+    return this.completeOnboardingUsecase.execute({
       userAuthId: req.user.userAuthId,
     });
   }

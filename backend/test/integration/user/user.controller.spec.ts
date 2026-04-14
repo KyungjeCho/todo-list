@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { UserController } from 'src/user/user.controller';
 import { GetProfileUsecase } from 'src/user/application/get-profile.usecase';
 import { UpdateSettingsUsecase } from 'src/user/application/update-settings.usecase';
+import { CompleteOnboardingUsecase } from 'src/user/application/complete-onboarding.usecase';
 import { RegisterDeviceUsecase } from 'src/notification/application/register-device.usecase';
 import { UserRepository } from 'src/user/infrastructure/user.repository';
 import { JwtStrategy } from 'src/auth/infrastructure/jwt.strategy';
@@ -23,6 +24,10 @@ describe('UserController (Integration)', () => {
   };
 
   const mockUpdateSettingsUsecase = {
+    execute: jest.fn(),
+  };
+
+  const mockCompleteOnboardingUsecase = {
     execute: jest.fn(),
   };
 
@@ -49,6 +54,10 @@ describe('UserController (Integration)', () => {
         {
           provide: UpdateSettingsUsecase,
           useValue: mockUpdateSettingsUsecase,
+        },
+        {
+          provide: CompleteOnboardingUsecase,
+          useValue: mockCompleteOnboardingUsecase,
         },
         {
           provide: RegisterDeviceUsecase,

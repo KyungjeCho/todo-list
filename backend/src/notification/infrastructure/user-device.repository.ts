@@ -45,6 +45,18 @@ export class UserDeviceRepository {
       });
       await this.deviceRepo.save(entity);
     }
+
+    // WHY: FCM 은 동일 기기의 토큰이 회전(onTokenRefresh)하거나 앱 재설치 시
+    // 옛 토큰을 즉시 무효화한다. 같은 (userId, deviceType) 의 다른 활성 행은
+    // 전부 죽은 토큰이므로, 스케줄러가 헛쏘지 않도록 즉시 soft-delete 한다.
+    await this.deviceRepo
+      .createQueryBuilder()
+      .softDelete()
+      .where('user_id = :userId', { userId: data.userId })
+      .andWhere('device_type = :deviceType', { deviceType: data.deviceType })
+      .andWhere('fcm_token != :fcmToken', { fcmToken: data.fcmToken })
+      .andWhere('deleted_at IS NULL')
+      .execute();
   }
 
   async deleteByFcmToken(fcmToken: string): Promise<void> {

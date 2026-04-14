@@ -17,7 +17,13 @@ export class NotificationSchedulerUsecase {
     for (const user of users) {
       const localTime = this.getLocalHHmm(now, user.timezone);
 
-      if (user.planTime !== null && localTime === user.planTime) {
+      // WHY: PostgreSQL time 컬럼은 'HH:mm:ss' 로 직렬화되지만 로컬 시각 계산은
+      // HH:mm 단위까지만 한다. 저장 포맷 차이로 비교가 영영 어긋나는 사고를 방지하기
+      // 위해 선행 5글자(HH:mm)만 비교한다.
+      const planHHmm = user.planTime?.substring(0, 5) ?? null;
+      const reviewHHmm = user.reviewTime?.substring(0, 5) ?? null;
+
+      if (planHHmm !== null && localTime === planHHmm) {
         try {
           await this.sendNotificationUsecase.execute(user.id, 'PLAN');
         } catch (error) {
@@ -28,7 +34,7 @@ export class NotificationSchedulerUsecase {
         }
       }
 
-      if (user.reviewTime !== null && localTime === user.reviewTime) {
+      if (reviewHHmm !== null && localTime === reviewHHmm) {
         try {
           await this.sendNotificationUsecase.execute(user.id, 'REVIEW');
         } catch (error) {

@@ -1,0 +1,47 @@
+# T012 [US1] Maestro E2E: 온보딩 완료 → 재시작 후 Main 재진입 (재온보딩 없음)
+# WHY: hasCompletedOnboarding 도메인 속성이 실제로 서버·앱 양쪽에 영속되어
+#       앱 재시작 후에도 Onboarding 스택이 렌더되지 않음을 검증 (FR-001, FR-002, FR-008).
+
+appId: com.todolist.app
+
+tags:
+  - auth
+  - onboarding
+  - regression
+
+---
+
+# 사전 조건: 신규 가입 또는 hasCompletedOnboarding=false 상태에서 로그인 완료
+- runFlow: login.yml
+
+# 온보딩 화면 진입 확인
+- assertVisible:
+    text: "루틴 설정"
+- assertVisible:
+    id: "onboarding-complete-button"
+
+# 온보딩 시간 설정 (기본값 사용) 후 완료 버튼 탭
+- tapOn:
+    id: "onboarding-complete-button"
+
+# Main 화면 전환 대기
+- extendedWaitUntil:
+    visible:
+      id: "main-screen"
+    timeout: 8000
+
+# 앱 재시작: 온보딩이 서버에 저장되었는지 구조적으로 확인
+- stopApp
+- launchApp:
+    appId: com.todolist.app
+
+# Main 이 바로 표시되어야 하며 (LoadingSplash 허용) Onboarding 은 재노출되지 않아야 한다
+- extendedWaitUntil:
+    visible:
+      id: "main-screen"
+    timeout: 8000
+
+- assertNotVisible:
+    text: "루틴 설정"
+- assertNotVisible:
+    id: "onboarding-complete-button"

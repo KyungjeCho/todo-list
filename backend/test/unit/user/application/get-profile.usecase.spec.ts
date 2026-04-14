@@ -28,6 +28,7 @@ describe('GetProfileUsecase', () => {
         reviewTime: '22:00',
         timezone: 'Asia/Seoul',
         language: 'ko',
+        hasCompletedOnboarding: true,
       };
 
       mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
@@ -41,6 +42,26 @@ describe('GetProfileUsecase', () => {
       expect(result.reviewTime).toBe('22:00');
       expect(result.timezone).toBe('Asia/Seoul');
       expect(result.language).toBe('ko');
+      expect(result.hasCompletedOnboarding).toBe(true);
+    });
+
+    it('should expose hasCompletedOnboarding:false when not yet completed', async () => {
+      const mockUser = {
+        id: 'user-id-2',
+        userAuthId: 'auth-id-2',
+        userName: 'New',
+        planTime: null,
+        reviewTime: null,
+        timezone: null,
+        language: 'en',
+        hasCompletedOnboarding: false,
+      };
+
+      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+
+      const result = await usecase.execute({ userAuthId: 'auth-id-2' });
+
+      expect(result.hasCompletedOnboarding).toBe(false);
     });
 
     it('should return profile with null planTime and reviewTime', async () => {

@@ -7,6 +7,7 @@ export interface UserProfile {
   reviewTime: string | null;
   timezone: string | null;
   language: SupportedLanguage;
+  hasCompletedOnboarding: boolean;
 }
 
 export interface UpdateSettingsRequest {
