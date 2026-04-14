@@ -27,7 +27,7 @@ describe('soundService — 연속 탭 (FR-012, SC-002)', () => {
 
       expect(player!.seekTo).toHaveBeenCalledTimes(5);
       expect(player!.play).toHaveBeenCalledTimes(5);
-      player!.seekTo.mock.calls.forEach((call) => {
+      player!.seekTo.mock.calls.forEach((call: unknown[]) => {
         expect(call[0]).toBe(0);
       });
     } finally {
