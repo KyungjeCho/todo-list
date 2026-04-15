@@ -1,3 +1,5 @@
+import { IsBoolean } from 'class-validator';
+
 export class UserProfileDto {
   id!: string;
   userName!: string;
@@ -5,4 +7,7 @@ export class UserProfileDto {
   reviewTime!: string | null;
   timezone!: string | null;
   language!: string;
+
+  @IsBoolean()
+  hasCompletedOnboarding!: boolean;
 }

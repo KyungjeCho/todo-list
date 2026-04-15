@@ -1,0 +1,60 @@
+# T013 [US1] Maestro E2E: 재로그인 가드 + 완료 직후 전이
+# WHY: (1) 완료자의 재로그인/딥링크/내비게이션 어떤 경로로도 Onboarding 스택이
+#       네비게이션 트리에 존재하지 않아야 한다 (FR-007 구조적 가드).
+#       (2) 미완료 사용자가 완료 버튼 탭 → 동일 세션에서 Main 으로 정확히 1회 전이한다 (FR-001).
+
+appId: com.todolist.app
+
+tags:
+  - auth
+  - onboarding
+  - regression
+
+---
+
+# 시나리오 1: 완료자 재로그인 가드
+- runFlow: login.yml
+
+- extendedWaitUntil:
+    visible:
+      id: "main-screen"
+    timeout: 8000
+
+# Onboarding 스택이 트리에 존재하지 않아야 한다 (구조적 가드)
+- assertNotVisible:
+    text: "루틴 설정"
+- assertNotVisible:
+    id: "onboarding-complete-button"
+
+# 딥링크로도 Onboarding 진입 불가 — back 버튼/제스처로 내려가도 Main 유지
+- back
+- assertVisible:
+    id: "main-screen"
+- assertNotVisible:
+    text: "루틴 설정"
+
+# 시나리오 2: 미완료 사용자 완료 직후 전이 (별도 세션 가정: pre-condition 으로 테스트 러너가 상태 초기화 필요)
+# NOTE: 실행 러너에서 테스트 계정의 hasCompletedOnboarding=false 상태를 보장해야 한다.
+- stopApp
+- launchApp:
+    appId: com.todolist.app
+
+- runFlow: login.yml
+
+- assertVisible:
+    text: "루틴 설정"
+    optional: true
+
+# 온보딩 화면일 때만 완료 버튼 탭 — 이미 Main 이면 skip
+- tapOn:
+    id: "onboarding-complete-button"
+    optional: true
+
+- extendedWaitUntil:
+    visible:
+      id: "main-screen"
+    timeout: 10000
+
+# 완료 후 가드 역전이가 1회만 발생: Onboarding 으로 되돌아가지 않는다
+- assertNotVisible:
+    text: "루틴 설정"

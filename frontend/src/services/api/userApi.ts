@@ -16,6 +16,11 @@ export const userApi = {
     return response.data;
   },
 
+  async completeOnboarding(): Promise<UserProfile> {
+    const response = await apiClient.post('/users/me/onboarding/complete');
+    return response.data;
+  },
+
   async registerDevice(data: {
     fcmToken: string;
     deviceType: DeviceType;

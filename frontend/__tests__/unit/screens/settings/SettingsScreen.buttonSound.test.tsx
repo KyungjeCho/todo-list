@@ -16,6 +16,7 @@ const mockProfile: UserProfile = {
   reviewTime: '22:00',
   timezone: 'Asia/Seoul',
   language: 'ko',
+  hasCompletedOnboarding: true,
 };
 
 describe('SettingsScreen — 버튼 클릭음 토글 (US2)', () => {

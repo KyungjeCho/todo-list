@@ -27,6 +27,7 @@ describe('UpdateSettingsUsecase', () => {
       reviewTime: '22:00',
       timezone: 'Asia/Seoul',
       language: 'ko',
+      hasCompletedOnboarding: true,
     };
 
     it('should update userName', async () => {
@@ -43,6 +44,26 @@ describe('UpdateSettingsUsecase', () => {
 
       expect(result).toBeDefined();
       expect(result.userName).toBe('김철수');
+      expect(result.hasCompletedOnboarding).toBe(true);
+    });
+
+    it('should preserve hasCompletedOnboarding when disabling notifications (planTime=null)', async () => {
+      mockUserRepository.findByUserAuthId.mockResolvedValue(existingUser);
+      mockUserRepository.update.mockResolvedValue({
+        ...existingUser,
+        planTime: null,
+        reviewTime: null,
+      });
+
+      const result = await usecase.execute({
+        userAuthId,
+        planTime: null,
+        reviewTime: null,
+      });
+
+      expect(result.planTime).toBeNull();
+      expect(result.reviewTime).toBeNull();
+      expect(result.hasCompletedOnboarding).toBe(true);
     });
 
     it('should update planTime', async () => {

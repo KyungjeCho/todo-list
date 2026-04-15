@@ -23,6 +23,13 @@ export class User extends BaseEntity {
   @Column({ name: 'language', type: 'varchar', length: 10, default: 'en' })
   language!: string;
 
+  @Column({
+    name: 'has_completed_onboarding',
+    type: 'boolean',
+    default: false,
+  })
+  hasCompletedOnboarding!: boolean;
+
   @OneToOne(() => UserAuth, (auth) => auth.user)
   @JoinColumn({ name: 'user_auth_id' })
   userAuth!: UserAuth;

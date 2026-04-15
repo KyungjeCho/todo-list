@@ -25,7 +25,9 @@ import { VoiceInputScreen } from '../../screens/voice/VoiceInputScreen';
 import { TimezoneSelectScreen } from '../../screens/settings/TimezoneSelectScreen';
 import { MainTabNavigator } from './MainTabNavigator';
 import type { RootStackParamList } from './types';
-import { isUserOnboarded } from './isUserOnboarded';
+import { selectAuthRoute } from './selectAuthRoute';
+import { LoadingSplash } from './LoadingSplash';
+import { completeOnboardingApi } from '../../features/onboarding/completeOnboardingApi';
 
 type TimezoneSelectProps = NativeStackScreenProps<
   RootStackParamList,
@@ -68,11 +70,14 @@ const OnboardingWrapper: React.FC = () => {
       setIsLoading(true);
       setError(undefined);
       try {
-        const updatedUser = await userApi.updateSettings({
+        // WHY: 시간 설정 저장 성공 이후에 온보딩 완료 플래그 전이를 별도 호출로 분리.
+        // 알림 시간과 완료 상태의 결합을 끊어 Issue 3/5 를 구조적으로 차단한다.
+        await userApi.updateSettings({
           planTime: settings.planTime,
           reviewTime: settings.reviewTime,
         });
-        setUser(updatedUser);
+        const profile = await completeOnboardingApi();
+        setUser(profile);
       } catch (err) {
         const message =
           err instanceof Error
@@ -369,12 +374,16 @@ export const AuthNavigator: React.FC = () => {
     }
   }, [user?.language]);
 
-  const isOnboarded = isUserOnboarded(user);
+  const route = selectAuthRoute({ isAuthenticated, isLoading, user });
 
-  // WHY: 로그인 직후 프로필 로딩 중에는 user가 null이므로 온보딩으로 잘못 리다이렉트됨.
-  // 프로필 로딩이 완료될 때까지 Auth 화면을 유지하여 플리커 방지
-  const showOnboarding = isAuthenticated && !isLoading && !isOnboarded;
-  const showMain = isAuthenticated && (isLoading || isOnboarded);
+  // WHY: 로딩 단락(FR-003). Stack 진입 전에 LoadingSplash 단독 렌더로
+  // Onboarding 으로 찰나 리다이렉트되는 플리커를 원천 차단.
+  if (route === 'loading') {
+    return <LoadingSplash />;
+  }
+
+  const showMain = route === 'main';
+  const showOnboarding = route === 'onboarding';
 
   const getInitialRoute = (): keyof RootStackParamList => {
     if (!isAuthenticated) return 'Auth';
@@ -387,11 +396,11 @@ export const AuthNavigator: React.FC = () => {
       initialRouteName={getInitialRoute()}
       screenOptions={{ headerShown: false }}
     >
-      {!isAuthenticated ? (
-        <Stack.Screen name="Auth" component={LoginScreen} />
-      ) : showOnboarding ? (
+      {!isAuthenticated && <Stack.Screen name="Auth" component={LoginScreen} />}
+      {showOnboarding && (
         <Stack.Screen name="Onboarding" component={OnboardingWrapper} />
-      ) : (
+      )}
+      {showMain && (
         <>
           <Stack.Screen name="Main" component={MainTabScreen} />
           <Stack.Screen

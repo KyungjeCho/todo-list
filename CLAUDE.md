@@ -1,6 +1,6 @@
 # todo-list Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-04-13
+Auto-generated from all feature plans. Last updated: 2026-04-14
 
 ## Active Technologies
 - Supabase (PostgreSQL) — 디스크 수준 AES-256 암호화, 추가 앱 레벨 암호화 없음 (001-todo-mobile-service)
@@ -13,6 +13,7 @@ Auto-generated from all feature plans. Last updated: 2026-04-13
 - TypeScript 5.x (Frontend & Backend) + i18next, react-i18next, expo-localization (신규), Intl.supportedValuesOf 타임존 API (005-i18n-timezone)
 - Supabase (PostgreSQL) via TypeORM — `language` 컬럼 형식 마이그레이션 (ko-KR → ko, 기본값 en) (005-i18n-timezone)
 - TypeScript 5.9 (Frontend) (feature/006-ui-button-sound)
+- Supabase (PostgreSQL) via TypeORM — `TODOLIST_USER` 테이블에 `has_completed_onboarding BOOLEAN NOT NULL DEFAULT FALSE` 컬럼 추가, 기존 사용자 전원 `TRUE` 백필. (007-fix-login-notif-calendar)
 
 - TypeScript 5.x (Frontend & Backend) (001-todo-mobile-service)
 - React Native (Expo) — iOS/Android 크로스 플랫폼
@@ -80,9 +81,9 @@ cd frontend && npm test && npm run lint
 - `hotfix/*`: 긴급 수정
 
 ## Recent Changes
+- 007-fix-login-notif-calendar: Added TypeScript 5.x (Frontend & Backend)
 - feature/006-ui-button-sound: Added TypeScript 5.9 (Frontend)
 - 005-i18n-timezone: Added i18next/react-i18next, expo-localization, 4개 언어(ko/en/ja/es) 지원, 전 세계 IANA 타임존 선택, STT 언어 연동, Gemini refine 언어별 프롬프트
-- 004-voice-input-screen: Added TypeScript 5.x (Frontend & Backend) + React Native (Expo ~55), expo-speech-recognition (신규), NestJS v11, @google/generative-ai
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

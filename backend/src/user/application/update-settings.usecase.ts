@@ -84,6 +84,7 @@ export class UpdateSettingsUsecase {
       reviewTime: updated.reviewTime,
       timezone: updated.timezone,
       language: updated.language,
+      hasCompletedOnboarding: updated.hasCompletedOnboarding,
     };
   }
 }

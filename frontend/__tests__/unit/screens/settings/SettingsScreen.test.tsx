@@ -25,6 +25,7 @@ const mockProfile: UserProfile = {
   reviewTime: '22:00',
   timezone: 'Asia/Seoul',
   language: 'ko',
+  hasCompletedOnboarding: true,
 };
 
 describe('SettingsScreen', () => {
