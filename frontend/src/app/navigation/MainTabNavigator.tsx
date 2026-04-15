@@ -80,20 +80,23 @@ function CalendarTab() {
     }
   }, []);
 
-  useEffect(() => {
-    void fetchMonthlySummary(year, month);
-  }, [year, month, fetchMonthlySummary]);
-
   // WHY(fix-bug-01 ③): Home에서 todo 생성 후 Calendar 탭으로 이동해도 year/month가 동일하면
-  // 기본 useEffect는 재실행되지 않아 점이 반영되지 않는다. 탭 포커스 시마다 현재 월을 재조회하고,
-  // 선택된 날짜가 있으면 해당 일자 상세도 함께 갱신한다.
+  // useEffect만으로는 재조회되지 않는다. useFocusEffect 하나로 포커스 진입과 year/month 변경을
+  // 모두 커버해 mount 시 중복 요청을 막는다. selectedDate는 ref로 읽어 날짜 선택 자체가
+  // focus 콜백을 재생성·재실행하지 않도록 한다(중복 fetchDayDetail 방지).
+  const selectedDateRef = useRef<string | null>(null);
+  useEffect(() => {
+    selectedDateRef.current = selectedDate;
+  }, [selectedDate]);
+
   useFocusEffect(
     useCallback(() => {
       void fetchMonthlySummary(year, month);
-      if (selectedDate) {
-        void fetchDayDetail(selectedDate);
+      const currentSelected = selectedDateRef.current;
+      if (currentSelected) {
+        void fetchDayDetail(currentSelected);
       }
-    }, [year, month, selectedDate, fetchMonthlySummary, fetchDayDetail]),
+    }, [year, month, fetchMonthlySummary, fetchDayDetail]),
   );
 
   const handleMonthChange = (newYear: number, newMonth: number) => {

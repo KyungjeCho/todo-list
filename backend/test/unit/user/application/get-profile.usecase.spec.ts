@@ -90,5 +90,25 @@ describe('GetProfileUsecase', () => {
         usecase.execute({ userAuthId: 'non-existent' }),
       ).rejects.toThrow();
     });
+
+    // WHY(fix-bug-01 ①): Postgres `time` 컬럼이 `HH:mm:ss`로 반환될 때 DTO 경계에서
+    // `HH:mm`으로 잘라 보내야 클라이언트가 리로드 전후 포맷을 일치시킬 수 있다.
+    it('should normalize HH:mm:ss from DB to HH:mm in response', async () => {
+      mockUserRepository.findByUserAuthId.mockResolvedValue({
+        id: 'user-id-3',
+        userAuthId: 'auth-id-3',
+        userName: 'User',
+        planTime: '08:00:00',
+        reviewTime: '22:30:00',
+        timezone: 'UTC',
+        language: 'en',
+        hasCompletedOnboarding: true,
+      });
+
+      const result = await usecase.execute({ userAuthId: 'auth-id-3' });
+
+      expect(result.planTime).toBe('08:00');
+      expect(result.reviewTime).toBe('22:30');
+    });
   });
 });

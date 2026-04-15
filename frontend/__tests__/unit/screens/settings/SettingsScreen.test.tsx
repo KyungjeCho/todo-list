@@ -235,6 +235,105 @@ describe('SettingsScreen', () => {
         );
       });
     });
+
+    // WHY(fix-bug-01 ②): OFF 시 서버는 null로 저장되어 이전 시간이 유실된다. ON 재전환 시
+    // 세션 동안 기억한 직전 시간으로 복원되어야 한다. 기본값 덮어쓰기는 회귀.
+    it('계획 알림을 OFF 후 다시 ON하면 직전 시간으로 복원된다', async () => {
+      const profileWithCustomTime: UserProfile = {
+        ...mockProfile,
+        planTime: '09:30',
+      };
+      mockUpdateSettings.mockResolvedValue({
+        ...profileWithCustomTime,
+        planTime: null,
+      });
+
+      const { rerender } = render(
+        <SettingsScreen
+          profile={profileWithCustomTime}
+          onUpdateSettings={mockUpdateSettings}
+        />,
+      );
+
+      // OFF: planTime=null로 저장
+      fireEvent(
+        screen.getByTestId('plan-notification-toggle'),
+        'valueChange',
+        false,
+      );
+      await waitFor(() => {
+        expect(mockUpdateSettings).toHaveBeenLastCalledWith(
+          expect.objectContaining({ planTime: null }),
+        );
+      });
+
+      // 부모가 profile.planTime=null로 리렌더
+      rerender(
+        <SettingsScreen
+          profile={{ ...profileWithCustomTime, planTime: null }}
+          onUpdateSettings={mockUpdateSettings}
+        />,
+      );
+
+      // ON: 기본값('08:00')이 아닌 직전 값('09:30')으로 복원되어야 함
+      fireEvent(
+        screen.getByTestId('plan-notification-toggle'),
+        'valueChange',
+        true,
+      );
+      await waitFor(() => {
+        expect(mockUpdateSettings).toHaveBeenLastCalledWith(
+          expect.objectContaining({ planTime: '09:30' }),
+        );
+      });
+    });
+
+    it('회고 알림을 OFF 후 다시 ON하면 직전 시간으로 복원된다', async () => {
+      const profileWithCustomReview: UserProfile = {
+        ...mockProfile,
+        reviewTime: '20:15',
+      };
+      mockUpdateSettings.mockResolvedValue({
+        ...profileWithCustomReview,
+        reviewTime: null,
+      });
+
+      const { rerender } = render(
+        <SettingsScreen
+          profile={profileWithCustomReview}
+          onUpdateSettings={mockUpdateSettings}
+        />,
+      );
+
+      fireEvent(
+        screen.getByTestId('review-notification-toggle'),
+        'valueChange',
+        false,
+      );
+      await waitFor(() => {
+        expect(mockUpdateSettings).toHaveBeenLastCalledWith(
+          expect.objectContaining({ reviewTime: null }),
+        );
+      });
+
+      rerender(
+        <SettingsScreen
+          profile={{ ...profileWithCustomReview, reviewTime: null }}
+          onUpdateSettings={mockUpdateSettings}
+        />,
+      );
+
+      fireEvent(
+        screen.getByTestId('review-notification-toggle'),
+        'valueChange',
+        true,
+      );
+      await waitFor(() => {
+        expect(mockUpdateSettings).toHaveBeenLastCalledWith(
+          expect.objectContaining({ reviewTime: '20:15' }),
+        );
+      });
+    });
   });
 
   describe('타임존 선택', () => {
