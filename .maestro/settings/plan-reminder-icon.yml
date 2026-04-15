@@ -1,0 +1,43 @@
+# T016 [US2] Maestro E2E: 계획알림 토글 ↔ 아이콘 상태 동기화 (FR-005~007)
+# WHY: 토글 조작 시 아이콘(accessibilityLabel)이 즉시 동기화되고, 재진입해도 유지되는지 검증
+
+appId: com.todolist.app
+
+tags:
+  - settings
+  - us2
+  - plan-reminder-icon
+
+---
+
+- launchApp:
+    clearState: false
+
+# 메인 화면 확인
+- assertVisible:
+    id: "mode-toggle-button"
+
+# 설정 화면 진입
+- tapOn:
+    id: "tab-settings"
+- assertVisible:
+    id: "settings-screen"
+
+# 초기 상태(ON) 가정: 아이콘이 활성 라벨
+- assertVisible:
+    id: "plan-notification-icon"
+
+# 토글 OFF
+- tapOn:
+    id: "plan-notification-toggle"
+
+# 비활성 아이콘으로 전환 (accessibilityLabel == "계획알림 비활성")
+- assertVisible:
+    text: "계획알림 비활성"
+
+# 다시 ON
+- tapOn:
+    id: "plan-notification-toggle"
+
+- assertVisible:
+    text: "계획알림 활성"

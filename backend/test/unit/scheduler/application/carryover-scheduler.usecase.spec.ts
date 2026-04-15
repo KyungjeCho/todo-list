@@ -163,7 +163,7 @@ describe('CarryoverSchedulerUsecase', () => {
     });
 
     describe('carry-over execution', () => {
-      it('should carry over ACTIVE todos at midnight within a transaction', async () => {
+      it('should carry over ACTIVE todos at midnight while preserving the original', async () => {
         const now = new Date('2026-03-28T15:00:00Z');
         const user = { id: 'user-1', timezone: 'Asia/Seoul' };
 
@@ -196,13 +196,13 @@ describe('CarryoverSchedulerUsecase', () => {
         // 트랜잭션 내에서 실행 확인
         expect(mockDataSource.transaction).toHaveBeenCalledTimes(1);
 
-        // 원본 ACTIVE -> CARRIED_OVER
-        expect(mockTxTodoRepo.save).toHaveBeenCalledWith(
-          expect.objectContaining({
-            id: 'todo-1',
-            status: TodoStatus.CARRIED_OVER,
-          }),
+        // WHY(FR-001~003): 어제 원본은 원래 status(ACTIVE 등)를 유지해야 한다.
+        // save가 원본 id('todo-1')로 호출된 경우가 없어야 함.
+        const saveCalls = mockTxTodoRepo.save.mock.calls;
+        const originalTodoSaved = saveCalls.some(
+          ([arg]: [{ id?: string }]) => arg?.id === 'todo-1',
         );
+        expect(originalTodoSaved).toBe(false);
 
         // 새 ACTIVE todo 생성 (다음 날)
         expect(mockTxTodoRepo.create).toHaveBeenCalledWith(
@@ -219,6 +219,52 @@ describe('CarryoverSchedulerUsecase', () => {
           expect.objectContaining({
             fromTodoId: 'todo-1',
           }),
+        );
+      });
+
+      it('should not create duplicates when carry-over routine runs twice', async () => {
+        // WHY(FR-002, SC-002): 이월 루틴이 재실행되어도 CarriedOverHistory UNIQUE 제약으로
+        // 중복 이월이 발생하지 않아야 한다. 두 번째 실행에서는 history가 존재하므로 skip.
+        const now = new Date('2026-03-28T15:00:00Z');
+        const user = { id: 'user-1', timezone: 'Asia/Seoul' };
+
+        const activeTodo = {
+          id: 'todo-1',
+          userId: 'user-1',
+          status: TodoStatus.ACTIVE,
+          content: '미완료 할 일',
+          todoDate: '2026-03-28',
+        };
+
+        mockUserRepository.findAllWithTimezone.mockResolvedValue([user]);
+        mockTxTodoRepo.find.mockResolvedValue([activeTodo]);
+        mockTxTodoRepo.save.mockImplementation((todo) =>
+          Promise.resolve({ id: todo.id ?? 'new-todo-1', ...todo }),
+        );
+        mockTxTodoRepo.create.mockImplementation((data) => ({
+          id: 'new-todo-1',
+          ...data,
+        }));
+        mockTxHistoryRepo.create.mockImplementation((data) => data);
+        mockTxHistoryRepo.save.mockResolvedValue({ id: 'history-1' });
+
+        // 1회차: history 없음
+        mockTxHistoryRepo.findOne.mockResolvedValueOnce(null);
+        await usecase.execute(now);
+
+        const firstRunCreateCount = mockTxTodoRepo.create.mock.calls.length;
+
+        // 2회차: history 존재
+        mockTxHistoryRepo.findOne.mockResolvedValueOnce({
+          id: 'history-1',
+          fromTodoId: 'todo-1',
+          toTodoId: 'new-todo-1',
+        });
+        await usecase.execute(now);
+
+        // 2회차에서는 추가 todo 생성/history 저장이 없어야 함
+        expect(mockTxTodoRepo.create.mock.calls.length).toBe(
+          firstRunCreateCount,
         );
       });
     });

@@ -23,8 +23,10 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import type { UserProfile, UpdateSettingsRequest } from '../../types/user';
 import type { RootStackParamList } from '../../app/navigation/types';
 import { SoundPressable } from '../../components/common/SoundPressable';
+import { PlanNotificationIcon } from '../../components/settings/PlanNotificationIcon';
 import { useSoundStore } from '../../store/soundStore';
 import { soundService } from '../../features/sound/soundService';
+import { togglePlanNotification } from '../../features/notification/planNotificationToggle';
 
 const DEFAULT_PLAN_TIME = '08:00';
 const DEFAULT_REVIEW_TIME = '22:00';
@@ -312,6 +314,9 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   const [showLanguagePicker, setShowLanguagePicker] = useState(false);
   const [optimisticLanguage, setOptimisticLanguage] =
     useState<SupportedLanguage | null>(null);
+  // WHY(FR-005, SC-003): 계획알림 토글은 저장 API 완료 전에도 즉시 아이콘/스위치가 반응해야
+  // 하므로 optimistic override를 유지한다. props(profile.planTime)와 값이 일치하면 override를 해제한다.
+  const [planOptimistic, setPlanOptimistic] = useState<boolean | null>(null);
   const buttonSoundEnabled = useSoundStore((s) => s.enabled);
 
   // WHY: profile.language가 외부에서 갱신되면 낙관적 오버라이드를 해제하여 props와 동기화
@@ -321,6 +326,16 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
   // WHY: props(profile.language)가 source of truth, 사용자 선택 직후에만 낙관적 값으로 오버라이드
   const displayLanguage = optimisticLanguage ?? profile.language;
+
+  const profilePlanEnabled = profile.planTime !== null;
+  const planEnabled = planOptimistic ?? profilePlanEnabled;
+
+  // WHY(FR-006): 저장 성공 후 authStore 갱신으로 profile이 optimistic 값과 일치하면 override 해제.
+  useEffect(() => {
+    if (planOptimistic !== null && planOptimistic === profilePlanEnabled) {
+      setPlanOptimistic(null);
+    }
+  }, [profilePlanEnabled, planOptimistic]);
 
   const handleTimeChange = async (
     event: { type?: string },
@@ -342,11 +357,21 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     }
   };
 
-  const handleTogglePlanNotification = async () => {
-    if (profile.planTime !== null) {
-      await onUpdateSettings({ planTime: null });
-    } else {
-      await onUpdateSettings({ planTime: DEFAULT_PLAN_TIME });
+  const handleTogglePlanNotification = async (next: boolean) => {
+    // WHY(FR-007): 저장 실패 시 이전 상태로 즉시 롤백되어야 한다.
+    try {
+      await togglePlanNotification({
+        next,
+        defaultPlanTime: DEFAULT_PLAN_TIME,
+        updateSettings: (data) => onUpdateSettings(data),
+        onOptimistic: setPlanOptimistic,
+        onRollback: setPlanOptimistic,
+        onError: () => {
+          Alert.alert(t('common.error'), t('settings.settingsChangeFailed'));
+        },
+      });
+    } catch {
+      // WHY: 에러는 togglePlanNotification 내부 onError/onRollback에서 이미 처리됨
     }
   };
 
@@ -427,7 +452,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
 
         <View style={styles.settingRow}>
           <View style={styles.iconContainer}>
-            <BellIcon />
+            <PlanNotificationIcon enabled={planEnabled} />
           </View>
           <View style={styles.settingInfo}>
             <Text style={styles.settingLabel}>
@@ -436,25 +461,27 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
             <SoundPressable
               testID="plan-time-button"
               onPress={() => setTimePickerTarget('plan')}
-              disabled={profile.planTime === null}
+              disabled={!planEnabled}
             >
               <Text
                 testID="plan-time-value"
                 style={[
                   styles.settingValue,
-                  profile.planTime === null && styles.settingValueDisabled,
+                  !planEnabled && styles.settingValueDisabled,
                 ]}
               >
-                {profile.planTime ?? t('common.disabled')}
+                {planEnabled
+                  ? (profile.planTime ?? DEFAULT_PLAN_TIME)
+                  : t('common.disabled')}
               </Text>
             </SoundPressable>
           </View>
           <Switch
             testID="plan-notification-toggle"
-            value={profile.planTime !== null}
-            onValueChange={() => {
+            value={planEnabled}
+            onValueChange={(next) => {
               soundService.play();
-              void handleTogglePlanNotification();
+              void handleTogglePlanNotification(next);
             }}
             trackColor={{ false: colors.border, true: colors.primary }}
             thumbColor={colors.surface}

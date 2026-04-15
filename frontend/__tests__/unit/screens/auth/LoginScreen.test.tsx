@@ -38,6 +38,13 @@ describe('LoginScreen', () => {
 
       expect(screen.getByText(/todo/i)).toBeTruthy();
     });
+
+    // WHY(FR-008): 로그인 화면은 브랜드 그라데이션 배경을 사용해야 한다.
+    it('LinearGradient 배경을 렌더링한다', () => {
+      const { UNSAFE_getAllByType } = render(<LoginScreen />);
+      const { LinearGradient } = require('expo-linear-gradient');
+      expect(UNSAFE_getAllByType(LinearGradient).length).toBeGreaterThan(0);
+    });
   });
 
   describe('소셜 로그인 탭 이벤트', () => {

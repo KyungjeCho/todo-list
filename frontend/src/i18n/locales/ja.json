@@ -64,6 +64,8 @@
     "title": "設定",
     "notificationSettings": "通知設定",
     "planNotification": "計画通知",
+    "planNotificationOn": "計画通知オン",
+    "planNotificationOff": "計画通知オフ",
     "reviewNotification": "振り返り通知",
     "regionSettings": "地域設定",
     "timezone": "タイムゾーン",

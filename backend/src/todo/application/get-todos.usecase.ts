@@ -45,6 +45,8 @@ export class GetTodosUsecase {
       (t) => t.status === TodoStatus.INACTIVE,
     ).length;
 
+    // WHY(FR-001~004): 008 이후 이월 루틴은 원본 status를 CARRIED_OVER로 전이하지 않지만,
+    // 과거 데이터에 남아 있는 CARRIED_OVER 레코드(레거시)는 진행률 분모에서 계속 제외한다.
     const nonCarriedOverCount = sortedTodos.filter(
       (t) => t.status !== TodoStatus.CARRIED_OVER,
     ).length;
@@ -89,9 +91,9 @@ export class GetTodosUsecase {
         id: todo.id,
         content: todo.content,
         status: todo.status,
-        isCarriedOver:
-          todo.status === TodoStatus.CARRIED_OVER ||
-          carriedOverToIds.has(todo.id),
+        // WHY(FR-001~004): 어제 원본 status가 더 이상 CARRIED_OVER로 전이되지 않으므로
+        // 이월 여부 판정은 CarriedOverHistory → to todo id 집합 기반 단일 판정으로 충분.
+        isCarriedOver: carriedOverToIds.has(todo.id),
         todoDate: todo.todoDate,
         memos,
         createdAt: new Date(todo.createdAt).toISOString(),

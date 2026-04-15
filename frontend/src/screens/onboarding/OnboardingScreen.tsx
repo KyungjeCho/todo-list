@@ -13,7 +13,7 @@ import Svg, { Path, Circle, Polyline } from 'react-native-svg';
 import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
-import { colors, typography, spacing, radius } from '../../theme';
+import { colors, gradients, typography, spacing, radius } from '../../theme';
 
 interface OnboardingSettings {
   planTime: string;
@@ -164,7 +164,10 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
 
   return (
     <LinearGradient
-      colors={[colors.primaryLight, colors.surface]}
+      colors={gradients.brandHero.colors as unknown as readonly [string, string, ...string[]]}
+      locations={gradients.brandHero.locations as unknown as readonly [number, number, ...number[]]}
+      start={gradients.brandHero.start}
+      end={gradients.brandHero.end}
       style={styles.container}
     >
       <View style={styles.brandSection}>
