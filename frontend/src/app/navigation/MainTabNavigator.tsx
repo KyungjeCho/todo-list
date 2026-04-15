@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useFocusEffect } from '@react-navigation/native';
 import Svg, { Path, Rect, Circle, Line } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
@@ -82,6 +83,18 @@ function CalendarTab() {
   useEffect(() => {
     void fetchMonthlySummary(year, month);
   }, [year, month, fetchMonthlySummary]);
+
+  // WHY(fix-bug-01 ③): Home에서 todo 생성 후 Calendar 탭으로 이동해도 year/month가 동일하면
+  // 기본 useEffect는 재실행되지 않아 점이 반영되지 않는다. 탭 포커스 시마다 현재 월을 재조회하고,
+  // 선택된 날짜가 있으면 해당 일자 상세도 함께 갱신한다.
+  useFocusEffect(
+    useCallback(() => {
+      void fetchMonthlySummary(year, month);
+      if (selectedDate) {
+        void fetchDayDetail(selectedDate);
+      }
+    }, [year, month, selectedDate, fetchMonthlySummary, fetchDayDetail]),
+  );
 
   const handleMonthChange = (newYear: number, newMonth: number) => {
     setYear(newYear);
