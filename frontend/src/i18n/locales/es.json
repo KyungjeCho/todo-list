@@ -64,6 +64,8 @@
     "title": "Configuración",
     "notificationSettings": "Configuración de notificaciones",
     "planNotification": "Notificación de planificación",
+    "planNotificationOn": "Notificación de planificación activada",
+    "planNotificationOff": "Notificación de planificación desactivada",
     "reviewNotification": "Notificación de reflexión",
     "regionSettings": "Configuración regional",
     "timezone": "Zona horaria",

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Svg, { Path, Line } from 'react-native-svg';
 import { colors } from '../../theme';
 
@@ -19,7 +20,10 @@ export const PlanNotificationIcon: React.FC<PlanNotificationIconProps> = ({
   enabled,
   size = 24,
 }) => {
-  const label = enabled ? '계획알림 활성' : '계획알림 비활성';
+  const { t } = useTranslation();
+  const label = enabled
+    ? t('settings.planNotificationOn')
+    : t('settings.planNotificationOff');
   return (
     <View testID="plan-notification-icon" accessibilityLabel={label} accessible>
       {enabled ? <BellOn size={size} /> : <BellOff size={size} />}

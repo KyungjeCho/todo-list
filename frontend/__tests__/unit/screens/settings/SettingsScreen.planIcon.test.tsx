@@ -5,6 +5,7 @@ import {
   waitFor,
   act,
 } from '@testing-library/react-native';
+import i18n from 'src/i18n';
 import { SettingsScreen } from 'src/screens/settings/SettingsScreen';
 import type { UserProfile } from 'src/types/user';
 
@@ -25,16 +26,17 @@ const baseProfile: UserProfile = {
 describe('SettingsScreen — 계획알림 아이콘 상태 동기화 (FR-005~007)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    void i18n.changeLanguage('ko');
   });
 
-  it('초기 ON 상태에서 아이콘 accessibilityLabel === "계획알림 활성"', () => {
+  it('초기 ON 상태에서 아이콘 accessibilityLabel === "계획 알림 활성"', () => {
     render(
       <SettingsScreen
         profile={baseProfile}
         onUpdateSettings={jest.fn().mockResolvedValue(baseProfile)}
       />,
     );
-    expect(screen.getByLabelText('계획알림 활성')).toBeTruthy();
+    expect(screen.getByLabelText('계획 알림 활성')).toBeTruthy();
   });
 
   it('초기 OFF 상태(planTime === null)에서 마운트 즉시 비활성 아이콘이 렌더된다 (FR-006)', () => {
@@ -45,7 +47,7 @@ describe('SettingsScreen — 계획알림 아이콘 상태 동기화 (FR-005~007
         onUpdateSettings={jest.fn().mockResolvedValue(baseProfile)}
       />,
     );
-    expect(screen.getByLabelText('계획알림 비활성')).toBeTruthy();
+    expect(screen.getByLabelText('계획 알림 비활성')).toBeTruthy();
   });
 
   it('토글 OFF 시 아이콘이 비활성 변형으로 전환된다 (FR-005)', async () => {
@@ -61,13 +63,13 @@ describe('SettingsScreen — 계획알림 아이콘 상태 동기화 (FR-005~007
     });
 
     // optimistic: 즉시 비활성 아이콘이 보여야 함
-    expect(screen.getByLabelText('계획알림 비활성')).toBeTruthy();
+    expect(screen.getByLabelText('계획 알림 비활성')).toBeTruthy();
 
     // 서버 성공 후 profile 갱신된 상태로 재렌더(실서비스에서 useAuthStore가 갱신)
     rerender(
       <SettingsScreen profile={updatedProfile} onUpdateSettings={onUpdate} />,
     );
-    expect(screen.getByLabelText('계획알림 비활성')).toBeTruthy();
+    expect(screen.getByLabelText('계획 알림 비활성')).toBeTruthy();
   });
 
   it('저장 실패 시 이전 상태로 롤백된다 (FR-007)', async () => {
@@ -82,7 +84,7 @@ describe('SettingsScreen — 계획알림 아이콘 상태 동기화 (FR-005~007
     });
 
     await waitFor(() => {
-      expect(screen.getByLabelText('계획알림 활성')).toBeTruthy();
+      expect(screen.getByLabelText('계획 알림 활성')).toBeTruthy();
     });
   });
 });

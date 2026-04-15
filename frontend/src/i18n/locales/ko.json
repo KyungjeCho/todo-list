@@ -64,6 +64,8 @@
     "title": "설정",
     "notificationSettings": "알림 설정",
     "planNotification": "계획 알림",
+    "planNotificationOn": "계획 알림 활성",
+    "planNotificationOff": "계획 알림 비활성",
     "reviewNotification": "회고 알림",
     "regionSettings": "지역 설정",
     "timezone": "타임존",

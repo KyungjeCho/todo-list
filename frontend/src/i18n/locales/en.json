@@ -64,6 +64,8 @@
     "title": "Settings",
     "notificationSettings": "Notification Settings",
     "planNotification": "Plan Notification",
+    "planNotificationOn": "Plan notification enabled",
+    "planNotificationOff": "Plan notification disabled",
     "reviewNotification": "Review Notification",
     "regionSettings": "Region Settings",
     "timezone": "Timezone",
