@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { UserRepository } from '../infrastructure/user.repository';
 import type { UserProfileDto } from './dto';
+import { normalizeHmm } from './dto';
 
 const TIME_FORMAT = /^([01]\d|2[0-3]):[0-5]\d$/;
 const SUPPORTED_LANGUAGES = ['ko', 'en', 'ja', 'es'] as const;
@@ -80,8 +81,8 @@ export class UpdateSettingsUsecase {
     return {
       id: updated.id,
       userName: updated.userName,
-      planTime: updated.planTime,
-      reviewTime: updated.reviewTime,
+      planTime: normalizeHmm(updated.planTime),
+      reviewTime: normalizeHmm(updated.reviewTime),
       timezone: updated.timezone,
       language: updated.language,
       hasCompletedOnboarding: updated.hasCompletedOnboarding,

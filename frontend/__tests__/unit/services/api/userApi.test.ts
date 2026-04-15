@@ -133,4 +133,73 @@ describe('UserApi', () => {
       await expect(userApi.updateSettings({ userName: '' })).rejects.toThrow();
     });
   });
+
+  describe('시간 포맷 정규화 (HH:mm:ss ↔ HH:mm)', () => {
+    it('getProfile 응답의 HH:mm:ss를 HH:mm으로 정규화한다', async () => {
+      mockedClient.get.mockResolvedValueOnce({
+        data: { ...mockUserProfile, planTime: '08:00:00', reviewTime: '22:30:00' },
+      });
+
+      const result = await userApi.getProfile();
+
+      expect(result.planTime).toBe('08:00');
+      expect(result.reviewTime).toBe('22:30');
+    });
+
+    it('updateSettings 요청의 HH:mm:ss를 HH:mm으로 정규화해 전송한다', async () => {
+      mockedClient.patch.mockResolvedValueOnce({ data: mockUserProfile });
+
+      await userApi.updateSettings({
+        planTime: '08:00:00',
+        reviewTime: '22:30:00',
+      });
+
+      expect(mockedClient.patch).toHaveBeenCalledWith('/users/me/settings', {
+        planTime: '08:00',
+        reviewTime: '22:30',
+      });
+    });
+
+    it('updateSettings 응답도 정규화된다', async () => {
+      mockedClient.patch.mockResolvedValueOnce({
+        data: { ...mockUserProfile, planTime: '09:15:00' },
+      });
+
+      const result = await userApi.updateSettings({ planTime: '09:15' });
+
+      expect(result.planTime).toBe('09:15');
+    });
+
+    it('planTime이 null이면 null로 유지한다', async () => {
+      mockedClient.get.mockResolvedValueOnce({
+        data: { ...mockUserProfile, planTime: null, reviewTime: null },
+      });
+
+      const result = await userApi.getProfile();
+
+      expect(result.planTime).toBeNull();
+      expect(result.reviewTime).toBeNull();
+    });
+
+    it('undefined 필드는 요청에 포함되지 않는다', async () => {
+      mockedClient.patch.mockResolvedValueOnce({ data: mockUserProfile });
+
+      await userApi.updateSettings({ userName: '새이름' });
+
+      expect(mockedClient.patch).toHaveBeenCalledWith('/users/me/settings', {
+        userName: '새이름',
+      });
+    });
+
+    it('completeOnboarding 응답도 정규화된다', async () => {
+      mockedClient.post.mockResolvedValueOnce({
+        data: { ...mockUserProfile, planTime: '07:00:00', reviewTime: '23:00:00' },
+      });
+
+      const result = await userApi.completeOnboarding();
+
+      expect(result.planTime).toBe('07:00');
+      expect(result.reviewTime).toBe('23:00');
+    });
+  });
 });

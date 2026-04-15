@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useFocusEffect } from '@react-navigation/native';
 import Svg, { Path, Rect, Circle, Line } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
 import i18n from '../../i18n';
@@ -79,9 +80,24 @@ function CalendarTab() {
     }
   }, []);
 
+  // WHY(fix-bug-01 ③): Home에서 todo 생성 후 Calendar 탭으로 이동해도 year/month가 동일하면
+  // useEffect만으로는 재조회되지 않는다. useFocusEffect 하나로 포커스 진입과 year/month 변경을
+  // 모두 커버해 mount 시 중복 요청을 막는다. selectedDate는 ref로 읽어 날짜 선택 자체가
+  // focus 콜백을 재생성·재실행하지 않도록 한다(중복 fetchDayDetail 방지).
+  const selectedDateRef = useRef<string | null>(null);
   useEffect(() => {
-    void fetchMonthlySummary(year, month);
-  }, [year, month, fetchMonthlySummary]);
+    selectedDateRef.current = selectedDate;
+  }, [selectedDate]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void fetchMonthlySummary(year, month);
+      const currentSelected = selectedDateRef.current;
+      if (currentSelected) {
+        void fetchDayDetail(currentSelected);
+      }
+    }, [year, month, fetchMonthlySummary, fetchDayDetail]),
+  );
 
   const handleMonthChange = (newYear: number, newMonth: number) => {
     setYear(newYear);

@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { UserRepository } from '../infrastructure/user.repository';
 import type { UserProfileDto } from './dto';
+import { normalizeHmm } from './dto';
 
 interface CompleteOnboardingInput {
   userAuthId: string;
@@ -55,8 +56,8 @@ export class CompleteOnboardingUsecase {
     return {
       id: user.id,
       userName: user.userName,
-      planTime: user.planTime,
-      reviewTime: user.reviewTime,
+      planTime: normalizeHmm(user.planTime),
+      reviewTime: normalizeHmm(user.reviewTime),
       timezone: user.timezone,
       language: user.language,
       hasCompletedOnboarding: user.hasCompletedOnboarding,

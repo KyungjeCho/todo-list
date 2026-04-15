@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -317,7 +317,23 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
   // WHY(FR-005, SC-003): 계획알림 토글은 저장 API 완료 전에도 즉시 아이콘/스위치가 반응해야
   // 하므로 optimistic override를 유지한다. props(profile.planTime)와 값이 일치하면 override를 해제한다.
   const [planOptimistic, setPlanOptimistic] = useState<boolean | null>(null);
+  // WHY(fix-bug-01 ②): OFF 시 서버는 null로 저장되어 이전 시간이 유실되므로, 세션 동안
+  // 마지막 활성 시간을 ref에 보존해 ON 재전환 시 동일 시간으로 복원한다.
+  const lastPlanTimeRef = useRef<string | null>(profile.planTime);
+  const lastReviewTimeRef = useRef<string | null>(profile.reviewTime);
   const buttonSoundEnabled = useSoundStore((s) => s.enabled);
+
+  useEffect(() => {
+    if (profile.planTime !== null) {
+      lastPlanTimeRef.current = profile.planTime;
+    }
+  }, [profile.planTime]);
+
+  useEffect(() => {
+    if (profile.reviewTime !== null) {
+      lastReviewTimeRef.current = profile.reviewTime;
+    }
+  }, [profile.reviewTime]);
 
   // WHY: profile.language가 외부에서 갱신되면 낙관적 오버라이드를 해제하여 props와 동기화
   useEffect(() => {
@@ -362,7 +378,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     try {
       await togglePlanNotification({
         next,
-        defaultPlanTime: DEFAULT_PLAN_TIME,
+        defaultPlanTime: lastPlanTimeRef.current ?? DEFAULT_PLAN_TIME,
         updateSettings: (data) => onUpdateSettings(data),
         onOptimistic: setPlanOptimistic,
         onRollback: setPlanOptimistic,
@@ -379,7 +395,10 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
     if (profile.reviewTime !== null) {
       await onUpdateSettings({ reviewTime: null });
     } else {
-      await onUpdateSettings({ reviewTime: DEFAULT_REVIEW_TIME });
+      // WHY(fix-bug-01 ②): ON 재전환 시 이전 시간으로 복원. 세션 최초 ON이면 기본값 사용.
+      await onUpdateSettings({
+        reviewTime: lastReviewTimeRef.current ?? DEFAULT_REVIEW_TIME,
+      });
     }
   };
 
