@@ -159,7 +159,7 @@ description: "Task list for feature 006 — UI 버튼 클릭음 추가"
 - [X] T048 [P] Update `CLAUDE.md` "Recent Changes" block to include `006-ui-button-sound` (if not already inserted by `update-agent-context.sh`)
 - [X] T049 Run full Maestro regression: `maestro test .maestro/full_flow.yml` and the two new files under `.maestro/settings/` to confirm no regression on existing user journeys
 - [X] T050 Execute quickstart.md §3 manual scenarios A–G on the Android emulator; additionally measure tap→sound perceived latency on at least 5 primary buttons (target ≤150ms per FR-011/SC-002) and frame-drop delta vs. baseline via React DevTools Profiler (target ≤5% per SC-004); record discrepancies as follow-up issues (not blockers)
-- [ ] T051 Create PR from `feature/006-ui-button-sound` → `main` with linked spec/plan/tasks and a "Test plan" checklist derived from this file
+- [X] T051 Create PR from `feature/006-ui-button-sound` → `main` with linked spec/plan/tasks and a "Test plan" checklist derived from this file — https://github.com/KyungjeCho/todo-list/pull/253
 
 ---
 

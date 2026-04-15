@@ -247,17 +247,13 @@ describe('GetTodosUsecase', () => {
       await expect(usecase.execute(queryDto)).rejects.toThrow();
     });
 
-    it('should set isCarriedOver true for CARRIED_OVER status', async () => {
-      const todosWithCarryOver = [
-        {
-          ...mockTodos[0],
-          status: 'CARRIED_OVER',
-        },
-        mockTodos[1],
-      ];
+    it('should set isCarriedOver based on carriedOverToIds even when original status is preserved (FR-001~004)', async () => {
+      // WHY(FR-001): 이월 후 어제 원본은 ACTIVE 상태를 유지하며, 이월 여부는
+      // CarriedOverHistory(carriedOverToIds)로만 판정한다.
       mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-      mockTodoRepository.findByUserIdAndDate.mockResolvedValue(
-        todosWithCarryOver,
+      mockTodoRepository.findByUserIdAndDate.mockResolvedValue(mockTodos);
+      mockCarriedOverHistoryRepository.findToTodoIds.mockResolvedValue(
+        new Set(['todo-id-1']),
       );
 
       const result = await usecase.execute(queryDto);
@@ -265,6 +261,7 @@ describe('GetTodosUsecase', () => {
       const carriedOverTodo = result.todos.find(
         (t: { id: string }) => t.id === 'todo-id-1',
       );
+      expect(carriedOverTodo!.status).toBe('ACTIVE');
       expect(carriedOverTodo!.isCarriedOver).toBe(true);
 
       const normalTodo = result.todos.find(

@@ -1,0 +1,47 @@
+# T025 [US3] Maestro E2E: 로그인 화면 비주얼 (그라데이션 + 4개 provider 버튼)
+# WHY(FR-008, FR-009, FR-010): 디자인 리뷰 회귀를 막기 위해 로그인 화면에
+#   - 4개 OAuth provider 버튼이 모두 표시되는지
+#   - 각 버튼에 접근성 라벨이 붙어 있는지
+#   를 스냅샷 + 어서션으로 검증한다. 브랜드 아이콘 자체는 선택적(optional) 폴백 허용.
+
+appId: com.todolist.app
+
+tags:
+  - auth
+  - visual
+
+---
+
+# 로그인 화면 진입 및 비주얼 스냅샷 확보
+- assertVisible:
+    id: "login-button-google"
+- assertVisible:
+    id: "login-button-naver"
+- assertVisible:
+    id: "login-button-kakao"
+- assertVisible:
+    id: "login-button-apple"
+
+# 접근성 라벨(텍스트) 폴백 검증 (FR-010: 아이콘 미노출 시에도 텍스트 라벨은 유지)
+- assertVisible:
+    text: "Google"
+- assertVisible:
+    text: "네이버"
+- assertVisible:
+    text: "카카오"
+- assertVisible:
+    text: "Apple"
+
+# 브랜드 에셋이 존재하는 경우에 한해 아이콘이 표시된다 (optional 폴백)
+- assertVisible:
+    id: "oauth-icon-google"
+    optional: true
+- assertVisible:
+    id: "oauth-icon-naver"
+    optional: true
+- assertVisible:
+    id: "oauth-icon-kakao"
+    optional: true
+- assertVisible:
+    id: "oauth-icon-apple"
+    optional: true

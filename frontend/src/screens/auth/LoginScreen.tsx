@@ -3,11 +3,12 @@ import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
-import { colors, typography, spacing, radius } from '../../theme';
+import { colors, gradients, typography, spacing, radius } from '../../theme';
 import { useAuth } from '../../features/auth/useAuth';
 import { useAuthStore } from '../../store/authStore';
 import type { OAuthProvider } from '../../types/user';
-import { SoundPressable } from '../../components/common/SoundPressable';
+import { OAuthProviderButton } from '../../components/auth/OAuthProviderButton';
+import { OAUTH_ICONS } from '../../components/auth/oauthIconCatalog';
 
 interface LoginScreenProps {
   onLogin?: (provider: OAuthProvider) => void;
@@ -82,7 +83,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = (props) => {
   const error = props.error ?? auth.error ?? undefined;
   return (
     <LinearGradient
-      colors={[colors.primaryLight, colors.surface]}
+      colors={gradients.brandHero.colors as unknown as readonly [string, string, ...string[]]}
+      locations={gradients.brandHero.locations as unknown as readonly [number, number, ...number[]]}
+      start={gradients.brandHero.start}
+      end={gradients.brandHero.end}
       style={styles.container}
     >
       <View style={styles.brandSection}>
@@ -104,24 +108,20 @@ export const LoginScreen: React.FC<LoginScreenProps> = (props) => {
       <View style={styles.buttonContainer}>
         {PROVIDERS.map(
           ({ key, label, backgroundColor, textColor, borderColor }) => (
-            <SoundPressable
+            <OAuthProviderButton
               key={key}
-              testID={`login-button-${key}`}
-              accessibilityLabel={t(label)}
-              accessibilityRole="button"
-              accessibilityState={{ disabled: isLoading }}
+              provider={key}
+              label={t(label)}
+              iconSource={OAUTH_ICONS[key]}
               disabled={isLoading}
+              onPress={() => onLogin?.(key)}
               style={[
                 styles.button,
                 { backgroundColor },
                 borderColor ? { borderWidth: 1, borderColor } : undefined,
               ]}
-              onPress={() => onLogin?.(key)}
-            >
-              <Text style={[styles.buttonText, { color: textColor }]}>
-                {t(label)}
-              </Text>
-            </SoundPressable>
+              textStyle={[styles.buttonText, { color: textColor }]}
+            />
           ),
         )}
       </View>

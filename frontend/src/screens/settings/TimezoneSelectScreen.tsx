@@ -15,7 +15,11 @@ import {
 import { useTranslation } from 'react-i18next';
 import Svg, { Path } from 'react-native-svg';
 import { colors, typography, spacing, radius } from '../../theme';
-import { getTimezoneEntries } from '../../i18n/timezones';
+import {
+  getTimezoneEntries,
+  formatTimezoneLabel,
+  TZ_TO_COUNTRY_CITY,
+} from '../../i18n/timezones';
 
 interface TimezoneSelectScreenProps {
   current: string;
@@ -58,11 +62,20 @@ export const TimezoneSelectScreen: React.FC<TimezoneSelectScreenProps> = ({
 
   // WHY: 검색 중에도 현재 선택을 항상 최상단에 고정한다 (검색어와 무관).
   // 예: 현재 Asia/Seoul + 검색 "Tokyo" → [Asia/Seoul (고정), Asia/Tokyo, ...]
+  //
+  // WHY(FR-013): 검색 키는 (a) IANA 원문 (b) countryEn (c) cityEn 세 가지를 모두 포함해
+  // "Korea"/"Seoul"/"South" 같은 영어 국가·도시 검색어로도 매칭되도록 한다.
   const otherMatches = useMemo(() => {
-    const base =
-      q === ''
-        ? entries
-        : entries.filter((e) => e.tz.toLowerCase().includes(q));
+    const matches = (tz: string): boolean => {
+      if (tz.toLowerCase().includes(q)) return true;
+      const mapped = TZ_TO_COUNTRY_CITY[tz];
+      if (!mapped) return false;
+      return (
+        mapped.countryEn.toLowerCase().includes(q) ||
+        mapped.cityEn.toLowerCase().includes(q)
+      );
+    };
+    const base = q === '' ? entries : entries.filter((e) => matches(e.tz));
     return base.filter((e) => e.tz !== current);
   }, [entries, q, current]);
 
@@ -72,8 +85,16 @@ export const TimezoneSelectScreen: React.FC<TimezoneSelectScreenProps> = ({
   );
 
   // WHY: 검색어가 있고 현재 선택 외 추가 매칭이 없으며 현재 선택도 검색어에 매칭되지 않을 때만 "결과 없음"을 보여준다
-  const currentMatchesQuery =
-    !!currentEntry && currentEntry.tz.toLowerCase().includes(q);
+  const currentMatchesQuery = (() => {
+    if (!currentEntry) return false;
+    if (currentEntry.tz.toLowerCase().includes(q)) return true;
+    const mapped = TZ_TO_COUNTRY_CITY[currentEntry.tz];
+    if (!mapped) return false;
+    return (
+      mapped.countryEn.toLowerCase().includes(q) ||
+      mapped.cityEn.toLowerCase().includes(q)
+    );
+  })();
   const showNoResults =
     q !== '' && otherMatches.length === 0 && !currentMatchesQuery;
 
@@ -174,7 +195,7 @@ export const TimezoneSelectScreen: React.FC<TimezoneSelectScreenProps> = ({
                       selected && styles.itemLabelSelected,
                     ]}
                   >
-                    {item.tz}
+                    {formatTimezoneLabel(item.tz)}
                   </Text>
                   <Text style={styles.itemOffset}>{item.offsetLabel}</Text>
                 </View>

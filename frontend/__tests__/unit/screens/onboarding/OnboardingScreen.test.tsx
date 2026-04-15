@@ -63,6 +63,13 @@ describe('OnboardingScreen', () => {
 
       expect(screen.getByText('회고 시간')).toBeTruthy();
     });
+
+    // WHY(FR-008): 온보딩 화면도 브랜드 그라데이션 배경을 유지해야 한다.
+    it('LinearGradient 배경을 렌더링한다', () => {
+      const { UNSAFE_getAllByType } = render(<OnboardingScreen />);
+      const { LinearGradient } = require('expo-linear-gradient');
+      expect(UNSAFE_getAllByType(LinearGradient).length).toBeGreaterThan(0);
+    });
   });
 
   describe('기본값', () => {

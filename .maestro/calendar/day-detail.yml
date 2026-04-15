@@ -31,3 +31,8 @@ tags:
 # 통계 영역 확인
 - assertVisible:
     id: "day-detail-stats"
+
+# WHY(008-FR-001~004): 이월 루틴 이후에도 어제 원본 todo가 보존되어
+# 선택한 날짜의 기존 todo 목록(`day-detail-todo-list`)이 그대로 렌더되어야 한다.
+- assertVisible:
+    id: "day-detail-todo-list"

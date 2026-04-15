@@ -47,8 +47,9 @@ export class CarryoverSchedulerUsecase {
 
           const nextDate = this.getNextDate(yesterday);
 
-          todo.status = TodoStatus.CARRIED_OVER;
-          await txTodoRepo.save(todo);
+          // WHY(FR-001~004): 어제 원본의 status는 변경하지 않는다.
+          // 이월 중복 방지는 CarriedOverHistory.fromTodoId UNIQUE 제약이 담당하며,
+          // "이월됨" 표시는 GetTodosUsecase가 carriedOverToIds로 도출한다.
 
           const newTodo = txTodoRepo.create({
             userId: user.id,
