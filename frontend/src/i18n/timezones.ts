@@ -751,7 +751,10 @@ export const TZ_TO_COUNTRY_CITY: Record<string, CountryCityLabel> = {
     countryEn: 'Cocos (Keeling) Islands',
     cityEn: 'West Island',
   },
-  'Indian/Christmas': { countryEn: 'Christmas Island', cityEn: 'Flying Fish Cove' },
+  'Indian/Christmas': {
+    countryEn: 'Christmas Island',
+    cityEn: 'Flying Fish Cove',
+  },
   'Indian/Kerguelen': {
     countryEn: 'French Southern Territories',
     cityEn: 'Port-aux-Français',
