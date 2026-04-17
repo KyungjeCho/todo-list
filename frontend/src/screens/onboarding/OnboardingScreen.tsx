@@ -164,8 +164,20 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
 
   return (
     <LinearGradient
-      colors={gradients.brandHero.colors as unknown as readonly [string, string, ...string[]]}
-      locations={gradients.brandHero.locations as unknown as readonly [number, number, ...number[]]}
+      colors={
+        gradients.brandHero.colors as unknown as readonly [
+          string,
+          string,
+          ...string[],
+        ]
+      }
+      locations={
+        gradients.brandHero.locations as unknown as readonly [
+          number,
+          number,
+          ...number[],
+        ]
+      }
       start={gradients.brandHero.start}
       end={gradients.brandHero.end}
       style={styles.container}

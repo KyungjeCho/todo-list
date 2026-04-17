@@ -1,6 +1,6 @@
 # todo-list Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-04-15
+Auto-generated from all feature plans. Last updated: 2026-04-16
 
 ## Active Technologies
 - Supabase (PostgreSQL) — 디스크 수준 AES-256 암호화, 추가 앱 레벨 암호화 없음 (001-todo-mobile-service)
@@ -16,6 +16,8 @@ Auto-generated from all feature plans. Last updated: 2026-04-15
 - Supabase (PostgreSQL) via TypeORM — `TODOLIST_USER` 테이블에 `has_completed_onboarding BOOLEAN NOT NULL DEFAULT FALSE` 컬럼 추가, 기존 사용자 전원 `TRUE` 백필. (007-fix-login-notif-calendar)
 - TypeScript 5.x (strict, `any` 금지) — Frontend & Backend 공통 (008-update-01-ui-fixes)
 - Supabase (PostgreSQL) via TypeORM — **스키마 변경 없음**. `CarriedOverHistory`(`from_todo_id` UNIQUE) 재사용. (008-update-01-ui-fixes)
+- TypeScript 5.9 (Frontend), TypeScript 5.7 (Backend) (009-security-dep-input-fix)
+- Supabase (PostgreSQL) via TypeORM — 스키마 변경 없음 (009-security-dep-input-fix)
 
 - TypeScript 5.x (Frontend & Backend) (001-todo-mobile-service)
 - React Native (Expo) — iOS/Android 크로스 플랫폼
@@ -83,9 +85,9 @@ cd frontend && npm test && npm run lint
 - `hotfix/*`: 긴급 수정
 
 ## Recent Changes
+- 009-security-dep-input-fix: Added TypeScript 5.9 (Frontend), TypeScript 5.7 (Backend)
 - 008-update-01-ui-fixes: Added TypeScript 5.x (strict, `any` 금지) — Frontend & Backend 공통
 - 007-fix-login-notif-calendar: Added TypeScript 5.x (Frontend & Backend)
-- feature/006-ui-button-sound: Added TypeScript 5.9 (Frontend)
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
