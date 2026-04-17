@@ -36,6 +36,17 @@ export class AuthController {
     private readonly configService: ConfigService,
   ) {}
 
+  /**
+   * OAuth 로그인을 시작하여 프로바이더 인증 페이지로 리다이렉트한다.
+   * @param provider - OAuth 프로바이더 (google, naver, kakao, apple)
+   * @param fcmToken - FCM 푸시 토큰 (선택)
+   * @param deviceType - 디바이스 타입 (IOS, ANDROID)
+   * @param redirectUri - 인증 완료 후 리다이렉트 URI
+   * @param deviceName - 디바이스 이름 (선택)
+   * @param timezone - 클라이언트 타임존 (선택)
+   * @param language - 클라이언트 언어 (선택)
+   * @param res - HTTP 응답 (302 리다이렉트)
+   */
   @Get('oauth/:provider')
   async oauthLogin(
     @Param('provider') provider: string,
@@ -62,6 +73,14 @@ export class AuthController {
 
   private static readonly DEFAULT_REDIRECT_URI = 'todolist://auth/callback';
 
+  /**
+   * OAuth 프로바이더 콜백을 처리하여 토큰을 발급하고 클라이언트로 리다이렉트한다.
+   * @param provider - OAuth 프로바이더
+   * @param code - 인가 코드
+   * @param state - CSRF 방지용 state 파라미터
+   * @param req - HTTP 요청 (user-agent, IP 추출)
+   * @param res - HTTP 응답 (토큰 포함 리다이렉트)
+   */
   @Get('oauth/:provider/callback')
   async oauthCallback(
     @Param('provider') provider: string,
@@ -81,7 +100,9 @@ export class AuthController {
       throw new BadRequestException('INVALID_STATE');
     }
 
-    // WHY: state 디코딩 후 필수 필드 타입 검증 — 악의적 state로 undefined 캐스팅 방지
+    // WHY: state 디코딩 후 필수 필드 타입 검증 — 악의적 state로 undefined 캐스팅 방지.
+    // HMAC 서명은 위변조를 막지만 페이로드 구조까지 보장하지 않으므로
+    // 런타임 타입 체크로 이후 as 캐스팅의 안전성을 확보한다.
     const stateData = verified;
     if (
       typeof stateData !== 'object' ||
@@ -157,10 +178,17 @@ export class AuthController {
 
   @Post('token/refresh')
   @HttpCode(200)
+  // WHY: 토큰 갱신은 초당 1회, 분당 10회로 제한하여
+  // 탈취된 refresh token을 이용한 대량 갱신 시도를 차단한다.
   @Throttle({
     short: { ttl: 1000, limit: 1 },
     medium: { ttl: 60000, limit: 10 },
   })
+  /**
+   * refresh token으로 새 access/refresh 토큰 쌍을 발급한다.
+   * @param body - 기존 refresh token
+   * @returns 새 accessToken, refreshToken
+   */
   async tokenRefresh(
     @Body() body: TokenRefreshDto,
   ): Promise<{ accessToken: string; refreshToken: string }> {
@@ -169,6 +197,12 @@ export class AuthController {
     });
   }
 
+  /**
+   * 로그아웃하여 세션을 삭제하고 FCM 디바이스를 해제한다.
+   * @param req - 인증된 요청 (userAuthId 포함)
+   * @param body - refresh token과 FCM token
+   * @returns 로그아웃 결과 메시지
+   */
   @Post('logout')
   @UseGuards(JwtAuthGuard)
   @HttpCode(200)

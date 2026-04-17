@@ -1,8 +1,10 @@
 import React from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { colors, typography, spacing, radius } from '../../theme';
 import { SoundPressable } from '../../components/common/SoundPressable';
+import { ErrorBanner } from '../../components/common/ErrorBanner';
+import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 
 interface DaySummary {
   date: string;
@@ -54,6 +56,8 @@ function getDayTextColor(dayOfWeek: number, isSelected: boolean): string {
   return colors.onSurface;
 }
 
+// WHY: Manual ISO formatting avoids timezone-shifting issues with toISOString(),
+// which converts to UTC and can return yesterday's date after midnight in positive-offset zones.
 function getTodayDate(): string {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -163,7 +167,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator testID="calendar-loading-indicator" size="large" />
+        <LoadingSpinner testID="calendar-loading-indicator" />
       </View>
     );
   }
@@ -172,11 +176,7 @@ export const CalendarScreen: React.FC<CalendarScreenProps> = ({
     <View style={styles.container}>
       <Text style={styles.screenTitle}>{t('calendar.title')}</Text>
 
-      {error && (
-        <View testID="calendar-error-message" style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      )}
+      <ErrorBanner error={error} testID="calendar-error-message" />
 
       <View style={styles.header}>
         <SoundPressable
@@ -316,15 +316,5 @@ const styles = StyleSheet.create({
   emptyText: {
     ...typography.body,
     color: colors.secondaryText,
-  },
-  errorContainer: {
-    backgroundColor: colors.primaryLight,
-    padding: spacing.md,
-    borderRadius: radius.md,
-    marginBottom: spacing.md,
-  },
-  errorText: {
-    color: colors.error,
-    ...typography.body,
   },
 });

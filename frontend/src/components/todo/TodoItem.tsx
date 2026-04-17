@@ -6,7 +6,8 @@ import type { Todo } from '../../types/todo';
 import { MemoSection } from './MemoSection';
 import { TodoActionButtons } from './TodoActionButtons';
 import { SoundPressable } from '../common/SoundPressable';
-import { colors, spacing, radius } from '../../theme';
+import { Checkbox } from '../common/Checkbox';
+import { colors, spacing } from '../../theme';
 
 interface TodoItemProps {
   todo: Todo;
@@ -22,202 +23,200 @@ interface TodoItemProps {
   onDeleteMemo?: (todoId: string, memoId: string) => void;
 }
 
-export const TodoItem: React.FC<TodoItemProps> = ({
-  todo,
-  isExpanded = false,
-  onExpand,
-  onToggleComplete,
-  onEdit,
-  onDeactivate,
-  onDelete,
-  onAddMemoOverlay,
-  onUpdateMemo,
-  onDeleteMemo,
-}) => {
-  const { t } = useTranslation();
-  const [editText, setEditText] = useState(todo.content);
-  const isCompleted = todo.status === 'COMPLETED';
-  const isInactive = todo.status === 'INACTIVE';
+export const TodoItem = React.memo<TodoItemProps>(
+  ({
+    todo,
+    isExpanded = false,
+    onExpand,
+    onToggleComplete,
+    onEdit,
+    onDeactivate,
+    onDelete,
+    onAddMemoOverlay,
+    onUpdateMemo,
+    onDeleteMemo,
+  }) => {
+    const { t } = useTranslation();
+    const [editText, setEditText] = useState(todo.content);
+    const isCompleted = todo.status === 'COMPLETED';
+    const isInactive = todo.status === 'INACTIVE';
 
-  useEffect(() => {
-    if (isExpanded) {
-      setEditText(todo.content);
-    }
-  }, [isExpanded, todo.content]);
-
-  const handleItemPress = useCallback(() => {
-    onExpand?.(isExpanded ? null : todo.id);
-  }, [isExpanded, onExpand, todo.id]);
-
-  const handleSubmitEditing = () => {
-    const trimmed = editText.trim();
-    if (trimmed.length === 0 || trimmed === todo.content) {
-      setEditText(todo.content);
-      return;
-    }
-    onEdit?.(todo.id, trimmed);
-  };
-
-  const handleBlur = () => {
-    handleSubmitEditing();
-  };
-
-  const handleDelete = useCallback(() => {
-    Alert.alert(
-      t('todo.deleteTitle'),
-      t('todo.deleteMessage', { content: todo.content }),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('common.delete'),
-          style: 'destructive',
-          onPress: () => onDelete?.(todo.id),
-        },
-      ],
-    );
-  }, [onDelete, todo.id, todo.content, t]);
-
-  const handleDeactivate = useCallback(() => {
-    onDeactivate?.(todo.id);
-  }, [onDeactivate, todo.id]);
-
-  const handleAddMemo = useCallback(() => {
-    onAddMemoOverlay?.(todo.id);
-  }, [onAddMemoOverlay, todo.id]);
-
-  const handleCollapse = useCallback(() => {
-    onExpand?.(null);
-  }, [onExpand]);
-
-  return (
-    <SoundPressable
-      testID={`todo-item-${todo.id}`}
-      accessibilityLabel={
-        todo.isCarriedOver
-          ? t('todo.statusLabelCarried', {
-              content: todo.content,
-              status: t(`todo.statusAccessibility.${todo.status}`),
-            })
-          : t('todo.statusLabel', {
-              content: todo.content,
-              status: t(`todo.statusAccessibility.${todo.status}`),
-            })
+    useEffect(() => {
+      if (isExpanded) {
+        setEditText(todo.content);
       }
-      activeOpacity={0.7}
-      onPress={handleItemPress}
-      style={[
-        styles.container,
-        isInactive && styles.inactive,
-        isExpanded && styles.expanded,
-      ]}
-    >
-      <View style={styles.row}>
-        <SoundPressable
-          testID={`todo-checkbox-${todo.id}`}
-          onPress={() => onToggleComplete?.(todo.id)}
-          accessibilityRole="checkbox"
-          accessibilityState={{ checked: isCompleted }}
-          style={[styles.checkbox, isCompleted && styles.checkboxChecked]}
-        >
-          {isCompleted && <Text style={styles.checkmark}>&#10003;</Text>}
-        </SoundPressable>
+    }, [isExpanded, todo.content]);
 
-        {todo.isCarriedOver && (
-          <View
-            testID={`carried-over-badge-${todo.id}`}
-            accessibilityLabel={t('todo.carriedOverItem')}
-            style={styles.carriedOverBadge}
-          >
-            <Text style={styles.carriedOverBadgeText}>
-              {t('common.carriedOver')}
-            </Text>
-          </View>
-        )}
+    const handleItemPress = useCallback(() => {
+      onExpand?.(isExpanded ? null : todo.id);
+    }, [isExpanded, onExpand, todo.id]);
 
-        <View style={styles.contentContainer}>
-          {isExpanded ? (
-            <TextInput
-              testID={`todo-edit-input-${todo.id}`}
-              value={editText}
-              onChangeText={setEditText}
-              onSubmitEditing={handleSubmitEditing}
-              onBlur={handleBlur}
-              style={[
-                styles.contentInput,
-                isCompleted && styles.completedText,
-                isInactive && styles.inactiveText,
-              ]}
-              accessibilityLabel={t('todo.editTodo')}
-            />
-          ) : (
-            <Text
-              style={[
-                styles.contentText,
-                isCompleted && styles.completedText,
-                isInactive && styles.inactiveText,
-              ]}
+    const handleSubmitEditing = () => {
+      const trimmed = editText.trim();
+      if (trimmed.length === 0 || trimmed === todo.content) {
+        setEditText(todo.content);
+        return;
+      }
+      onEdit?.(todo.id, trimmed);
+    };
+
+    const handleBlur = () => {
+      handleSubmitEditing();
+    };
+
+    const handleDelete = useCallback(() => {
+      Alert.alert(
+        t('todo.deleteTitle'),
+        t('todo.deleteMessage', { content: todo.content }),
+        [
+          { text: t('common.cancel'), style: 'cancel' },
+          {
+            text: t('common.delete'),
+            style: 'destructive',
+            onPress: () => onDelete?.(todo.id),
+          },
+        ],
+      );
+    }, [onDelete, todo.id, todo.content, t]);
+
+    const handleDeactivate = useCallback(() => {
+      onDeactivate?.(todo.id);
+    }, [onDeactivate, todo.id]);
+
+    const handleAddMemo = useCallback(() => {
+      onAddMemoOverlay?.(todo.id);
+    }, [onAddMemoOverlay, todo.id]);
+
+    const handleCollapse = useCallback(() => {
+      onExpand?.(null);
+    }, [onExpand]);
+
+    return (
+      <SoundPressable
+        testID={`todo-item-${todo.id}`}
+        accessibilityLabel={
+          todo.isCarriedOver
+            ? t('todo.statusLabelCarried', {
+                content: todo.content,
+                status: t(`todo.statusAccessibility.${todo.status}`),
+              })
+            : t('todo.statusLabel', {
+                content: todo.content,
+                status: t(`todo.statusAccessibility.${todo.status}`),
+              })
+        }
+        activeOpacity={0.7}
+        onPress={handleItemPress}
+        style={[
+          styles.container,
+          isInactive && styles.inactive,
+          isExpanded && styles.expanded,
+        ]}
+      >
+        <View style={styles.row}>
+          <Checkbox
+            testID={`todo-checkbox-${todo.id}`}
+            checked={isCompleted}
+            onPress={() => onToggleComplete?.(todo.id)}
+          />
+
+          {todo.isCarriedOver && (
+            <View
+              testID={`carried-over-badge-${todo.id}`}
+              accessibilityLabel={t('todo.carriedOverItem')}
+              style={styles.carriedOverBadge}
             >
-              {todo.content}
-            </Text>
+              <Text style={styles.carriedOverBadgeText}>
+                {t('common.carriedOver')}
+              </Text>
+            </View>
+          )}
+
+          <View style={styles.contentContainer}>
+            {isExpanded ? (
+              <TextInput
+                testID={`todo-edit-input-${todo.id}`}
+                value={editText}
+                onChangeText={setEditText}
+                onSubmitEditing={handleSubmitEditing}
+                onBlur={handleBlur}
+                style={[
+                  styles.contentInput,
+                  isCompleted && styles.completedText,
+                  isInactive && styles.inactiveText,
+                ]}
+                accessibilityLabel={t('todo.editTodo')}
+              />
+            ) : (
+              <Text
+                style={[
+                  styles.contentText,
+                  isCompleted && styles.completedText,
+                  isInactive && styles.inactiveText,
+                ]}
+              >
+                {todo.content}
+              </Text>
+            )}
+          </View>
+
+          {!isExpanded && todo.memos.length > 0 && (
+            <View style={styles.memoCountContainer}>
+              <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"
+                  stroke={colors.primary}
+                  strokeWidth={1.5}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <Path
+                  d="M14 2v6h6"
+                  stroke={colors.primary}
+                  strokeWidth={1.5}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
+              <Text style={styles.memoCountText}>{todo.memos.length}</Text>
+            </View>
+          )}
+
+          {isExpanded && (
+            <SoundPressable
+              testID={`chevron-up-${todo.id}`}
+              onPress={handleCollapse}
+              style={styles.chevronButton}
+              accessibilityLabel={t('todo.collapse')}
+              accessibilityRole="button"
+            >
+              <Text style={styles.chevronIcon}>▲</Text>
+            </SoundPressable>
           )}
         </View>
 
-        {!isExpanded && todo.memos.length > 0 && (
-          <View style={styles.memoCountContainer}>
-            <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
-              <Path
-                d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"
-                stroke={colors.primary}
-                strokeWidth={1.5}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <Path
-                d="M14 2v6h6"
-                stroke={colors.primary}
-                strokeWidth={1.5}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
-            <Text style={styles.memoCountText}>{todo.memos.length}</Text>
-          </View>
-        )}
-
         {isExpanded && (
-          <SoundPressable
-            testID={`chevron-up-${todo.id}`}
-            onPress={handleCollapse}
-            style={styles.chevronButton}
-            accessibilityLabel={t('todo.collapse')}
-            accessibilityRole="button"
-          >
-            <Text style={styles.chevronIcon}>▲</Text>
-          </SoundPressable>
+          <>
+            <TodoActionButtons
+              onDelete={handleDelete}
+              onDeactivate={handleDeactivate}
+              onAddMemo={handleAddMemo}
+            />
+
+            <MemoSection
+              todoId={todo.id}
+              memos={todo.memos}
+              onUpdateMemo={(memoId, content) =>
+                onUpdateMemo?.(todo.id, memoId, content)
+              }
+              onDeleteMemo={(memoId) => onDeleteMemo?.(todo.id, memoId)}
+            />
+          </>
         )}
-      </View>
-
-      {isExpanded && (
-        <>
-          <TodoActionButtons
-            onDelete={handleDelete}
-            onDeactivate={handleDeactivate}
-            onAddMemo={handleAddMemo}
-          />
-
-          <MemoSection
-            todoId={todo.id}
-            memos={todo.memos}
-            onUpdateMemo={(memoId, content) =>
-              onUpdateMemo?.(todo.id, memoId, content)
-            }
-            onDeleteMemo={(memoId) => onDeleteMemo?.(todo.id, memoId)}
-          />
-        </>
-      )}
-    </SoundPressable>
-  );
-};
+      </SoundPressable>
+    );
+  },
+);
 
 const styles = StyleSheet.create({
   container: {
@@ -236,21 +235,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderWidth: 2,
-    borderColor: colors.muted,
-    borderRadius: radius.sm,
-    marginRight: spacing.md,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: colors.successLight,
-    borderColor: colors.successLight,
-  },
-  checkmark: { color: colors.surface, fontSize: 14 },
   contentContainer: { flex: 1 },
   contentText: {
     fontSize: 15,

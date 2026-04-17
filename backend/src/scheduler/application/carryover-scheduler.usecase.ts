@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { UserRepository } from '../../user/infrastructure/user.repository';
+import { DateHelper } from '../../common/utils/date-helper';
 import { Todo, TodoStatus } from '../../todo/domain/todo.entity';
 import { CarriedOverHistory } from '../../todo/domain/carried-over-history.entity';
 
@@ -45,7 +46,7 @@ export class CarryoverSchedulerUsecase {
             continue;
           }
 
-          const nextDate = this.getNextDate(yesterday);
+          const nextDate = DateHelper.getNextDate(yesterday);
 
           // WHY(FR-001~004): 어제 원본의 status는 변경하지 않는다.
           // 이월 중복 방지는 CarriedOverHistory.fromTodoId UNIQUE 제약이 담당하며,
@@ -73,6 +74,9 @@ export class CarryoverSchedulerUsecase {
     }
   }
 
+  // WHY: hourCycle 'h23'을 사용하여 자정을 0으로 표현한다.
+  // 기본 'h12'에서는 자정이 12로 표시되어 오후 12시와 구분 불가하고,
+  // 'h24'에서는 자정이 24로 표시되어 parseInt 비교가 실패한다.
   private isMidnight(now: Date, timezone: string): boolean {
     const localTime = new Intl.DateTimeFormat('en-US', {
       timeZone: timezone,
@@ -103,11 +107,5 @@ export class CarryoverSchedulerUsecase {
     const today = new Date(todayStr + 'T00:00:00Z');
     today.setUTCDate(today.getUTCDate() - 1);
     return today.toISOString().split('T')[0];
-  }
-
-  private getNextDate(dateStr: string): string {
-    const date = new Date(dateStr + 'T00:00:00Z');
-    date.setUTCDate(date.getUTCDate() + 1);
-    return date.toISOString().split('T')[0];
   }
 }

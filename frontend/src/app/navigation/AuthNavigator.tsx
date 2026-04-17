@@ -6,7 +6,13 @@ import type {
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import { useAuthStore } from '../../store/authStore';
+import {
+  useAuthStore,
+  selectUser,
+  selectSetUser,
+  selectIsAuthenticated,
+  selectIsLoading,
+} from '../../store/authStore';
 import { userApi } from '../../services/api/userApi';
 import { todoApi } from '../../services/api/todoApi';
 import type {
@@ -38,7 +44,8 @@ const TimezoneSelectWrapper: React.FC<TimezoneSelectProps> = ({
   route,
   navigation,
 }) => {
-  const { user, setUser } = useAuthStore();
+  const user = useAuthStore(selectUser);
+  const setUser = useAuthStore(selectSetUser);
   const current = route.params?.current ?? user?.timezone ?? 'UTC';
 
   const handleSelect = useCallback(
@@ -61,7 +68,7 @@ const TimezoneSelectWrapper: React.FC<TimezoneSelectProps> = ({
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const OnboardingWrapper: React.FC = () => {
-  const { setUser } = useAuthStore();
+  const setUser = useAuthStore(selectSetUser);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
 
@@ -364,7 +371,9 @@ const MainTabScreen: React.FC = () => {
 };
 
 export const AuthNavigator: React.FC = () => {
-  const { isAuthenticated, isLoading, user } = useAuthStore();
+  const isAuthenticated = useAuthStore(selectIsAuthenticated);
+  const isLoading = useAuthStore(selectIsLoading);
+  const user = useAuthStore(selectUser);
 
   // WHY: 서버에 저장된 사용자 언어 설정이 변경되면 앱 전체 UI 언어를 동기화한다.
   // 디바이스 언어보다 서버 저장값이 우선이므로, 로그인 후 서버 값으로 전환한다.

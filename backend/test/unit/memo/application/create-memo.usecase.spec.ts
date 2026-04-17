@@ -1,3 +1,4 @@
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { CreateMemoUsecase } from 'src/memo/application/create-memo.usecase';
 
 describe('CreateMemoUsecase', () => {
@@ -7,20 +8,20 @@ describe('CreateMemoUsecase', () => {
     create: jest.fn(),
   };
 
-  const mockTodoRepository = {
-    findById: jest.fn(),
+  const mockUserValidationService = {
+    ensureUserExists: jest.fn(),
   };
 
-  const mockUserRepository = {
-    findByUserAuthId: jest.fn(),
+  const mockTodoAuthorizationService = {
+    validateOwnership: jest.fn(),
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
     usecase = new CreateMemoUsecase(
       mockMemoRepository as never,
-      mockTodoRepository as never,
-      mockUserRepository as never,
+      mockUserValidationService as never,
+      mockTodoAuthorizationService as never,
     );
   });
 
@@ -49,8 +50,10 @@ describe('CreateMemoUsecase', () => {
     };
 
     it('should create a memo and return MemoResponse', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-      mockTodoRepository.findById.mockResolvedValue(mockTodo);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+      mockTodoAuthorizationService.validateOwnership.mockResolvedValue(
+        mockTodo,
+      );
       mockMemoRepository.create.mockResolvedValue({
         id: 'memo-id-1',
         todoId: 'todo-id-1',
@@ -68,8 +71,10 @@ describe('CreateMemoUsecase', () => {
     });
 
     it('should call memoRepository.create with correct data', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-      mockTodoRepository.findById.mockResolvedValue(mockTodo);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+      mockTodoAuthorizationService.validateOwnership.mockResolvedValue(
+        mockTodo,
+      );
       mockMemoRepository.create.mockResolvedValue({
         id: 'memo-id-1',
         todoId: 'todo-id-1',
@@ -90,29 +95,39 @@ describe('CreateMemoUsecase', () => {
     });
 
     it('should throw error when user not found', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(null);
+      mockUserValidationService.ensureUserExists.mockRejectedValue(
+        new NotFoundException('USER_NOT_FOUND'),
+      );
 
       await expect(usecase.execute(createDto)).rejects.toThrow();
     });
 
     it('should throw error when todo not found', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-      mockTodoRepository.findById.mockResolvedValue(null);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+      mockTodoAuthorizationService.validateOwnership.mockRejectedValue(
+        new NotFoundException('TODO_NOT_FOUND'),
+      );
 
       await expect(usecase.execute(createDto)).rejects.toThrow();
     });
 
     it('should throw error when todo belongs to different user', async () => {
       const differentUser = { id: 'user-id-2', userAuthId: 'auth-id-1' };
-      mockUserRepository.findByUserAuthId.mockResolvedValue(differentUser);
-      mockTodoRepository.findById.mockResolvedValue(mockTodo);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(
+        differentUser,
+      );
+      mockTodoAuthorizationService.validateOwnership.mockRejectedValue(
+        new ForbiddenException('FORBIDDEN'),
+      );
 
       await expect(usecase.execute(createDto)).rejects.toThrow();
     });
 
     it('should throw error for empty content', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-      mockTodoRepository.findById.mockResolvedValue(mockTodo);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+      mockTodoAuthorizationService.validateOwnership.mockResolvedValue(
+        mockTodo,
+      );
 
       await expect(
         usecase.execute({ ...createDto, content: '' }),
@@ -120,8 +135,10 @@ describe('CreateMemoUsecase', () => {
     });
 
     it('should set createdBy from the user id', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-      mockTodoRepository.findById.mockResolvedValue(mockTodo);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+      mockTodoAuthorizationService.validateOwnership.mockResolvedValue(
+        mockTodo,
+      );
       mockMemoRepository.create.mockResolvedValue({
         id: 'memo-id-1',
         todoId: 'todo-id-1',

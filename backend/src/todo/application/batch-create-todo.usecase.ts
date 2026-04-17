@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { DataSource, EntityManager } from 'typeorm';
-import { UserRepository } from '../../user/infrastructure/user.repository';
+import { UserValidationService } from '../../common/services/user-validation.service';
 import { Todo, TodoStatus } from '../domain/todo.entity';
 import type { TodoItemDto } from './dto/todo-response.dto';
 
@@ -21,16 +21,17 @@ export interface BatchCreateTodoOutput {
 @Injectable()
 export class BatchCreateTodoUsecase {
   constructor(
-    private readonly userRepository: UserRepository,
+    private readonly userValidationService: UserValidationService,
     private readonly dataSource: DataSource,
   ) {}
 
   async execute(input: BatchCreateTodoInput): Promise<BatchCreateTodoOutput> {
-    const user = await this.userRepository.findByUserAuthId(input.userAuthId);
-    if (!user) {
-      throw new NotFoundException('USER_NOT_FOUND');
-    }
+    const user = await this.userValidationService.ensureUserExists(
+      input.userAuthId,
+    );
 
+    // WHY: 배치 생성을 단일 트랜잭션으로 감싸서 원자성을 보장한다.
+    // 중간 항목에서 실패하면 전체 롤백되어 부분 생성(partial create)을 방지한다.
     const created = await this.dataSource.transaction(
       async (manager: EntityManager) => {
         const todoRepo = manager.getRepository(Todo);

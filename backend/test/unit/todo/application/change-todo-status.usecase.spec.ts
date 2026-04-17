@@ -1,22 +1,27 @@
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { ChangeTodoStatusUsecase } from 'src/todo/application/change-todo-status.usecase';
 
 describe('ChangeTodoStatusUsecase', () => {
   let usecase: ChangeTodoStatusUsecase;
 
   const mockTodoRepository = {
-    findById: jest.fn(),
     update: jest.fn(),
   };
 
-  const mockUserRepository = {
-    findByUserAuthId: jest.fn(),
+  const mockUserValidationService = {
+    ensureUserExists: jest.fn(),
+  };
+
+  const mockTodoAuthorizationService = {
+    validateOwnership: jest.fn(),
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
     usecase = new ChangeTodoStatusUsecase(
       mockTodoRepository as never,
-      mockUserRepository as never,
+      mockUserValidationService as never,
+      mockTodoAuthorizationService as never,
     );
   });
 
@@ -47,8 +52,10 @@ describe('ChangeTodoStatusUsecase', () => {
       it('should change ACTIVE -> COMPLETED', async () => {
         const mockTodo = createMockTodo('ACTIVE');
         mockTodo.canTransitionTo.mockReturnValue(true);
-        mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-        mockTodoRepository.findById.mockResolvedValue(mockTodo);
+        mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+        mockTodoAuthorizationService.validateOwnership.mockResolvedValue(
+          mockTodo,
+        );
         mockTodoRepository.update.mockResolvedValue({
           ...mockTodo,
           status: 'COMPLETED',
@@ -74,8 +81,10 @@ describe('ChangeTodoStatusUsecase', () => {
       it('should change ACTIVE -> INACTIVE', async () => {
         const mockTodo = createMockTodo('ACTIVE');
         mockTodo.canTransitionTo.mockReturnValue(true);
-        mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-        mockTodoRepository.findById.mockResolvedValue(mockTodo);
+        mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+        mockTodoAuthorizationService.validateOwnership.mockResolvedValue(
+          mockTodo,
+        );
         mockTodoRepository.update.mockResolvedValue({
           ...mockTodo,
           status: 'INACTIVE',
@@ -95,8 +104,10 @@ describe('ChangeTodoStatusUsecase', () => {
       it('should change INACTIVE -> ACTIVE', async () => {
         const mockTodo = createMockTodo('INACTIVE');
         mockTodo.canTransitionTo.mockReturnValue(true);
-        mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-        mockTodoRepository.findById.mockResolvedValue(mockTodo);
+        mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+        mockTodoAuthorizationService.validateOwnership.mockResolvedValue(
+          mockTodo,
+        );
         mockTodoRepository.update.mockResolvedValue({
           ...mockTodo,
           status: 'ACTIVE',
@@ -121,8 +132,10 @@ describe('ChangeTodoStatusUsecase', () => {
       it('should change COMPLETED -> ACTIVE', async () => {
         const mockTodo = createMockTodo('COMPLETED');
         mockTodo.canTransitionTo.mockReturnValue(true);
-        mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-        mockTodoRepository.findById.mockResolvedValue(mockTodo);
+        mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+        mockTodoAuthorizationService.validateOwnership.mockResolvedValue(
+          mockTodo,
+        );
         mockTodoRepository.update.mockResolvedValue({
           ...mockTodo,
           status: 'ACTIVE',
@@ -149,8 +162,10 @@ describe('ChangeTodoStatusUsecase', () => {
             'Invalid status transition from INACTIVE to COMPLETED',
           );
         });
-        mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-        mockTodoRepository.findById.mockResolvedValue(mockTodo);
+        mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+        mockTodoAuthorizationService.validateOwnership.mockResolvedValue(
+          mockTodo,
+        );
 
         await expect(
           usecase.execute({
@@ -171,8 +186,10 @@ describe('ChangeTodoStatusUsecase', () => {
             'Invalid status transition from CARRIED_OVER to ACTIVE',
           );
         });
-        mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-        mockTodoRepository.findById.mockResolvedValue(mockTodo);
+        mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+        mockTodoAuthorizationService.validateOwnership.mockResolvedValue(
+          mockTodo,
+        );
 
         await expect(
           usecase.execute({
@@ -189,8 +206,10 @@ describe('ChangeTodoStatusUsecase', () => {
     describe('user cannot set CARRIED_OVER', () => {
       it('should reject CARRIED_OVER as target status', async () => {
         const mockTodo = createMockTodo('ACTIVE');
-        mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-        mockTodoRepository.findById.mockResolvedValue(mockTodo);
+        mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+        mockTodoAuthorizationService.validateOwnership.mockResolvedValue(
+          mockTodo,
+        );
 
         await expect(
           usecase.execute({
@@ -204,8 +223,10 @@ describe('ChangeTodoStatusUsecase', () => {
 
     describe('authorization', () => {
       it('should throw error when todo not found', async () => {
-        mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-        mockTodoRepository.findById.mockResolvedValue(null);
+        mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+        mockTodoAuthorizationService.validateOwnership.mockRejectedValue(
+          new NotFoundException('TODO_NOT_FOUND'),
+        );
 
         await expect(
           usecase.execute({
@@ -217,7 +238,9 @@ describe('ChangeTodoStatusUsecase', () => {
       });
 
       it('should throw error when user not found', async () => {
-        mockUserRepository.findByUserAuthId.mockResolvedValue(null);
+        mockUserValidationService.ensureUserExists.mockRejectedValue(
+          new NotFoundException('USER_NOT_FOUND'),
+        );
 
         await expect(
           usecase.execute({
@@ -230,9 +253,12 @@ describe('ChangeTodoStatusUsecase', () => {
 
       it('should throw error when todo belongs to different user', async () => {
         const differentUser = { id: 'user-id-2', userAuthId: 'auth-id-1' };
-        const mockTodo = createMockTodo('ACTIVE');
-        mockUserRepository.findByUserAuthId.mockResolvedValue(differentUser);
-        mockTodoRepository.findById.mockResolvedValue(mockTodo);
+        mockUserValidationService.ensureUserExists.mockResolvedValue(
+          differentUser,
+        );
+        mockTodoAuthorizationService.validateOwnership.mockRejectedValue(
+          new ForbiddenException('FORBIDDEN'),
+        );
 
         await expect(
           usecase.execute({

@@ -1,13 +1,9 @@
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { TodoRepository } from '../infrastructure/todo.repository';
-import { UserRepository } from '../../user/infrastructure/user.repository';
-import { TodoStatus } from '../domain/todo.entity';
-import type { TodoItemDto } from './dto';
+import { UserValidationService } from '../../common/services/user-validation.service';
+import { TodoAuthorizationService } from './services/todo-authorization.service';
+import { TodoItemMapper } from './mappers/todo-item.mapper';
+import type { TodoItemDto } from './dto/todo-response.dto';
 
 interface UpdateTodoInput {
   userAuthId: string;
@@ -19,23 +15,19 @@ interface UpdateTodoInput {
 export class UpdateTodoUsecase {
   constructor(
     private readonly todoRepository: TodoRepository,
-    private readonly userRepository: UserRepository,
+    private readonly userValidationService: UserValidationService,
+    private readonly todoAuthorizationService: TodoAuthorizationService,
   ) {}
 
   async execute(input: UpdateTodoInput): Promise<TodoItemDto> {
-    const user = await this.userRepository.findByUserAuthId(input.userAuthId);
-    if (!user) {
-      throw new NotFoundException('USER_NOT_FOUND');
-    }
+    const user = await this.userValidationService.ensureUserExists(
+      input.userAuthId,
+    );
 
-    const todo = await this.todoRepository.findById(input.todoId);
-    if (!todo) {
-      throw new NotFoundException('TODO_NOT_FOUND');
-    }
-
-    if (todo.userId !== user.id) {
-      throw new ForbiddenException('FORBIDDEN');
-    }
+    await this.todoAuthorizationService.validateOwnership(
+      input.todoId,
+      user.id,
+    );
 
     if (!input.content || input.content.trim().length === 0) {
       throw new BadRequestException('CONTENT_REQUIRED');
@@ -50,31 +42,6 @@ export class UpdateTodoUsecase {
       updatedBy: user.id,
     });
 
-    const memos = (
-      (updated.memos as {
-        id: string;
-        todoId: string;
-        content: string;
-        createdAt: Date;
-        updatedAt: Date;
-      }[]) ?? []
-    ).map((memo) => ({
-      id: memo.id,
-      todoId: memo.todoId,
-      content: memo.content,
-      createdAt: new Date(memo.createdAt).toISOString(),
-      updatedAt: new Date(memo.updatedAt).toISOString(),
-    }));
-
-    return {
-      id: updated.id,
-      content: updated.content,
-      status: updated.status,
-      isCarriedOver: updated.status === TodoStatus.CARRIED_OVER,
-      todoDate: updated.todoDate,
-      memos,
-      createdAt: new Date(updated.createdAt).toISOString(),
-      updatedAt: new Date(updated.updatedAt).toISOString(),
-    };
+    return TodoItemMapper.toDto(updated);
   }
 }

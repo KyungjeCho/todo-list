@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { colors, typography, spacing } from '../../theme';
 import { SoundPressable } from '../common/SoundPressable';
+import { useTimer } from '../../features/common/useTimer';
 
 interface VoiceControlsProps {
   isListening: boolean;
@@ -15,27 +16,22 @@ export const VoiceControls: React.FC<VoiceControlsProps> = ({
 }) => {
   const { t } = useTranslation();
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timer = useTimer();
 
   useEffect(() => {
     if (isListening) {
       setElapsedSeconds(0);
-      intervalRef.current = setInterval(() => {
+      timer.setInterval(() => {
         setElapsedSeconds((prev) => prev + 1);
       }, 1000);
     } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
+      timer.clear();
     }
 
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
+      timer.clear();
     };
-  }, [isListening]);
+  }, [isListening, timer]);
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);

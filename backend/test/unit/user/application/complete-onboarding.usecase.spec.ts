@@ -1,16 +1,23 @@
+import { NotFoundException } from '@nestjs/common';
 import { CompleteOnboardingUsecase } from 'src/user/application/complete-onboarding.usecase';
 
 describe('CompleteOnboardingUsecase', () => {
   let usecase: CompleteOnboardingUsecase;
 
   const mockUserRepository = {
-    findByUserAuthId: jest.fn(),
     update: jest.fn(),
+  };
+
+  const mockUserValidationService = {
+    ensureUserExists: jest.fn(),
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    usecase = new CompleteOnboardingUsecase(mockUserRepository as never);
+    usecase = new CompleteOnboardingUsecase(
+      mockUserRepository as never,
+      mockUserValidationService as never,
+    );
   });
 
   it('should be defined', () => {
@@ -30,8 +37,10 @@ describe('CompleteOnboardingUsecase', () => {
       hasCompletedOnboarding: false,
     };
 
-    it('C1: FALSE → TRUE 로 전이 후 프로필 반환', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue({ ...baseUser });
+    it('C1: FALSE -> TRUE 로 전이 후 프로필 반환', async () => {
+      mockUserValidationService.ensureUserExists.mockResolvedValue({
+        ...baseUser,
+      });
       mockUserRepository.update.mockImplementation((u) => Promise.resolve(u));
 
       const result = await usecase.execute({ userAuthId });
@@ -43,8 +52,8 @@ describe('CompleteOnboardingUsecase', () => {
       expect(result.id).toBe('user-id-1');
     });
 
-    it('C2: 이미 true 인 경우 멱등 — update 호출 없음', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue({
+    it('C2: 이미 true 인 경우 멱등 -- update 호출 없음', async () => {
+      mockUserValidationService.ensureUserExists.mockResolvedValue({
         ...baseUser,
         hasCompletedOnboarding: true,
       });
@@ -55,8 +64,10 @@ describe('CompleteOnboardingUsecase', () => {
       expect(result.hasCompletedOnboarding).toBe(true);
     });
 
-    it('C4: 매핑 사용자 없음 → NotFoundException(NOT_FOUND)', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(null);
+    it('C4: 매핑 사용자 없음 -> NotFoundException(NOT_FOUND)', async () => {
+      mockUserValidationService.ensureUserExists.mockRejectedValue(
+        new NotFoundException('USER_NOT_FOUND'),
+      );
 
       await expect(usecase.execute({ userAuthId: 'ghost' })).rejects.toThrow(
         /NOT_FOUND/,

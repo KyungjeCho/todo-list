@@ -38,6 +38,9 @@ export class TokenRefreshUsecase {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
 
+    // WHY: refresh token rotation — 기존 세션을 삭제하고 새 토큰 쌍을 발급한다.
+    // 만약 탈취된 refresh token이 사용되면 정상 사용자의 세션도 이미 삭제되어
+    // 토큰 재사용을 즉시 감지하고 차단할 수 있다.
     await this.authRepository.deleteSession(session.id);
 
     const accessToken = this.tokenService.generateAccessToken(

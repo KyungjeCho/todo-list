@@ -39,6 +39,8 @@ export class TokenManager {
     await this.storage.removeItem('refreshToken');
   }
 
+  // WHY: Multiple concurrent 401 responses can trigger parallel refresh calls; deduplicating
+  // via a shared promise prevents race conditions and redundant token rotations.
   async refreshTokens(
     refreshFn: (refreshToken: string) => Promise<TokenRefreshResponse>,
   ): Promise<TokenRefreshResponse | null> {

@@ -4,8 +4,8 @@ import { BatchCreateTodoUsecase } from 'src/todo/application/batch-create-todo.u
 describe('BatchCreateTodoUsecase', () => {
   let usecase: BatchCreateTodoUsecase;
 
-  const mockUserRepository = {
-    findByUserAuthId: jest.fn(),
+  const mockUserValidationService = {
+    ensureUserExists: jest.fn(),
   };
 
   const mockDataSource = {
@@ -15,7 +15,7 @@ describe('BatchCreateTodoUsecase', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     usecase = new BatchCreateTodoUsecase(
-      mockUserRepository as never,
+      mockUserValidationService as never,
       mockDataSource as never,
     );
   });
@@ -23,7 +23,7 @@ describe('BatchCreateTodoUsecase', () => {
   const mockUser = { id: 'user-id-1' };
 
   it('여러 할 일을 트랜잭션으로 일괄 생성하여 반환한다', async () => {
-    mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+    mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
 
     const createdTodos = [
       {
@@ -84,13 +84,15 @@ describe('BatchCreateTodoUsecase', () => {
         content: '장보기',
       }),
     );
-    expect(mockUserRepository.findByUserAuthId).toHaveBeenCalledWith(
+    expect(mockUserValidationService.ensureUserExists).toHaveBeenCalledWith(
       'test-user-auth-id',
     );
   });
 
   it('사용자가 존재하지 않으면 NotFoundException을 throw한다', async () => {
-    mockUserRepository.findByUserAuthId.mockResolvedValue(null);
+    mockUserValidationService.ensureUserExists.mockRejectedValue(
+      new NotFoundException('USER_NOT_FOUND'),
+    );
 
     await expect(
       usecase.execute({
@@ -101,7 +103,7 @@ describe('BatchCreateTodoUsecase', () => {
   });
 
   it('트랜잭션 실패 시 에러를 전파한다', async () => {
-    mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+    mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
     mockDataSource.transaction.mockRejectedValue(
       new Error('Transaction failed'),
     );

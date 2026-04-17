@@ -1,3 +1,4 @@
+import { NotFoundException } from '@nestjs/common';
 import { GetMonthlySummaryUsecase } from 'src/todo/application/get-monthly-summary.usecase';
 
 describe('GetMonthlySummaryUsecase', () => {
@@ -7,15 +8,15 @@ describe('GetMonthlySummaryUsecase', () => {
     findByUserIdAndMonth: jest.fn(),
   };
 
-  const mockUserRepository = {
-    findByUserAuthId: jest.fn(),
+  const mockUserValidationService = {
+    ensureUserExists: jest.fn(),
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
     usecase = new GetMonthlySummaryUsecase(
       mockTodoRepository as never,
-      mockUserRepository as never,
+      mockUserValidationService as never,
     );
   });
 
@@ -36,7 +37,7 @@ describe('GetMonthlySummaryUsecase', () => {
     };
 
     it('날짜별 완료/전체 건수를 집계하여 반환한다', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockTodoRepository.findByUserIdAndMonth.mockResolvedValue([
         {
           id: 'todo-1',
@@ -109,7 +110,7 @@ describe('GetMonthlySummaryUsecase', () => {
     });
 
     it('할 일이 없는 월은 빈 days 배열을 반환한다', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockTodoRepository.findByUserIdAndMonth.mockResolvedValue([]);
 
       const result = await usecase.execute(input);
@@ -120,24 +121,26 @@ describe('GetMonthlySummaryUsecase', () => {
     });
 
     it('사용자를 찾지 못하면 NotFoundException을 던진다', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(null);
+      mockUserValidationService.ensureUserExists.mockRejectedValue(
+        new NotFoundException('USER_NOT_FOUND'),
+      );
 
       await expect(usecase.execute(input)).rejects.toThrow('USER_NOT_FOUND');
     });
 
     it('userAuthId로 사용자를 조회한다', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockTodoRepository.findByUserIdAndMonth.mockResolvedValue([]);
 
       await usecase.execute(input);
 
-      expect(mockUserRepository.findByUserAuthId).toHaveBeenCalledWith(
+      expect(mockUserValidationService.ensureUserExists).toHaveBeenCalledWith(
         'auth-id-1',
       );
     });
 
     it('userId, year, month를 repository에 전달한다', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockTodoRepository.findByUserIdAndMonth.mockResolvedValue([]);
 
       await usecase.execute(input);
@@ -150,7 +153,7 @@ describe('GetMonthlySummaryUsecase', () => {
     });
 
     it('INACTIVE는 totalCount에 포함되고 CARRIED_OVER는 제외된다', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockTodoRepository.findByUserIdAndMonth.mockResolvedValue([
         {
           id: 'todo-1',
@@ -193,7 +196,7 @@ describe('GetMonthlySummaryUsecase', () => {
     });
 
     it('모든 할 일이 완료+이월이면 completedCount === totalCount (초록 표시)', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockTodoRepository.findByUserIdAndMonth.mockResolvedValue([
         {
           id: 'todo-1',
@@ -226,7 +229,7 @@ describe('GetMonthlySummaryUsecase', () => {
     });
 
     it('days 배열은 날짜순으로 정렬된다', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockTodoRepository.findByUserIdAndMonth.mockResolvedValue([
         {
           id: 'todo-1',

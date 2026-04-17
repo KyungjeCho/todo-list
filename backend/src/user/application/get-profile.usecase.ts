@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { UserRepository } from '../infrastructure/user.repository';
 import type { UserProfileDto } from './dto';
 import { normalizeHmm } from './dto';
+import { ERROR_CODES } from '../../common/constants/error-codes';
 
 interface GetProfileInput {
   userAuthId: string;
@@ -15,7 +16,7 @@ export class GetProfileUsecase {
     const user = await this.userRepository.findByUserAuthId(input.userAuthId);
 
     if (!user) {
-      throw new NotFoundException('NOT_FOUND');
+      throw new NotFoundException(ERROR_CODES.NOT_FOUND);
     }
 
     return {

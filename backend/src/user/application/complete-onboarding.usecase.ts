@@ -1,5 +1,6 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { UserRepository } from '../infrastructure/user.repository';
+import { UserValidationService } from '../../common/services/user-validation.service';
 import type { UserProfileDto } from './dto';
 import { normalizeHmm } from './dto';
 
@@ -18,14 +19,15 @@ interface CompleteOnboardingInput {
 export class CompleteOnboardingUsecase {
   private readonly logger = new Logger(CompleteOnboardingUsecase.name);
 
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly userValidationService: UserValidationService,
+  ) {}
 
   async execute(input: CompleteOnboardingInput): Promise<UserProfileDto> {
-    const user = await this.userRepository.findByUserAuthId(input.userAuthId);
-
-    if (!user) {
-      throw new NotFoundException('NOT_FOUND');
-    }
+    const user = await this.userValidationService.ensureUserExists(
+      input.userAuthId,
+    );
 
     if (user.hasCompletedOnboarding) {
       this.logger.log(

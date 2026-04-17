@@ -10,8 +10,10 @@ import { CompleteDayUsecase } from './application/complete-day.usecase';
 import { GetMonthlySummaryUsecase } from './application/get-monthly-summary.usecase';
 import { RefineTextUsecase } from './application/refine-text.usecase';
 import { BatchCreateTodoUsecase } from './application/batch-create-todo.usecase';
+import { TodoAuthorizationService } from './application/services/todo-authorization.service';
 import { TodoRepository } from './infrastructure/todo.repository';
 import { CarriedOverHistoryRepository } from './infrastructure/carried-over-history.repository';
+import { UserValidationService } from '../common/services/user-validation.service';
 import { Todo } from './domain/todo.entity';
 import { CarriedOverHistory } from './domain/carried-over-history.entity';
 import { TodoMemo } from '../memo/domain/todo-memo.entity';
@@ -35,10 +37,16 @@ import { AiModule } from '../ai/ai.module';
     GetMonthlySummaryUsecase,
     RefineTextUsecase,
     BatchCreateTodoUsecase,
+    TodoAuthorizationService,
     TodoRepository,
     CarriedOverHistoryRepository,
+    UserValidationService,
     UserRepository,
   ],
-  exports: [TodoRepository, CarriedOverHistoryRepository],
+  exports: [
+    TodoRepository,
+    CarriedOverHistoryRepository,
+    TodoAuthorizationService,
+  ],
 })
 export class TodoModule {}

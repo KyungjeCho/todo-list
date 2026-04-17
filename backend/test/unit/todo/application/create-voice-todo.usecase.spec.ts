@@ -1,3 +1,4 @@
+import { NotFoundException } from '@nestjs/common';
 import { CreateVoiceTodoUsecase } from 'src/todo/application/create-voice-todo.usecase';
 
 describe('CreateVoiceTodoUsecase', () => {
@@ -8,8 +9,8 @@ describe('CreateVoiceTodoUsecase', () => {
     findById: jest.fn(),
   };
 
-  const mockUserRepository = {
-    findByUserAuthId: jest.fn(),
+  const mockUserValidationService = {
+    ensureUserExists: jest.fn(),
   };
 
   const mockGeminiService = {
@@ -20,7 +21,7 @@ describe('CreateVoiceTodoUsecase', () => {
     jest.clearAllMocks();
     usecase = new CreateVoiceTodoUsecase(
       mockTodoRepository as never,
-      mockUserRepository as never,
+      mockUserValidationService as never,
       mockGeminiService as never,
     );
   });
@@ -45,7 +46,7 @@ describe('CreateVoiceTodoUsecase', () => {
     };
 
     it('오디오를 Gemini로 변환 후 할 일을 생성하고 rawText 포함 응답을 반환한다', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockGeminiService.transcribeAndRefine.mockResolvedValue('장보기');
       mockTodoRepository.create.mockResolvedValue({
         id: 'todo-id-1',
@@ -69,7 +70,7 @@ describe('CreateVoiceTodoUsecase', () => {
     });
 
     it('GeminiService.transcribeAndRefine에 오디오 버퍼와 mimeType을 전달한다', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockGeminiService.transcribeAndRefine.mockResolvedValue('운동하기');
       mockTodoRepository.create.mockResolvedValue({
         id: 'todo-id-1',
@@ -91,7 +92,7 @@ describe('CreateVoiceTodoUsecase', () => {
     });
 
     it('변환된 텍스트로 Todo를 생성한다', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockGeminiService.transcribeAndRefine.mockResolvedValue('독서하기');
       mockTodoRepository.create.mockResolvedValue({
         id: 'todo-id-1',
@@ -117,7 +118,7 @@ describe('CreateVoiceTodoUsecase', () => {
     });
 
     it('전달된 todoDate를 그대로 사용한다', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockGeminiService.transcribeAndRefine.mockResolvedValue('할 일');
       mockTodoRepository.create.mockResolvedValue({
         id: 'todo-id-1',
@@ -140,13 +141,15 @@ describe('CreateVoiceTodoUsecase', () => {
     });
 
     it('사용자를 찾을 수 없으면 에러를 throw한다', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(null);
+      mockUserValidationService.ensureUserExists.mockRejectedValue(
+        new NotFoundException('USER_NOT_FOUND'),
+      );
 
       await expect(usecase.execute(executeDto)).rejects.toThrow();
     });
 
     it('GeminiService 호출이 실패하면 에러를 전파한다', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockGeminiService.transcribeAndRefine.mockRejectedValue(
         new Error('VOICE_AI_API_ERROR'),
       );
@@ -155,7 +158,7 @@ describe('CreateVoiceTodoUsecase', () => {
     });
 
     it('createdBy를 사용자 ID로 설정한다', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockGeminiService.transcribeAndRefine.mockResolvedValue('할 일');
       mockTodoRepository.create.mockResolvedValue({
         id: 'todo-id-1',
@@ -178,7 +181,7 @@ describe('CreateVoiceTodoUsecase', () => {
     });
 
     it('Gemini 반환 텍스트가 빈 문자열이면 CONTENT_REQUIRED 에러를 throw한다', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockGeminiService.transcribeAndRefine.mockResolvedValue('   ');
 
       await expect(usecase.execute(executeDto)).rejects.toThrow(
@@ -187,7 +190,7 @@ describe('CreateVoiceTodoUsecase', () => {
     });
 
     it('Gemini 반환 텍스트가 255자를 초과하면 CONTENT_TOO_LONG 에러를 throw한다', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockGeminiService.transcribeAndRefine.mockResolvedValue('가'.repeat(256));
 
       await expect(usecase.execute(executeDto)).rejects.toThrow(
@@ -196,7 +199,7 @@ describe('CreateVoiceTodoUsecase', () => {
     });
 
     it('응답에 memos 배열을 포함한다', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockGeminiService.transcribeAndRefine.mockResolvedValue('장보기');
       mockTodoRepository.create.mockResolvedValue({
         id: 'todo-id-1',

@@ -1,10 +1,7 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { UserRepository } from '../../user/infrastructure/user.repository';
+import { UserValidationService } from '../../common/services/user-validation.service';
+import { DateHelper } from '../../common/utils/date-helper';
 import { Todo, TodoStatus } from '../domain/todo.entity';
 import { CarriedOverHistory } from '../domain/carried-over-history.entity';
 import type {
@@ -20,7 +17,7 @@ interface CompleteDayInput {
 @Injectable()
 export class CompleteDayUsecase {
   constructor(
-    private readonly userRepository: UserRepository,
+    private readonly userValidationService: UserValidationService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -29,10 +26,9 @@ export class CompleteDayUsecase {
       throw new BadRequestException('VALIDATION_ERROR');
     }
 
-    const user = await this.userRepository.findByUserAuthId(input.userAuthId);
-    if (!user) {
-      throw new NotFoundException('USER_NOT_FOUND');
-    }
+    const user = await this.userValidationService.ensureUserExists(
+      input.userAuthId,
+    );
 
     const carriedOverTodos: CarriedOverTodoDto[] = [];
 
@@ -57,7 +53,7 @@ export class CompleteDayUsecase {
           continue;
         }
 
-        const nextDate = this.getNextDate(input.date);
+        const nextDate = DateHelper.getNextDate(input.date);
 
         // WHY: ACTIVE → CARRIED_OVER 전이는 canTransitionTo에 없음 (시스템 전용)
         todo.status = TodoStatus.CARRIED_OVER;
@@ -121,11 +117,5 @@ export class CompleteDayUsecase {
       carriedOverCount: carriedOverTodos.length,
       carriedOverTodos,
     };
-  }
-
-  private getNextDate(dateStr: string): string {
-    const date = new Date(dateStr + 'T00:00:00Z');
-    date.setUTCDate(date.getUTCDate() + 1);
-    return date.toISOString().split('T')[0];
   }
 }

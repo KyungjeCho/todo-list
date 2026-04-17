@@ -45,6 +45,8 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   setLoading: (isLoading) => set({ isLoading }),
 
+  // WHY: On app launch, tokens are restored from secure storage so returning users
+  // skip the login screen; if the stored token is invalid, we clear it to force re-auth.
   restoreTokens: async () => {
     const accessToken = await tokenManager.getAccessToken();
     const refreshToken = await tokenManager.getRefreshToken();
@@ -65,3 +67,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 }));
+
+/** Zustand selectors — 개별 필드 구독으로 불필요한 리렌더 방지 */
+export const selectIsAuthenticated = (s: AuthState) => s.isAuthenticated;
+export const selectIsLoading = (s: AuthState) => s.isLoading;
+export const selectUser = (s: AuthState) => s.user;
+export const selectRefreshToken = (s: AuthState) => s.refreshToken;
+export const selectSetUser = (s: AuthState) => s.setUser;
+export const selectClearAuth = (s: AuthState) => s.clearAuth;

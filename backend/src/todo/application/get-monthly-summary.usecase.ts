@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { TodoRepository } from '../infrastructure/todo.repository';
-import { UserRepository } from '../../user/infrastructure/user.repository';
+import { UserValidationService } from '../../common/services/user-validation.service';
 import { TodoStatus } from '../domain/todo.entity';
 import type {
   DaySummaryDto,
@@ -17,16 +17,15 @@ interface GetMonthlySummaryInput {
 export class GetMonthlySummaryUsecase {
   constructor(
     private readonly todoRepository: TodoRepository,
-    private readonly userRepository: UserRepository,
+    private readonly userValidationService: UserValidationService,
   ) {}
 
   async execute(
     input: GetMonthlySummaryInput,
   ): Promise<MonthlySummaryResponseDto> {
-    const user = await this.userRepository.findByUserAuthId(input.userAuthId);
-    if (!user) {
-      throw new NotFoundException('USER_NOT_FOUND');
-    }
+    const user = await this.userValidationService.ensureUserExists(
+      input.userAuthId,
+    );
 
     const todos = await this.todoRepository.findByUserIdAndMonth(
       user.id,

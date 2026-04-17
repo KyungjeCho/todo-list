@@ -16,6 +16,8 @@ function sanitizeLanguage(value: string | undefined): string {
     : DEFAULT_LANGUAGE;
 }
 
+// WHY: 클라이언트가 전송한 timezone 문자열을 Intl API로 검증하여,
+// 잘못된 timezone이 DB에 저장되어 이후 날짜 연산에서 런타임 오류를 일으키는 것을 방지한다.
 function sanitizeTimezone(value: string | undefined): string | null {
   if (!value) return null;
   try {

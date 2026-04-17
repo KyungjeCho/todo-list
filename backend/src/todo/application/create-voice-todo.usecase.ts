@@ -1,10 +1,6 @@
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { TodoRepository } from '../infrastructure/todo.repository';
-import { UserRepository } from '../../user/infrastructure/user.repository';
+import { UserValidationService } from '../../common/services/user-validation.service';
 import { GeminiService } from '../../ai/infrastructure/gemini.service';
 import { TodoStatus } from '../domain/todo.entity';
 import type { VoiceTodoResponseDto } from './dto/voice-todo.dto';
@@ -20,15 +16,14 @@ interface CreateVoiceTodoInput {
 export class CreateVoiceTodoUsecase {
   constructor(
     private readonly todoRepository: TodoRepository,
-    private readonly userRepository: UserRepository,
+    private readonly userValidationService: UserValidationService,
     private readonly geminiService: GeminiService,
   ) {}
 
   async execute(input: CreateVoiceTodoInput): Promise<VoiceTodoResponseDto> {
-    const user = await this.userRepository.findByUserAuthId(input.userAuthId);
-    if (!user) {
-      throw new NotFoundException('USER_NOT_FOUND');
-    }
+    const user = await this.userValidationService.ensureUserExists(
+      input.userAuthId,
+    );
 
     const rawText = await this.geminiService.transcribeAndRefine(
       input.audioBuffer,

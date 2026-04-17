@@ -1,12 +1,9 @@
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { TodoRepository } from '../infrastructure/todo.repository';
-import { UserRepository } from '../../user/infrastructure/user.repository';
+import { UserValidationService } from '../../common/services/user-validation.service';
+import { TodoItemMapper } from './mappers/todo-item.mapper';
 import { TodoStatus } from '../domain/todo.entity';
-import type { TodoItemDto } from './dto';
+import type { TodoItemDto } from './dto/todo-response.dto';
 
 interface CreateTodoInput {
   userAuthId: string;
@@ -18,14 +15,13 @@ interface CreateTodoInput {
 export class CreateTodoUsecase {
   constructor(
     private readonly todoRepository: TodoRepository,
-    private readonly userRepository: UserRepository,
+    private readonly userValidationService: UserValidationService,
   ) {}
 
   async execute(input: CreateTodoInput): Promise<TodoItemDto> {
-    const user = await this.userRepository.findByUserAuthId(input.userAuthId);
-    if (!user) {
-      throw new NotFoundException('USER_NOT_FOUND');
-    }
+    const user = await this.userValidationService.ensureUserExists(
+      input.userAuthId,
+    );
 
     if (!input.content || input.content.trim().length === 0) {
       throw new BadRequestException('CONTENT_REQUIRED');
@@ -46,31 +42,6 @@ export class CreateTodoUsecase {
       updatedBy: user.id,
     });
 
-    const memos = (
-      (todo.memos as {
-        id: string;
-        todoId: string;
-        content: string;
-        createdAt: Date;
-        updatedAt: Date;
-      }[]) ?? []
-    ).map((memo) => ({
-      id: memo.id,
-      todoId: memo.todoId,
-      content: memo.content,
-      createdAt: new Date(memo.createdAt).toISOString(),
-      updatedAt: new Date(memo.updatedAt).toISOString(),
-    }));
-
-    return {
-      id: todo.id,
-      content: todo.content,
-      status: todo.status,
-      isCarriedOver: false,
-      todoDate: todo.todoDate,
-      memos,
-      createdAt: new Date(todo.createdAt).toISOString(),
-      updatedAt: new Date(todo.updatedAt).toISOString(),
-    };
+    return TodoItemMapper.toDto(todo);
   }
 }

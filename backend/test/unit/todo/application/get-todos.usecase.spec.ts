@@ -1,3 +1,4 @@
+import { NotFoundException } from '@nestjs/common';
 import { GetTodosUsecase } from 'src/todo/application/get-todos.usecase';
 
 describe('GetTodosUsecase', () => {
@@ -11,8 +12,8 @@ describe('GetTodosUsecase', () => {
     findToTodoIds: jest.fn(),
   };
 
-  const mockUserRepository = {
-    findByUserAuthId: jest.fn(),
+  const mockUserValidationService = {
+    ensureUserExists: jest.fn(),
   };
 
   beforeEach(() => {
@@ -21,7 +22,7 @@ describe('GetTodosUsecase', () => {
     usecase = new GetTodosUsecase(
       mockTodoRepository as never,
       mockCarriedOverHistoryRepository as never,
-      mockUserRepository as never,
+      mockUserValidationService as never,
     );
   });
 
@@ -85,7 +86,7 @@ describe('GetTodosUsecase', () => {
     ];
 
     it('should return TodoListResponse with todos and stats', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockTodoRepository.findByUserIdAndDate.mockResolvedValue(mockTodos);
 
       const result = await usecase.execute(queryDto);
@@ -96,7 +97,7 @@ describe('GetTodosUsecase', () => {
     });
 
     it('should include mode (PLAN or REVIEW)', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockTodoRepository.findByUserIdAndDate.mockResolvedValue(mockTodos);
 
       const result = await usecase.execute(queryDto);
@@ -106,7 +107,7 @@ describe('GetTodosUsecase', () => {
     });
 
     it('should calculate stats correctly', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockTodoRepository.findByUserIdAndDate.mockResolvedValue(mockTodos);
 
       const result = await usecase.execute(queryDto);
@@ -119,7 +120,7 @@ describe('GetTodosUsecase', () => {
     });
 
     it('should calculate progressRate as percentage', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockTodoRepository.findByUserIdAndDate.mockResolvedValue(mockTodos);
 
       const result = await usecase.execute(queryDto);
@@ -129,7 +130,7 @@ describe('GetTodosUsecase', () => {
     });
 
     it('should return progressRate 0 when no todos', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockTodoRepository.findByUserIdAndDate.mockResolvedValue([]);
 
       const result = await usecase.execute(queryDto);
@@ -139,7 +140,7 @@ describe('GetTodosUsecase', () => {
     });
 
     it('should return empty todos array when none exist for the date', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockTodoRepository.findByUserIdAndDate.mockResolvedValue([]);
 
       const result = await usecase.execute(queryDto);
@@ -149,7 +150,7 @@ describe('GetTodosUsecase', () => {
     });
 
     it('should include memos in each todo item', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockTodoRepository.findByUserIdAndDate.mockResolvedValue(mockTodos);
 
       const result = await usecase.execute(queryDto);
@@ -163,7 +164,7 @@ describe('GetTodosUsecase', () => {
     });
 
     it('should return todos in createdAt ascending order', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockTodoRepository.findByUserIdAndDate.mockResolvedValue(mockTodos);
 
       const result = await usecase.execute(queryDto);
@@ -181,7 +182,7 @@ describe('GetTodosUsecase', () => {
         mockTodos[1], // COMPLETED
         { ...mockTodos[2], status: 'ACTIVE' },
       ];
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockTodoRepository.findByUserIdAndDate.mockResolvedValue(
         todosWithCarryOver,
       );
@@ -197,7 +198,7 @@ describe('GetTodosUsecase', () => {
         { ...mockTodos[0], status: 'CARRIED_OVER' },
         { ...mockTodos[1], status: 'COMPLETED' },
       ];
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockTodoRepository.findByUserIdAndDate.mockResolvedValue(
         todosWithCarryOver,
       );
@@ -227,7 +228,7 @@ describe('GetTodosUsecase', () => {
           },
         ],
       };
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockTodoRepository.findByUserIdAndDate.mockResolvedValue([
         todoWithMultipleMemos,
       ]);
@@ -242,7 +243,9 @@ describe('GetTodosUsecase', () => {
     });
 
     it('should throw error when user not found', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(null);
+      mockUserValidationService.ensureUserExists.mockRejectedValue(
+        new NotFoundException('USER_NOT_FOUND'),
+      );
 
       await expect(usecase.execute(queryDto)).rejects.toThrow();
     });
@@ -250,7 +253,7 @@ describe('GetTodosUsecase', () => {
     it('should set isCarriedOver based on carriedOverToIds even when original status is preserved (FR-001~004)', async () => {
       // WHY(FR-001): 이월 후 어제 원본은 ACTIVE 상태를 유지하며, 이월 여부는
       // CarriedOverHistory(carriedOverToIds)로만 판정한다.
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockTodoRepository.findByUserIdAndDate.mockResolvedValue(mockTodos);
       mockCarriedOverHistoryRepository.findToTodoIds.mockResolvedValue(
         new Set(['todo-id-1']),
@@ -271,7 +274,7 @@ describe('GetTodosUsecase', () => {
     });
 
     it('should set isCarriedOver true for child todos created by carry-over', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
       mockTodoRepository.findByUserIdAndDate.mockResolvedValue(mockTodos);
       mockCarriedOverHistoryRepository.findToTodoIds.mockResolvedValue(
         new Set(['todo-id-1']),

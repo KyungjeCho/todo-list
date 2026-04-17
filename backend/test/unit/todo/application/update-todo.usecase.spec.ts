@@ -1,22 +1,27 @@
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { UpdateTodoUsecase } from 'src/todo/application/update-todo.usecase';
 
 describe('UpdateTodoUsecase', () => {
   let usecase: UpdateTodoUsecase;
 
   const mockTodoRepository = {
-    findById: jest.fn(),
     update: jest.fn(),
   };
 
-  const mockUserRepository = {
-    findByUserAuthId: jest.fn(),
+  const mockUserValidationService = {
+    ensureUserExists: jest.fn(),
+  };
+
+  const mockTodoAuthorizationService = {
+    validateOwnership: jest.fn(),
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
     usecase = new UpdateTodoUsecase(
       mockTodoRepository as never,
-      mockUserRepository as never,
+      mockUserValidationService as never,
+      mockTodoAuthorizationService as never,
     );
   });
 
@@ -48,8 +53,10 @@ describe('UpdateTodoUsecase', () => {
     };
 
     it('should update todo content and return updated TodoItem', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-      mockTodoRepository.findById.mockResolvedValue(mockExistingTodo);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+      mockTodoAuthorizationService.validateOwnership.mockResolvedValue(
+        mockExistingTodo,
+      );
       mockTodoRepository.update.mockResolvedValue({
         ...mockExistingTodo,
         content: '수정된 할 일',
@@ -64,8 +71,10 @@ describe('UpdateTodoUsecase', () => {
     });
 
     it('should call repository with correct update data', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-      mockTodoRepository.findById.mockResolvedValue(mockExistingTodo);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+      mockTodoAuthorizationService.validateOwnership.mockResolvedValue(
+        mockExistingTodo,
+      );
       mockTodoRepository.update.mockResolvedValue({
         ...mockExistingTodo,
         content: '수정된 할 일',
@@ -82,29 +91,39 @@ describe('UpdateTodoUsecase', () => {
     });
 
     it('should throw error when todo not found', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-      mockTodoRepository.findById.mockResolvedValue(null);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+      mockTodoAuthorizationService.validateOwnership.mockRejectedValue(
+        new NotFoundException('TODO_NOT_FOUND'),
+      );
 
       await expect(usecase.execute(updateDto)).rejects.toThrow();
     });
 
     it('should throw error when user not found', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(null);
+      mockUserValidationService.ensureUserExists.mockRejectedValue(
+        new NotFoundException('USER_NOT_FOUND'),
+      );
 
       await expect(usecase.execute(updateDto)).rejects.toThrow();
     });
 
     it('should throw error when todo belongs to different user', async () => {
       const differentUser = { id: 'user-id-2', userAuthId: 'auth-id-1' };
-      mockUserRepository.findByUserAuthId.mockResolvedValue(differentUser);
-      mockTodoRepository.findById.mockResolvedValue(mockExistingTodo);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(
+        differentUser,
+      );
+      mockTodoAuthorizationService.validateOwnership.mockRejectedValue(
+        new ForbiddenException('FORBIDDEN'),
+      );
 
       await expect(usecase.execute(updateDto)).rejects.toThrow();
     });
 
     it('should throw error for empty content', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-      mockTodoRepository.findById.mockResolvedValue(mockExistingTodo);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+      mockTodoAuthorizationService.validateOwnership.mockResolvedValue(
+        mockExistingTodo,
+      );
 
       await expect(
         usecase.execute({ ...updateDto, content: '' }),
@@ -112,8 +131,10 @@ describe('UpdateTodoUsecase', () => {
     });
 
     it('should throw error for content exceeding 255 characters', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-      mockTodoRepository.findById.mockResolvedValue(mockExistingTodo);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+      mockTodoAuthorizationService.validateOwnership.mockResolvedValue(
+        mockExistingTodo,
+      );
 
       const longContent = 'a'.repeat(256);
       await expect(
@@ -122,8 +143,10 @@ describe('UpdateTodoUsecase', () => {
     });
 
     it('should set updatedBy from user id', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-      mockTodoRepository.findById.mockResolvedValue(mockExistingTodo);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+      mockTodoAuthorizationService.validateOwnership.mockResolvedValue(
+        mockExistingTodo,
+      );
       mockTodoRepository.update.mockResolvedValue({
         ...mockExistingTodo,
         content: '수정된 할 일',

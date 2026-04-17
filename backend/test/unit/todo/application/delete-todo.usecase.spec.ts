@@ -1,22 +1,27 @@
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { DeleteTodoUsecase } from 'src/todo/application/delete-todo.usecase';
 
 describe('DeleteTodoUsecase', () => {
   let usecase: DeleteTodoUsecase;
 
   const mockTodoRepository = {
-    findById: jest.fn(),
     softDelete: jest.fn(),
   };
 
-  const mockUserRepository = {
-    findByUserAuthId: jest.fn(),
+  const mockUserValidationService = {
+    ensureUserExists: jest.fn(),
+  };
+
+  const mockTodoAuthorizationService = {
+    validateOwnership: jest.fn(),
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
     usecase = new DeleteTodoUsecase(
       mockTodoRepository as never,
-      mockUserRepository as never,
+      mockUserValidationService as never,
+      mockTodoAuthorizationService as never,
     );
   });
 
@@ -46,8 +51,10 @@ describe('DeleteTodoUsecase', () => {
     };
 
     it('should soft-delete todo and return DeleteTodoResponse', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-      mockTodoRepository.findById.mockResolvedValue(mockExistingTodo);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+      mockTodoAuthorizationService.validateOwnership.mockResolvedValue(
+        mockExistingTodo,
+      );
       const deletedAt = new Date('2026-03-28T15:00:00Z');
       mockTodoRepository.softDelete.mockResolvedValue({
         id: 'todo-id-1',
@@ -62,8 +69,10 @@ describe('DeleteTodoUsecase', () => {
     });
 
     it('should call repository softDelete with todo id', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-      mockTodoRepository.findById.mockResolvedValue(mockExistingTodo);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+      mockTodoAuthorizationService.validateOwnership.mockResolvedValue(
+        mockExistingTodo,
+      );
       mockTodoRepository.softDelete.mockResolvedValue({
         id: 'todo-id-1',
         deletedAt: new Date(),
@@ -75,30 +84,40 @@ describe('DeleteTodoUsecase', () => {
     });
 
     it('should throw error when todo not found', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-      mockTodoRepository.findById.mockResolvedValue(null);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+      mockTodoAuthorizationService.validateOwnership.mockRejectedValue(
+        new NotFoundException('TODO_NOT_FOUND'),
+      );
 
       await expect(usecase.execute(deleteDto)).rejects.toThrow();
     });
 
     it('should throw error when user not found', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(null);
+      mockUserValidationService.ensureUserExists.mockRejectedValue(
+        new NotFoundException('USER_NOT_FOUND'),
+      );
 
       await expect(usecase.execute(deleteDto)).rejects.toThrow();
     });
 
     it('should throw error when todo belongs to different user', async () => {
       const differentUser = { id: 'user-id-2', userAuthId: 'auth-id-1' };
-      mockUserRepository.findByUserAuthId.mockResolvedValue(differentUser);
-      mockTodoRepository.findById.mockResolvedValue(mockExistingTodo);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(
+        differentUser,
+      );
+      mockTodoAuthorizationService.validateOwnership.mockRejectedValue(
+        new ForbiddenException('FORBIDDEN'),
+      );
 
       await expect(usecase.execute(deleteDto)).rejects.toThrow();
     });
 
     it('should allow deleting todo regardless of status', async () => {
       const completedTodo = { ...mockExistingTodo, status: 'COMPLETED' };
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-      mockTodoRepository.findById.mockResolvedValue(completedTodo);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+      mockTodoAuthorizationService.validateOwnership.mockResolvedValue(
+        completedTodo,
+      );
       mockTodoRepository.softDelete.mockResolvedValue({
         id: 'todo-id-1',
         deletedAt: new Date(),
@@ -115,16 +134,20 @@ describe('DeleteTodoUsecase', () => {
         ...mockExistingTodo,
         deletedAt: new Date('2026-03-28T10:00:00Z'),
       };
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-      mockTodoRepository.findById.mockResolvedValue(alreadyDeletedTodo);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+      mockTodoAuthorizationService.validateOwnership.mockResolvedValue(
+        alreadyDeletedTodo,
+      );
 
       await expect(usecase.execute(deleteDto)).rejects.toThrow();
       expect(mockTodoRepository.softDelete).not.toHaveBeenCalled();
     });
 
     it('should propagate error when softDelete fails', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-      mockTodoRepository.findById.mockResolvedValue(mockExistingTodo);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+      mockTodoAuthorizationService.validateOwnership.mockResolvedValue(
+        mockExistingTodo,
+      );
       mockTodoRepository.softDelete.mockRejectedValue(
         new Error('Database connection failed'),
       );
@@ -136,8 +159,10 @@ describe('DeleteTodoUsecase', () => {
 
     it('should allow deleting INACTIVE todo', async () => {
       const inactiveTodo = { ...mockExistingTodo, status: 'INACTIVE' };
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-      mockTodoRepository.findById.mockResolvedValue(inactiveTodo);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+      mockTodoAuthorizationService.validateOwnership.mockResolvedValue(
+        inactiveTodo,
+      );
       mockTodoRepository.softDelete.mockResolvedValue({
         id: 'todo-id-1',
         deletedAt: new Date(),
