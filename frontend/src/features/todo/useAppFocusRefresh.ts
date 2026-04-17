@@ -7,6 +7,8 @@ interface UseAppFocusRefreshOptions {
   onRefresh: () => void;
 }
 
+// WHY: 60 s strikes a balance — frequent enough to detect a date change within a minute
+// of midnight, yet infrequent enough to avoid unnecessary battery and CPU overhead.
 const MIDNIGHT_CHECK_INTERVAL = 60_000;
 
 export function useAppFocusRefresh({

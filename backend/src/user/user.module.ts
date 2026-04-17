@@ -5,6 +5,7 @@ import { GetProfileUsecase } from './application/get-profile.usecase';
 import { UpdateSettingsUsecase } from './application/update-settings.usecase';
 import { CompleteOnboardingUsecase } from './application/complete-onboarding.usecase';
 import { UserRepository } from './infrastructure/user.repository';
+import { UserValidationService } from '../common/services/user-validation.service';
 import { User } from './domain/user.entity';
 import { NotificationModule } from '../notification/notification.module';
 
@@ -16,6 +17,7 @@ import { NotificationModule } from '../notification/notification.module';
     UpdateSettingsUsecase,
     CompleteOnboardingUsecase,
     UserRepository,
+    UserValidationService,
   ],
   exports: [UserRepository],
 })

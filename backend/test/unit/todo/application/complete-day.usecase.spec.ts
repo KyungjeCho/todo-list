@@ -1,11 +1,12 @@
+import { NotFoundException } from '@nestjs/common';
 import { CompleteDayUsecase } from 'src/todo/application/complete-day.usecase';
 import { TodoStatus } from 'src/todo/domain/todo.entity';
 
 describe('CompleteDayUsecase', () => {
   let usecase: CompleteDayUsecase;
 
-  const mockUserRepository = {
-    findByUserAuthId: jest.fn(),
+  const mockUserValidationService = {
+    ensureUserExists: jest.fn(),
   };
 
   const mockTxTodoRepo = {
@@ -38,7 +39,7 @@ describe('CompleteDayUsecase', () => {
     jest.clearAllMocks();
     mockTxHistoryRepo.findOne.mockResolvedValue(null);
     usecase = new CompleteDayUsecase(
-      mockUserRepository as never,
+      mockUserValidationService as never,
       mockDataSource as never,
     );
   });
@@ -82,7 +83,7 @@ describe('CompleteDayUsecase', () => {
           '운동하기',
         );
 
-        mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+        mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
         mockTxTodoRepo.find.mockResolvedValue([activeTodo, completedTodo]);
         mockTxTodoRepo.save.mockImplementation((todo) =>
           Promise.resolve({ id: todo.id ?? 'new-todo-1', ...todo }),
@@ -110,10 +111,8 @@ describe('CompleteDayUsecase', () => {
         expect(result.carriedOverTodos[0].fromTodoId).toBe('todo-1');
         expect(result.carriedOverTodos[0].content).toBe('장보기');
 
-        // 트랜잭션 내에서 실행 확인
         expect(mockDataSource.transaction).toHaveBeenCalled();
 
-        // ACTIVE -> CARRIED_OVER 상태 변경 확인
         expect(mockTxTodoRepo.save).toHaveBeenCalledWith(
           expect.objectContaining({
             id: 'todo-1',
@@ -121,7 +120,6 @@ describe('CompleteDayUsecase', () => {
           }),
         );
 
-        // 새로운 ACTIVE todo 생성 확인 (다음 날)
         expect(mockTxTodoRepo.create).toHaveBeenCalledWith(
           expect.objectContaining({
             userId: 'user-id-1',
@@ -131,7 +129,6 @@ describe('CompleteDayUsecase', () => {
           }),
         );
 
-        // 이월 이력 생성 확인
         expect(mockTxHistoryRepo.create).toHaveBeenCalledWith(
           expect.objectContaining({
             fromTodoId: 'todo-1',
@@ -146,7 +143,7 @@ describe('CompleteDayUsecase', () => {
           '운동하기',
         );
 
-        mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+        mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
         mockTxTodoRepo.find.mockResolvedValue([completedTodo]);
 
         const result = await usecase.execute({
@@ -166,7 +163,7 @@ describe('CompleteDayUsecase', () => {
           '나중에 할 일',
         );
 
-        mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+        mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
         mockTxTodoRepo.find.mockResolvedValue([inactiveTodo]);
 
         const result = await usecase.execute({
@@ -192,7 +189,7 @@ describe('CompleteDayUsecase', () => {
           '새 할 일',
         );
 
-        mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+        mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
         mockTxTodoRepo.find.mockResolvedValue([carriedOverTodo, activeTodo]);
         mockTxTodoRepo.save.mockImplementation((todo) =>
           Promise.resolve({ id: todo.id ?? 'new-todo-1', ...todo }),
@@ -209,7 +206,6 @@ describe('CompleteDayUsecase', () => {
           date: '2026-03-28',
         });
 
-        // 이미 CARRIED_OVER인 todo-1은 건너뛰고 ACTIVE인 todo-2만 이월
         expect(result.carriedOverCount).toBe(1);
         expect(result.carriedOverTodos[0].fromTodoId).toBe('todo-2');
       });
@@ -224,7 +220,7 @@ describe('CompleteDayUsecase', () => {
           createMockTodo('todo-4', TodoStatus.ACTIVE, '할 일 2'),
         ];
 
-        mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+        mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
         mockTxTodoRepo.find.mockResolvedValue(todos);
         mockTxTodoRepo.save.mockImplementation((todo) =>
           Promise.resolve({ id: todo.id ?? `new-${todo.content}`, ...todo }),
@@ -253,7 +249,7 @@ describe('CompleteDayUsecase', () => {
           createMockTodo('todo-2', TodoStatus.COMPLETED, '완료된 일'),
         ];
 
-        mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+        mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
         mockTxTodoRepo.find.mockResolvedValue(todos);
         mockTxTodoRepo.save.mockImplementation((todo) =>
           Promise.resolve({ id: todo.id ?? 'new-todo', ...todo }),
@@ -270,8 +266,6 @@ describe('CompleteDayUsecase', () => {
           date: '2026-03-28',
         });
 
-        // 이월 후: CARRIED_OVER 1, COMPLETED 1
-        // progressRate = 1 / (2 - 1) * 100 = 100% (CARRIED_OVER 제외)
         expect(result.stats.progressRate).toBe(100);
       });
     });
@@ -284,7 +278,7 @@ describe('CompleteDayUsecase', () => {
           '이미 이월된 항목',
         );
 
-        mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+        mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
         mockTxTodoRepo.find.mockResolvedValue([activeTodo]);
         mockTxHistoryRepo.findOne.mockResolvedValue({
           id: 'history-1',
@@ -306,7 +300,7 @@ describe('CompleteDayUsecase', () => {
       it('should execute all carry-over operations within a transaction', async () => {
         const activeTodo = createMockTodo('todo-1', TodoStatus.ACTIVE, '할 일');
 
-        mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+        mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
         mockTxTodoRepo.find.mockResolvedValue([activeTodo]);
         mockTxTodoRepo.save.mockImplementation((todo) =>
           Promise.resolve({ id: todo.id ?? 'new-todo-1', ...todo }),
@@ -333,7 +327,7 @@ describe('CompleteDayUsecase', () => {
           '완료',
         );
 
-        mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+        mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
         mockTxTodoRepo.find.mockResolvedValue([completedTodo]);
 
         await usecase.execute({
@@ -347,7 +341,7 @@ describe('CompleteDayUsecase', () => {
 
     describe('empty day', () => {
       it('should handle day with no todos', async () => {
-        mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
+        mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
         mockTxTodoRepo.find.mockResolvedValue([]);
 
         const result = await usecase.execute({
@@ -363,7 +357,9 @@ describe('CompleteDayUsecase', () => {
 
     describe('authorization', () => {
       it('should throw error when user not found', async () => {
-        mockUserRepository.findByUserAuthId.mockResolvedValue(null);
+        mockUserValidationService.ensureUserExists.mockRejectedValue(
+          new NotFoundException('USER_NOT_FOUND'),
+        );
 
         await expect(
           usecase.execute({

@@ -30,6 +30,13 @@ export class MemoController {
     private readonly deleteMemoUsecase: DeleteMemoUsecase,
   ) {}
 
+  /**
+   * 투두에 메모를 추가한다.
+   * @param req - 인증된 요청 (userAuthId 포함)
+   * @param todoId - 메모를 추가할 투두 ID
+   * @param body - 메모 내용
+   * @returns 생성된 메모
+   */
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async createMemo(
@@ -44,6 +51,14 @@ export class MemoController {
     });
   }
 
+  /**
+   * 메모 내용을 수정한다.
+   * @param req - 인증된 요청 (userAuthId 포함)
+   * @param todoId - 메모가 속한 투두 ID
+   * @param memoId - 수정할 메모 ID
+   * @param body - 수정할 내용
+   * @returns 수정된 메모
+   */
   @Patch(':memoId')
   async updateMemo(
     @Req() req: AuthenticatedRequest,
@@ -59,6 +74,13 @@ export class MemoController {
     });
   }
 
+  /**
+   * 메모를 삭제한다.
+   * @param req - 인증된 요청 (userAuthId 포함)
+   * @param todoId - 메모가 속한 투두 ID
+   * @param memoId - 삭제할 메모 ID
+   * @returns 삭제 결과
+   */
   @Delete(':memoId')
   async deleteMemo(
     @Req() req: AuthenticatedRequest,

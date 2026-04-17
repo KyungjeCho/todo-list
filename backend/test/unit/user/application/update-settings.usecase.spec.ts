@@ -1,16 +1,23 @@
+import { NotFoundException } from '@nestjs/common';
 import { UpdateSettingsUsecase } from 'src/user/application/update-settings.usecase';
 
 describe('UpdateSettingsUsecase', () => {
   let usecase: UpdateSettingsUsecase;
 
   const mockUserRepository = {
-    findByUserAuthId: jest.fn(),
     update: jest.fn(),
+  };
+
+  const mockUserValidationService = {
+    ensureUserExists: jest.fn(),
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    usecase = new UpdateSettingsUsecase(mockUserRepository as never);
+    usecase = new UpdateSettingsUsecase(
+      mockUserRepository as never,
+      mockUserValidationService as never,
+    );
   });
 
   it('should be defined', () => {
@@ -31,7 +38,9 @@ describe('UpdateSettingsUsecase', () => {
     };
 
     it('should update userName', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(existingUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue({
+        ...existingUser,
+      });
       mockUserRepository.update.mockResolvedValue({
         ...existingUser,
         userName: '김철수',
@@ -48,7 +57,9 @@ describe('UpdateSettingsUsecase', () => {
     });
 
     it('should preserve hasCompletedOnboarding when disabling notifications (planTime=null)', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(existingUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue({
+        ...existingUser,
+      });
       mockUserRepository.update.mockResolvedValue({
         ...existingUser,
         planTime: null,
@@ -67,7 +78,9 @@ describe('UpdateSettingsUsecase', () => {
     });
 
     it('should update planTime', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(existingUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue({
+        ...existingUser,
+      });
       mockUserRepository.update.mockResolvedValue({
         ...existingUser,
         planTime: '09:00',
@@ -82,7 +95,9 @@ describe('UpdateSettingsUsecase', () => {
     });
 
     it('should set planTime to null (disable notification)', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(existingUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue({
+        ...existingUser,
+      });
       mockUserRepository.update.mockResolvedValue({
         ...existingUser,
         planTime: null,
@@ -97,7 +112,9 @@ describe('UpdateSettingsUsecase', () => {
     });
 
     it('should update reviewTime', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(existingUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue({
+        ...existingUser,
+      });
       mockUserRepository.update.mockResolvedValue({
         ...existingUser,
         reviewTime: '21:00',
@@ -112,7 +129,9 @@ describe('UpdateSettingsUsecase', () => {
     });
 
     it('should update timezone', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(existingUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue({
+        ...existingUser,
+      });
       mockUserRepository.update.mockResolvedValue({
         ...existingUser,
         timezone: 'America/New_York',
@@ -127,7 +146,9 @@ describe('UpdateSettingsUsecase', () => {
     });
 
     it('should update language with valid supported language', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(existingUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue({
+        ...existingUser,
+      });
       mockUserRepository.update.mockResolvedValue({
         ...existingUser,
         language: 'en',
@@ -144,7 +165,9 @@ describe('UpdateSettingsUsecase', () => {
     it.each(['ko', 'en', 'ja', 'es'])(
       'should accept valid language: %s',
       async (lang) => {
-        mockUserRepository.findByUserAuthId.mockResolvedValue(existingUser);
+        mockUserValidationService.ensureUserExists.mockResolvedValue({
+          ...existingUser,
+        });
         mockUserRepository.update.mockResolvedValue({
           ...existingUser,
           language: lang,
@@ -162,7 +185,9 @@ describe('UpdateSettingsUsecase', () => {
     it.each(['fr', 'zh', 'ko-KR', 'en-US', 'invalid', ''])(
       'should throw BAD_REQUEST for unsupported language: %s',
       async (lang) => {
-        mockUserRepository.findByUserAuthId.mockResolvedValue(existingUser);
+        mockUserValidationService.ensureUserExists.mockResolvedValue({
+          ...existingUser,
+        });
 
         await expect(
           usecase.execute({ userAuthId, language: lang }),
@@ -171,7 +196,9 @@ describe('UpdateSettingsUsecase', () => {
     );
 
     it('should update multiple fields at once (onboarding)', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(existingUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue({
+        ...existingUser,
+      });
       const updated = {
         ...existingUser,
         planTime: '07:00',
@@ -193,7 +220,9 @@ describe('UpdateSettingsUsecase', () => {
     });
 
     it('should throw NOT_FOUND for non-existent user', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(null);
+      mockUserValidationService.ensureUserExists.mockRejectedValue(
+        new NotFoundException('USER_NOT_FOUND'),
+      );
 
       await expect(
         usecase.execute({ userAuthId: 'non-existent', userName: 'Test' }),
@@ -201,7 +230,9 @@ describe('UpdateSettingsUsecase', () => {
     });
 
     it('should throw error for invalid time format', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(existingUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue({
+        ...existingUser,
+      });
 
       await expect(
         usecase.execute({ userAuthId, planTime: 'invalid' }),
@@ -209,7 +240,9 @@ describe('UpdateSettingsUsecase', () => {
     });
 
     it('should throw error for invalid timezone', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(existingUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue({
+        ...existingUser,
+      });
 
       await expect(
         usecase.execute({ userAuthId, timezone: 'Invalid/Zone' }),
@@ -217,7 +250,9 @@ describe('UpdateSettingsUsecase', () => {
     });
 
     it('should throw error for userName exceeding 100 characters', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(existingUser);
+      mockUserValidationService.ensureUserExists.mockResolvedValue({
+        ...existingUser,
+      });
 
       await expect(
         usecase.execute({ userAuthId, userName: 'a'.repeat(101) }),

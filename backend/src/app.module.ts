@@ -27,6 +27,9 @@ import { AiModule } from './ai/ai.module';
         ...configService.get<TypeOrmModuleOptions>('database')!,
       }),
     }),
+    // WHY: 계층별 rate limit으로 DDoS/브루트포스를 완화한다.
+    // short(1초 3회): 버스트 요청 차단, medium(10초 20회): 지속적 남용 방지,
+    // long(1분 100회): 전체 처리량 상한. 엔드포인트별 @Throttle로 더 엄격한 제한 가능.
     ThrottlerModule.forRoot([
       {
         name: 'short',

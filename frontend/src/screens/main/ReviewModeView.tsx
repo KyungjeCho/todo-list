@@ -1,17 +1,9 @@
 import React, { useMemo } from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import type { Todo } from '../../types/todo';
-import { SoundPressable } from '../../components/common/SoundPressable';
-import { colors, typography, spacing, radius } from '../../theme';
-
-interface Stats {
-  total: number;
-  completed: number;
-  active: number;
-  inactive: number;
-  progressRate: number;
-}
+import type { Todo, Stats } from '../../types/todo';
+import { Checkbox } from '../../components/common/Checkbox';
+import { colors, typography, spacing } from '../../theme';
 
 interface ReviewModeViewProps {
   todos: Todo[];
@@ -69,15 +61,11 @@ export const ReviewModeView: React.FC<ReviewModeViewProps> = ({
           scrollEnabled={false}
           renderItem={({ item }) => (
             <View style={styles.todoRow}>
-              <SoundPressable
+              <Checkbox
                 testID={`review-checkbox-${item.id}`}
+                checked={true}
                 onPress={() => onToggleComplete?.(item.id)}
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked: true }}
-                style={[styles.checkbox, styles.checkboxChecked]}
-              >
-                <Text style={styles.checkmark}>&#10003;</Text>
-              </SoundPressable>
+              />
               <Text style={styles.completedText}>{item.content}</Text>
             </View>
           )}
@@ -95,12 +83,10 @@ export const ReviewModeView: React.FC<ReviewModeViewProps> = ({
           renderItem={({ item }) => (
             <View style={styles.todoRow}>
               {item.status !== 'CARRIED_OVER' && (
-                <SoundPressable
+                <Checkbox
                   testID={`review-checkbox-${item.id}`}
+                  checked={false}
                   onPress={() => onToggleComplete?.(item.id)}
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked: false }}
-                  style={styles.checkbox}
                 />
               )}
               <Text
@@ -163,21 +149,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.borderLight,
   },
-  checkbox: {
-    width: 22,
-    height: 22,
-    borderWidth: 2,
-    borderColor: colors.muted,
-    borderRadius: radius.sm,
-    marginRight: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: colors.success,
-    borderColor: colors.success,
-  },
-  checkmark: { color: colors.surface, fontSize: 13 },
   todoText: { ...typography.body, flex: 1 },
   completedText: {
     ...typography.body,

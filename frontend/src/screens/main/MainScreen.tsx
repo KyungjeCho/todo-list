@@ -1,15 +1,9 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  View,
-  Text,
-  FlatList,
-  ActivityIndicator,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { SoundPressable } from '../../components/common/SoundPressable';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import type { Todo } from '../../types/todo';
+import type { Todo, Stats } from '../../types/todo';
 import type { CompleteDayResponse } from '../../services/api/todoApi';
 import { TodoItem } from '../../components/todo/TodoItem';
 import { ModeToggle } from '../../components/todo/ModeToggle';
@@ -19,15 +13,9 @@ import { CompleteDayButton } from '../../components/todo/CompleteDayButton';
 import { VoiceTodoButton } from '../../components/todo/VoiceTodoButton';
 import { InputOverlay } from '../../components/todo/InputOverlay';
 import { EmptyState } from '../../components/todo/EmptyState';
-import { colors, typography, spacing, radius } from '../../theme';
-
-interface Stats {
-  total: number;
-  completed: number;
-  active: number;
-  inactive: number;
-  progressRate: number;
-}
+import { ErrorBanner } from '../../components/common/ErrorBanner';
+import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { colors, typography, spacing } from '../../theme';
 
 interface MainScreenProps {
   mode: 'PLAN' | 'REVIEW';
@@ -120,7 +108,7 @@ export const MainScreen: React.FC<MainScreenProps> = ({
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
-        <ActivityIndicator testID="main-loading-indicator" size="large" />
+        <LoadingSpinner testID="main-loading-indicator" />
       </SafeAreaView>
     );
   }
@@ -144,20 +132,11 @@ export const MainScreen: React.FC<MainScreenProps> = ({
           </Text>
         </View>
 
-        {error && (
-          <View testID="main-error-message" style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
-            {onRetry && (
-              <SoundPressable
-                testID="retry-button"
-                onPress={onRetry}
-                style={styles.retryButton}
-              >
-                <Text style={styles.retryText}>{t('common.retry')}</Text>
-              </SoundPressable>
-            )}
-          </View>
-        )}
+        <ErrorBanner
+          error={error}
+          testID="main-error-message"
+          onRetry={onRetry}
+        />
 
         {mode === 'REVIEW' ? (
           <>
@@ -274,8 +253,6 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.onSurface,
   },
-  errorContainer: { padding: spacing.md, marginBottom: spacing.lg },
-  errorText: { color: colors.error },
   listContent: { paddingBottom: 120 },
   fabContainer: {
     position: 'absolute',
@@ -301,18 +278,5 @@ const styles = StyleSheet.create({
     color: colors.surface,
     fontSize: 24,
     lineHeight: 26,
-  },
-  retryButton: {
-    marginTop: spacing.sm,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    backgroundColor: colors.primary,
-    borderRadius: radius.sm,
-    alignSelf: 'center',
-  },
-  retryText: {
-    color: colors.surface,
-    fontSize: typography.body.fontSize,
-    fontWeight: '700',
   },
 });

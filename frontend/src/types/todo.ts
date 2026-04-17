@@ -19,6 +19,14 @@ export interface Todo {
   updatedAt: string;
 }
 
+export interface Stats {
+  total: number;
+  completed: number;
+  active: number;
+  inactive: number;
+  progressRate: number;
+}
+
 export interface CreateTodoRequest {
   content: string;
   todoDate?: string;

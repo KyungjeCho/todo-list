@@ -4,8 +4,8 @@ import { RefineTextUsecase } from 'src/todo/application/refine-text.usecase';
 describe('RefineTextUsecase', () => {
   let usecase: RefineTextUsecase;
 
-  const mockUserRepository = {
-    findByUserAuthId: jest.fn(),
+  const mockUserValidationService = {
+    ensureUserExists: jest.fn(),
   };
 
   const mockGeminiService = {
@@ -15,13 +15,13 @@ describe('RefineTextUsecase', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     usecase = new RefineTextUsecase(
-      mockUserRepository as never,
+      mockUserValidationService as never,
       mockGeminiService as never,
     );
   });
 
   it('사용자 확인 후 Gemini로 텍스트를 정리하여 반환한다', async () => {
-    mockUserRepository.findByUserAuthId.mockResolvedValue({
+    mockUserValidationService.ensureUserExists.mockResolvedValue({
       id: 'user-id-1',
       language: 'ko',
     });
@@ -33,7 +33,7 @@ describe('RefineTextUsecase', () => {
     });
 
     expect(result).toEqual({ refinedText: '내일까지 장보기' });
-    expect(mockUserRepository.findByUserAuthId).toHaveBeenCalledWith(
+    expect(mockUserValidationService.ensureUserExists).toHaveBeenCalledWith(
       'test-user-auth-id',
     );
     expect(mockGeminiService.refineText).toHaveBeenCalledWith(
@@ -43,7 +43,7 @@ describe('RefineTextUsecase', () => {
   });
 
   it('사용자 언어가 영어면 en으로 GeminiService에 전달한다', async () => {
-    mockUserRepository.findByUserAuthId.mockResolvedValue({
+    mockUserValidationService.ensureUserExists.mockResolvedValue({
       id: 'user-id-1',
       language: 'en',
     });
@@ -61,7 +61,7 @@ describe('RefineTextUsecase', () => {
   });
 
   it('사용자 언어가 일본어면 ja로 전달한다', async () => {
-    mockUserRepository.findByUserAuthId.mockResolvedValue({
+    mockUserValidationService.ensureUserExists.mockResolvedValue({
       id: 'user-id-1',
       language: 'ja',
     });
@@ -79,7 +79,7 @@ describe('RefineTextUsecase', () => {
   });
 
   it('사용자 언어가 스페인어면 es로 전달한다', async () => {
-    mockUserRepository.findByUserAuthId.mockResolvedValue({
+    mockUserValidationService.ensureUserExists.mockResolvedValue({
       id: 'user-id-1',
       language: 'es',
     });
@@ -97,7 +97,9 @@ describe('RefineTextUsecase', () => {
   });
 
   it('사용자가 존재하지 않으면 NotFoundException을 throw한다', async () => {
-    mockUserRepository.findByUserAuthId.mockResolvedValue(null);
+    mockUserValidationService.ensureUserExists.mockRejectedValue(
+      new NotFoundException('USER_NOT_FOUND'),
+    );
 
     await expect(
       usecase.execute({
@@ -108,7 +110,7 @@ describe('RefineTextUsecase', () => {
   });
 
   it('Gemini 에러를 그대로 전파한다', async () => {
-    mockUserRepository.findByUserAuthId.mockResolvedValue({
+    mockUserValidationService.ensureUserExists.mockResolvedValue({
       id: 'user-id-1',
       language: 'ko',
     });

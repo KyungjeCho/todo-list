@@ -44,6 +44,9 @@ export class OAuthLoginUsecase {
     return this.configService.getOrThrow<string>('oauth.stateSecret');
   }
 
+  // WHY: OAuth state 파라미터에 HMAC 서명을 적용하여 CSRF 공격을 방지한다.
+  // 서명 없이 state를 전달하면 공격자가 위조된 state로 콜백을 호출할 수 있다.
+  // nonce를 포함하여 replay attack도 차단한다.
   static signState(payload: Record<string, unknown>, secret: string): string {
     const nonce = randomBytes(16).toString('hex');
     const data = JSON.stringify({ ...payload, nonce });
@@ -51,6 +54,8 @@ export class OAuthLoginUsecase {
     return Buffer.from(JSON.stringify({ data, signature })).toString('base64');
   }
 
+  // WHY: 콜백 수신 시 state 서명을 검증하여, 우리가 발급한 state만 수락한다.
+  // timingSafeEqual로 비교하여 타이밍 사이드채널 공격을 방지한다.
   static verifyState(
     state: string,
     secret: string,

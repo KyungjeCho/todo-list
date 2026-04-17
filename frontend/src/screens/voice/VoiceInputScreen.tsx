@@ -1,6 +1,7 @@
 import React, { useEffect, useCallback, useRef } from 'react';
 import { View, Text, Alert, StyleSheet } from 'react-native';
 import { SoundPressable } from '../../components/common/SoundPressable';
+import { ErrorBanner } from '../../components/common/ErrorBanner';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -105,20 +106,11 @@ export const VoiceInputScreen: React.FC<VoiceInputScreenProps> = ({
           <View style={styles.headerSpacer} />
         </View>
 
-        {error && (
-          <View style={styles.errorContainer} testID="voice-error">
-            <Text style={styles.errorText}>{error}</Text>
-            {!isListening && (
-              <SoundPressable
-                testID="voice-retry-button"
-                onPress={start}
-                style={styles.retryButton}
-              >
-                <Text style={styles.retryText}>{t('common.retry')}</Text>
-              </SoundPressable>
-            )}
-          </View>
-        )}
+        <ErrorBanner
+          error={error}
+          testID="voice-error"
+          onRetry={!isListening ? start : undefined}
+        />
 
         <View style={styles.listContainer}>
           <DraftTodoList drafts={drafts} onRemove={removeDraft} />
@@ -159,30 +151,6 @@ const styles = StyleSheet.create({
   },
   headerSpacer: {
     width: 32,
-  },
-  errorContainer: {
-    marginHorizontal: spacing.lg,
-    padding: spacing.md,
-    backgroundColor: colors.surface,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.error,
-  },
-  errorText: {
-    ...typography.caption,
-    color: colors.error,
-  },
-  retryButton: {
-    marginTop: spacing.sm,
-    alignSelf: 'flex-start',
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.md,
-    backgroundColor: colors.error,
-    borderRadius: 4,
-  },
-  retryText: {
-    ...typography.caption,
-    color: colors.surface,
-    fontWeight: '600',
   },
   listContainer: {
     flex: 1,

@@ -1,9 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { TodoRepository } from '../infrastructure/todo.repository';
 import { CarriedOverHistoryRepository } from '../infrastructure/carried-over-history.repository';
-import { UserRepository } from '../../user/infrastructure/user.repository';
+import { UserValidationService } from '../../common/services/user-validation.service';
+import { TodoItemMapper } from './mappers/todo-item.mapper';
 import { TodoStatus } from '../domain/todo.entity';
-import type { TodoListResponseDto, TodoItemDto } from './dto';
+import type { TodoListResponseDto, TodoItemDto } from './dto/todo-response.dto';
 
 interface GetTodosInput {
   userAuthId: string;
@@ -15,14 +16,13 @@ export class GetTodosUsecase {
   constructor(
     private readonly todoRepository: TodoRepository,
     private readonly carriedOverHistoryRepository: CarriedOverHistoryRepository,
-    private readonly userRepository: UserRepository,
+    private readonly userValidationService: UserValidationService,
   ) {}
 
   async execute(input: GetTodosInput): Promise<TodoListResponseDto> {
-    const user = await this.userRepository.findByUserAuthId(input.userAuthId);
-    if (!user) {
-      throw new NotFoundException('USER_NOT_FOUND');
-    }
+    const user = await this.userValidationService.ensureUserExists(
+      input.userAuthId,
+    );
 
     const todos = await this.todoRepository.findByUserIdAndDate(
       user.id,
@@ -35,21 +35,22 @@ export class GetTodosUsecase {
     );
 
     const total = sortedTodos.length;
-    const completed = sortedTodos.filter(
-      (t) => t.status === TodoStatus.COMPLETED,
-    ).length;
-    const active = sortedTodos.filter(
-      (t) => t.status === TodoStatus.ACTIVE,
-    ).length;
-    const inactive = sortedTodos.filter(
-      (t) => t.status === TodoStatus.INACTIVE,
-    ).length;
+    // WHY: 4회 filter() 순회를 1회 reduce()로 통합하여 O(4n) → O(n) 최적화
+    const counts = sortedTodos.reduce(
+      (acc, t) => {
+        if (t.status === TodoStatus.COMPLETED) acc.completed++;
+        else if (t.status === TodoStatus.ACTIVE) acc.active++;
+        else if (t.status === TodoStatus.INACTIVE) acc.inactive++;
+        if (t.status !== TodoStatus.CARRIED_OVER) acc.nonCarriedOver++;
+        return acc;
+      },
+      { completed: 0, active: 0, inactive: 0, nonCarriedOver: 0 },
+    );
+    const { completed, active, inactive } = counts;
 
     // WHY(FR-001~004): 008 이후 이월 루틴은 원본 status를 CARRIED_OVER로 전이하지 않지만,
     // 과거 데이터에 남아 있는 CARRIED_OVER 레코드(레거시)는 진행률 분모에서 계속 제외한다.
-    const nonCarriedOverCount = sortedTodos.filter(
-      (t) => t.status !== TodoStatus.CARRIED_OVER,
-    ).length;
+    const nonCarriedOverCount = counts.nonCarriedOver;
     const progressRate =
       nonCarriedOverCount > 0
         ? Math.round((completed / nonCarriedOverCount) * 1000) / 10
@@ -66,39 +67,16 @@ export class GetTodosUsecase {
       await this.carriedOverHistoryRepository.findToTodoIds(todoIds);
 
     const todoItems: TodoItemDto[] = sortedTodos.map((todo) => {
-      const memos = (
-        (todo.memos as {
-          id: string;
-          todoId: string;
-          content: string;
-          createdAt: Date;
-          updatedAt: Date;
-        }[]) ?? []
-      )
-        .sort(
-          (a, b) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-        )
-        .map((memo) => ({
-          id: memo.id,
-          todoId: memo.todoId,
-          content: memo.content,
-          createdAt: new Date(memo.createdAt).toISOString(),
-          updatedAt: new Date(memo.updatedAt).toISOString(),
-        }));
-
-      return {
-        id: todo.id,
-        content: todo.content,
-        status: todo.status,
-        // WHY(FR-001~004): 어제 원본 status가 더 이상 CARRIED_OVER로 전이되지 않으므로
-        // 이월 여부 판정은 CarriedOverHistory → to todo id 집합 기반 단일 판정으로 충분.
-        isCarriedOver: carriedOverToIds.has(todo.id),
-        todoDate: todo.todoDate,
-        memos,
-        createdAt: new Date(todo.createdAt).toISOString(),
-        updatedAt: new Date(todo.updatedAt).toISOString(),
-      };
+      const dto = TodoItemMapper.toDto(todo);
+      // WHY(FR-001~004): 어제 원본 status가 더 이상 CARRIED_OVER로 전이되지 않으므로
+      // 이월 여부 판정은 CarriedOverHistory → to todo id 집합 기반 단일 판정으로 충분.
+      dto.isCarriedOver = carriedOverToIds.has(todo.id);
+      // Sort memos by createdAt
+      dto.memos = dto.memos.sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      );
+      return dto;
     });
 
     return {
@@ -109,6 +87,9 @@ export class GetTodosUsecase {
     };
   }
 
+  // WHY: 사용자가 설정한 planTime/reviewTime을 기준으로 현재 시각에 따라 모드를 전환한다.
+  // reviewTime 이후에는 하루를 돌아보는 REVIEW 모드, 그 전에는 할 일을 계획하는 PLAN 모드.
+  // planTime/reviewTime 미설정 시 기본 PLAN 모드를 반환하여 신규 유저도 정상 동작.
   private determineMode(
     planTime: string | null,
     reviewTime: string | null,

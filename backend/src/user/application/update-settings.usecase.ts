@@ -1,9 +1,6 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { UserRepository } from '../infrastructure/user.repository';
+import { UserValidationService } from '../../common/services/user-validation.service';
 import type { UserProfileDto } from './dto';
 import { normalizeHmm } from './dto';
 
@@ -30,14 +27,15 @@ interface UpdateSettingsInput {
 
 @Injectable()
 export class UpdateSettingsUsecase {
-  constructor(private readonly userRepository: UserRepository) {}
+  constructor(
+    private readonly userRepository: UserRepository,
+    private readonly userValidationService: UserValidationService,
+  ) {}
 
   async execute(input: UpdateSettingsInput): Promise<UserProfileDto> {
-    const user = await this.userRepository.findByUserAuthId(input.userAuthId);
-
-    if (!user) {
-      throw new NotFoundException('NOT_FOUND');
-    }
+    const user = await this.userValidationService.ensureUserExists(
+      input.userAuthId,
+    );
 
     if (input.userName !== undefined) {
       if (input.userName.length === 0 || input.userName.length > 100) {

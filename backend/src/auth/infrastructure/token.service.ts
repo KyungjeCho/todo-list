@@ -45,6 +45,8 @@ export class TokenService {
     }
   }
 
+  // WHY: refresh token을 평문이 아닌 SHA-256 해시로 저장하여,
+  // DB가 유출되더라도 공격자가 토큰 원본을 복원할 수 없도록 한다.
   static hashToken(token: string): string {
     return createHash('sha256').update(token).digest('hex');
   }

@@ -1,12 +1,8 @@
-import {
-  Injectable,
-  BadRequestException,
-  NotFoundException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { UserValidationService } from '../../common/services/user-validation.service';
+import { TodoAuthorizationService } from './services/todo-authorization.service';
 import { TodoRepository } from '../infrastructure/todo.repository';
-import { UserRepository } from '../../user/infrastructure/user.repository';
-import type { DeleteTodoResponseDto } from './dto';
+import type { DeleteTodoResponseDto } from './dto/todo-response.dto';
 
 interface DeleteTodoInput {
   userAuthId: string;
@@ -17,23 +13,19 @@ interface DeleteTodoInput {
 export class DeleteTodoUsecase {
   constructor(
     private readonly todoRepository: TodoRepository,
-    private readonly userRepository: UserRepository,
+    private readonly userValidationService: UserValidationService,
+    private readonly todoAuthorizationService: TodoAuthorizationService,
   ) {}
 
   async execute(input: DeleteTodoInput): Promise<DeleteTodoResponseDto> {
-    const user = await this.userRepository.findByUserAuthId(input.userAuthId);
-    if (!user) {
-      throw new NotFoundException('USER_NOT_FOUND');
-    }
+    const user = await this.userValidationService.ensureUserExists(
+      input.userAuthId,
+    );
 
-    const todo = await this.todoRepository.findById(input.todoId);
-    if (!todo) {
-      throw new NotFoundException('TODO_NOT_FOUND');
-    }
-
-    if (todo.userId !== user.id) {
-      throw new ForbiddenException('FORBIDDEN');
-    }
+    const todo = await this.todoAuthorizationService.validateOwnership(
+      input.todoId,
+      user.id,
+    );
 
     if (todo.deletedAt) {
       throw new BadRequestException('ALREADY_DELETED');

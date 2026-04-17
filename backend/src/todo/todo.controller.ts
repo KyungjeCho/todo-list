@@ -52,6 +52,12 @@ export class TodoController {
     private readonly batchCreateTodoUsecase: BatchCreateTodoUsecase,
   ) {}
 
+  /**
+   * 지정 연/월의 일별 완료율 요약을 조회한다.
+   * @param req - 인증된 요청 (userAuthId 포함)
+   * @param query - year, month 쿼리 파라미터
+   * @returns 월간 일별 통계 요약
+   */
   @Get('report/summary')
   async getMonthlySummary(
     @Req() req: AuthenticatedRequest,
@@ -64,6 +70,12 @@ export class TodoController {
     });
   }
 
+  /**
+   * 특정 날짜의 투두 목록과 통계를 조회한다.
+   * @param req - 인증된 요청 (userAuthId 포함)
+   * @param query - date 쿼리 파라미터 (YYYY-MM-DD)
+   * @returns 투두 목록, 모드(PLAN/REVIEW), 통계
+   */
   @Get()
   async getTodos(
     @Req() req: AuthenticatedRequest,
@@ -75,6 +87,12 @@ export class TodoController {
     });
   }
 
+  /**
+   * AI를 사용하여 투두 텍스트를 다듬는다.
+   * @param req - 인증된 요청 (userAuthId 포함)
+   * @param body - 다듬을 텍스트
+   * @returns 다듬어진 텍스트
+   */
   @Post('refine')
   @HttpCode(HttpStatus.OK)
   @Throttle({
@@ -91,6 +109,12 @@ export class TodoController {
     });
   }
 
+  /**
+   * 여러 투두를 한 번에 생성한다.
+   * @param req - 인증된 요청 (userAuthId 포함)
+   * @param body - 생성할 투두 배열 (content, todoDate)
+   * @returns 생성된 투두 목록
+   */
   @Post('batch')
   @HttpCode(HttpStatus.CREATED)
   async batchCreateTodos(
@@ -120,6 +144,12 @@ export class TodoController {
     );
   }
 
+  /**
+   * 단일 투두를 생성한다.
+   * @param req - 인증된 요청 (userAuthId 포함)
+   * @param body - 투두 내용과 날짜
+   * @returns 생성된 투두
+   */
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async createTodo(
@@ -133,6 +163,12 @@ export class TodoController {
     });
   }
 
+  /**
+   * 특정 날짜의 모든 ACTIVE 투두를 COMPLETED로 일괄 전환한다.
+   * @param req - 인증된 요청 (userAuthId 포함)
+   * @param body - 완료 처리할 날짜
+   * @returns 완료 처리 결과
+   */
   @Post('complete')
   @HttpCode(HttpStatus.OK)
   async completeDay(
@@ -145,6 +181,13 @@ export class TodoController {
     });
   }
 
+  /**
+   * 투두의 내용을 수정한다.
+   * @param req - 인증된 요청 (userAuthId 포함)
+   * @param todoId - 수정할 투두 ID
+   * @param body - 수정할 내용
+   * @returns 수정된 투두
+   */
   @Patch(':todoId')
   async updateTodo(
     @Req() req: AuthenticatedRequest,
@@ -158,6 +201,13 @@ export class TodoController {
     });
   }
 
+  /**
+   * 투두의 상태를 변경한다 (ACTIVE, COMPLETED, INACTIVE).
+   * @param req - 인증된 요청 (userAuthId 포함)
+   * @param todoId - 상태를 변경할 투두 ID
+   * @param body - 변경할 상태
+   * @returns 상태가 변경된 투두
+   */
   @Patch(':todoId/status')
   async changeTodoStatus(
     @Req() req: AuthenticatedRequest,
@@ -171,6 +221,12 @@ export class TodoController {
     });
   }
 
+  /**
+   * 투두를 삭제한다.
+   * @param req - 인증된 요청 (userAuthId 포함)
+   * @param todoId - 삭제할 투두 ID
+   * @returns 삭제 결과
+   */
   @Delete(':todoId')
   async deleteTodo(
     @Req() req: AuthenticatedRequest,

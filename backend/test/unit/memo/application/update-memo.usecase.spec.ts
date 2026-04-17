@@ -1,3 +1,4 @@
+import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { UpdateMemoUsecase } from 'src/memo/application/update-memo.usecase';
 
 describe('UpdateMemoUsecase', () => {
@@ -9,20 +10,20 @@ describe('UpdateMemoUsecase', () => {
     update: jest.fn(),
   };
 
-  const mockTodoRepository = {
-    findById: jest.fn(),
+  const mockUserValidationService = {
+    ensureUserExists: jest.fn(),
   };
 
-  const mockUserRepository = {
-    findByUserAuthId: jest.fn(),
+  const mockTodoAuthorizationService = {
+    validateOwnership: jest.fn(),
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
     usecase = new UpdateMemoUsecase(
       mockMemoRepository as never,
-      mockTodoRepository as never,
-      mockUserRepository as never,
+      mockUserValidationService as never,
+      mockTodoAuthorizationService as never,
     );
   });
 
@@ -60,8 +61,10 @@ describe('UpdateMemoUsecase', () => {
     };
 
     it('should update memo content and return MemoResponse', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-      mockTodoRepository.findById.mockResolvedValue(mockTodo);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+      mockTodoAuthorizationService.validateOwnership.mockResolvedValue(
+        mockTodo,
+      );
       mockMemoRepository.findByIdAndTodoId.mockResolvedValue(mockExistingMemo);
       mockMemoRepository.update.mockResolvedValue({
         ...mockExistingMemo,
@@ -77,8 +80,10 @@ describe('UpdateMemoUsecase', () => {
     });
 
     it('should call repository with correct update data', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-      mockTodoRepository.findById.mockResolvedValue(mockTodo);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+      mockTodoAuthorizationService.validateOwnership.mockResolvedValue(
+        mockTodo,
+      );
       mockMemoRepository.findByIdAndTodoId.mockResolvedValue(mockExistingMemo);
       mockMemoRepository.update.mockResolvedValue({
         ...mockExistingMemo,
@@ -96,21 +101,27 @@ describe('UpdateMemoUsecase', () => {
     });
 
     it('should throw error when user not found', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(null);
+      mockUserValidationService.ensureUserExists.mockRejectedValue(
+        new NotFoundException('USER_NOT_FOUND'),
+      );
 
       await expect(usecase.execute(updateDto)).rejects.toThrow();
     });
 
     it('should throw error when todo not found', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-      mockTodoRepository.findById.mockResolvedValue(null);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+      mockTodoAuthorizationService.validateOwnership.mockRejectedValue(
+        new NotFoundException('TODO_NOT_FOUND'),
+      );
 
       await expect(usecase.execute(updateDto)).rejects.toThrow();
     });
 
     it('should throw error when memo not found or does not belong to todo', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-      mockTodoRepository.findById.mockResolvedValue(mockTodo);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+      mockTodoAuthorizationService.validateOwnership.mockResolvedValue(
+        mockTodo,
+      );
       // findByIdAndTodoId returns null when memoId+todoId pair doesn't match
       mockMemoRepository.findByIdAndTodoId.mockResolvedValue(null);
 
@@ -119,15 +130,21 @@ describe('UpdateMemoUsecase', () => {
 
     it('should throw error when todo belongs to different user', async () => {
       const differentUser = { id: 'user-id-2', userAuthId: 'auth-id-1' };
-      mockUserRepository.findByUserAuthId.mockResolvedValue(differentUser);
-      mockTodoRepository.findById.mockResolvedValue(mockTodo);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(
+        differentUser,
+      );
+      mockTodoAuthorizationService.validateOwnership.mockRejectedValue(
+        new ForbiddenException('FORBIDDEN'),
+      );
 
       await expect(usecase.execute(updateDto)).rejects.toThrow();
     });
 
     it('should throw error for empty content', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-      mockTodoRepository.findById.mockResolvedValue(mockTodo);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+      mockTodoAuthorizationService.validateOwnership.mockResolvedValue(
+        mockTodo,
+      );
       mockMemoRepository.findByIdAndTodoId.mockResolvedValue(mockExistingMemo);
 
       await expect(
@@ -136,8 +153,10 @@ describe('UpdateMemoUsecase', () => {
     });
 
     it('should set updatedBy from the user id', async () => {
-      mockUserRepository.findByUserAuthId.mockResolvedValue(mockUser);
-      mockTodoRepository.findById.mockResolvedValue(mockTodo);
+      mockUserValidationService.ensureUserExists.mockResolvedValue(mockUser);
+      mockTodoAuthorizationService.validateOwnership.mockResolvedValue(
+        mockTodo,
+      );
       mockMemoRepository.findByIdAndTodoId.mockResolvedValue(mockExistingMemo);
       mockMemoRepository.update.mockResolvedValue({
         ...mockExistingMemo,

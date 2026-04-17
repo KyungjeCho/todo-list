@@ -2,7 +2,13 @@ import React, { useState, useCallback } from 'react';
 import { StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getMessaging, getToken } from '@react-native-firebase/messaging';
-import { useAuthStore } from '../../store/authStore';
+import {
+  useAuthStore,
+  selectUser,
+  selectSetUser,
+  selectRefreshToken,
+  selectClearAuth,
+} from '../../store/authStore';
 import { userApi } from '../../services/api/userApi';
 import { authApi } from '../../services/api/authApi';
 import { SettingsScreen } from '../../screens/settings/SettingsScreen';
@@ -20,7 +26,10 @@ async function getCurrentFcmToken(): Promise<string | null> {
 }
 
 export const SettingsWrapper: React.FC = () => {
-  const { user, setUser, refreshToken, clearAuth } = useAuthStore();
+  const user = useAuthStore(selectUser);
+  const setUser = useAuthStore(selectSetUser);
+  const refreshToken = useAuthStore(selectRefreshToken);
+  const clearAuth = useAuthStore(selectClearAuth);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | undefined>();
 

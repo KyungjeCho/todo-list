@@ -4,6 +4,7 @@ import {
   useSpeechRecognitionEvent,
 } from 'expo-speech-recognition';
 import i18n, { STT_LOCALE_MAP, type SupportedLanguage } from '../../i18n';
+import { useTimer } from '../common/useTimer';
 
 function getSttLocale(): string {
   const lang = i18n.language as SupportedLanguage;
@@ -35,7 +36,7 @@ export function useSpeechRecognition({
   const onFinalRef = useRef(onFinal);
   onFinalRef.current = onFinal;
   const interimTextRef = useRef('');
-  const silenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const silenceTimer = useTimer();
 
   const flushInterim = useCallback(() => {
     if (interimTextRef.current.trim()) {
@@ -45,18 +46,11 @@ export function useSpeechRecognition({
     }
   }, []);
 
-  const clearSilenceTimer = useCallback(() => {
-    if (silenceTimerRef.current !== null) {
-      clearTimeout(silenceTimerRef.current);
-      silenceTimerRef.current = null;
-    }
-  }, []);
-
   useSpeechRecognitionEvent('result', (event) => {
     const transcript = event.results?.[0]?.transcript ?? '';
 
     if (event.isFinal) {
-      clearSilenceTimer();
+      silenceTimer.clear();
       setInterimText('');
       interimTextRef.current = '';
       if (transcript.trim()) {
@@ -68,8 +62,7 @@ export function useSpeechRecognition({
 
       // WHY: continuous 모드에서 엔진의 isFinal 감지가 5-10초 걸릴 수 있어
       // 클라이언트 측 silence timeout으로 빠르게 확정
-      clearSilenceTimer();
-      silenceTimerRef.current = setTimeout(() => {
+      silenceTimer.setTimeout(() => {
         flushInterim();
       }, SILENCE_TIMEOUT_MS);
     }
@@ -85,7 +78,7 @@ export function useSpeechRecognition({
   // WHY: iOS는 60초 후 STT 세션이 자동 종료됨. 녹음 중이면 즉시 재시작하여 연속 인식 유지
   // WHY: 플랫폼에 따라 isFinal 결과 없이 세션이 종료될 수 있어 남은 interim 텍스트를 final로 처리
   useSpeechRecognitionEvent('end', () => {
-    clearSilenceTimer();
+    silenceTimer.clear();
     flushInterim();
 
     // WHY: 에러로 인한 종료 시 재시작하면 무한 루프 발생 가능 — 에러 상태에서는 재시작하지 않음
@@ -123,10 +116,10 @@ export function useSpeechRecognition({
   const stop = useCallback(() => {
     isListeningRef.current = false;
     setIsListening(false);
-    clearSilenceTimer();
+    silenceTimer.clear();
     flushInterim();
     ExpoSpeechRecognitionModule.stop();
-  }, [clearSilenceTimer, flushInterim]);
+  }, [silenceTimer, flushInterim]);
 
   return { isListening, interimText, error, start, stop };
 }

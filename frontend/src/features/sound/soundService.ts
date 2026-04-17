@@ -29,6 +29,8 @@ function createClickSoundService(): ClickSoundService {
   let recordingActive = false;
   let preloadPromise: Promise<void> | null = null;
 
+  // WHY: Audio assets must be loaded into memory before playback; on-demand loading causes
+  // audible latency that makes tap feedback feel sluggish.
   const preload = async (): Promise<void> => {
     if (status === 'ready' || status === 'error') {
       return;
@@ -57,6 +59,8 @@ function createClickSoundService(): ClickSoundService {
   };
 
   const play = (): void => {
+    // WHY: Guards prevent crashes from playing before preload completes, avoid audio
+    // conflicts during voice recording, and respect the user's sound preference.
     if (status !== 'ready' || !player) {
       return;
     }
