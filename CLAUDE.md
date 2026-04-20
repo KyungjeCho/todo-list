@@ -1,6 +1,6 @@
 # todo-list Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-04-17
+Auto-generated from all feature plans. Last updated: 2026-04-20
 
 ## Active Technologies
 - Supabase (PostgreSQL) — 디스크 수준 AES-256 암호화, 추가 앱 레벨 암호화 없음 (001-todo-mobile-service)
@@ -20,6 +20,8 @@ Auto-generated from all feature plans. Last updated: 2026-04-17
 - Supabase (PostgreSQL) via TypeORM — 스키마 변경 없음 (009-security-dep-input-fix)
 - TypeScript 5.9 (Frontend), TypeScript 5.7 (Backend) + React Native (Expo ~55), NestJS v11, Zustand, TypeORM (010-codebase-refactoring)
 - Supabase (PostgreSQL) — 스키마 변경 없음 (010-codebase-refactoring)
+- TypeScript 5.9 (Frontend), TypeScript 5.7 (Backend) — strict, `any` 금지 (011-apple-oauth-login)
+- Supabase (PostgreSQL) via TypeORM — `todolist_user_auth_oauth` 재사용, 스키마 변경 없음 (011-apple-oauth-login)
 
 - TypeScript 5.x (Frontend & Backend) (001-todo-mobile-service)
 - React Native (Expo) — iOS/Android 크로스 플랫폼
@@ -87,9 +89,19 @@ cd frontend && npm test && npm run lint
 - `hotfix/*`: 긴급 수정
 
 ## Recent Changes
+- 011-apple-oauth-login: Added TypeScript 5.9 (Frontend), TypeScript 5.7 (Backend) — strict, `any` 금지
 - 010-codebase-refactoring: Added TypeScript 5.9 (Frontend), TypeScript 5.7 (Backend) + React Native (Expo ~55), NestJS v11, Zustand, TypeORM
 - 009-security-dep-input-fix: Added TypeScript 5.9 (Frontend), TypeScript 5.7 (Backend)
-- 008-update-01-ui-fixes: Added TypeScript 5.x (strict, `any` 금지) — Frontend & Backend 공통
 
 <!-- MANUAL ADDITIONS START -->
+
+## Apple OAuth (011-apple-oauth-login)
+
+- 신규 엔드포인트: `POST /auth/oauth/apple/callback` (form_post 전용). Apple은 GET 콜백을 사용하지 않으므로 `GET /auth/oauth/apple/callback`은 400 `APPLE_MUST_USE_FORM_POST`.
+- 필수 환경 변수: `APPLE_CLIENT_ID`, `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY_PATH` **또는** `APPLE_PRIVATE_KEY`, `APPLE_CALLBACK_URL`.
+- `client_secret`은 `AppleClientSecretService`가 ES256 JWT로 동적 생성(55분 캐시). `id_token`은 `AppleIdTokenVerifier` + `AppleJwksService`(10분 캐시, kid 미일치 시 1회 재조회)로 검증.
+- 로깅 규칙(SC-006): `APPLE_PRIVATE_KEY`, `code`, `id_token`, `Authorization` 헤더, Apple 응답 본문 전체는 절대 로깅 금지. Apple 에러 응답 본문은 선두 300자만 기록.
+- i18n 에러 키: `auth.appleLoginFailed`, `auth.appleCancelled`, `auth.appleServerError` (ko/en/ja/es 4개 locale).
+- 프론트 testID: Apple 버튼은 `oauth-button-apple` (Maestro E2E 전용), 기존 `login-button-apple`도 유지.
+
 <!-- MANUAL ADDITIONS END -->

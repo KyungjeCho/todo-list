@@ -20,6 +20,9 @@
     "continueWithNaver": "Continuar con Naver",
     "continueWithKakao": "Continuar con Kakao",
     "continueWithApple": "Continuar con Apple",
+    "appleLoginFailed": "No se pudo iniciar sesión con Apple. Inténtalo de nuevo.",
+    "appleCancelled": "Inicio de sesión con Apple cancelado.",
+    "appleServerError": "El inicio de sesión con Apple no está disponible temporalmente. Inténtalo más tarde.",
     "subtitle": "Planifica tu día y reflexiona",
     "authFailed": "Error de autenticación",
     "profileFetchFailed": "Error al obtener el perfil"

@@ -20,6 +20,9 @@
     "continueWithNaver": "Naverで続ける",
     "continueWithKakao": "Kakaoで続ける",
     "continueWithApple": "Appleで続ける",
+    "appleLoginFailed": "Appleサインインに失敗しました。もう一度お試しください。",
+    "appleCancelled": "Appleサインインがキャンセルされました。",
+    "appleServerError": "現在Appleサインインを利用できません。しばらくしてからお試しください。",
     "subtitle": "一日を計画し、振り返りましょう",
     "authFailed": "認証に失敗しました",
     "profileFetchFailed": "プロフィールの取得に失敗しました"

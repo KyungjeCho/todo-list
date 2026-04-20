@@ -54,6 +54,8 @@ export default () => ({
       teamId: process.env.APPLE_TEAM_ID,
       keyId: process.env.APPLE_KEY_ID,
       privateKeyPath: process.env.APPLE_PRIVATE_KEY_PATH,
+      privateKey: process.env.APPLE_PRIVATE_KEY,
+      callbackUrl: process.env.APPLE_CALLBACK_URL,
     },
   },
   firebase: {

@@ -56,6 +56,11 @@ export function useAuth() {
   const { setTokens, setUser, clearAuth, setLoading } = useAuthStore();
   const [error, setError] = useState<string | null>(null);
 
+  // WHY(FR-001/T025): Apple 로그인은 프론트 관점에서 Google/Naver/Kakao와 동일한
+  // WebBrowser.openAuthSessionAsync 경로를 사용한다. Apple이 요구하는
+  // `response_mode=form_post`와 POST 콜백 처리(서버 → fragment redirect)는
+  // 서버의 `GET /auth/oauth/apple` 및 `POST /auth/oauth/apple/callback`에서 처리하므로
+  // 클라이언트 분기는 불필요하다. 오류/취소 분기만 T041에서 보강.
   const login = useCallback(
     async (provider: OAuthProvider) => {
       setLoading(true);
@@ -83,6 +88,22 @@ export function useAuth() {
           const fragment =
             hashIndex >= 0 ? result.url.slice(hashIndex + 1) : '';
           const fragmentParams = new URLSearchParams(fragment);
+          // WHY(P1): Apple 취소/에러 흐름에서 서버가 `#error=...` 으로 복귀시킨다.
+          // 토큰이 아닌 error 파라미터가 들어있으면 i18n 키로 매핑해 로그인 화면에
+          // 메시지를 표시하고 WebBrowser 세션을 종료한다.
+          const providerError = fragmentParams.get('error');
+          if (providerError) {
+            if (provider === 'apple') {
+              setError(
+                providerError === 'user_cancelled_authorize'
+                  ? 'auth.appleCancelled'
+                  : 'auth.appleLoginFailed',
+              );
+            } else {
+              setError(i18n.t('auth.authFailed'));
+            }
+            return;
+          }
           const accessToken = fragmentParams.get('accessToken') ?? '';
           const refreshToken = fragmentParams.get('refreshToken') ?? '';
           const isNewUser = fragmentParams.get('isNewUser') ?? 'false';
@@ -91,11 +112,26 @@ export function useAuth() {
             refreshToken,
             isNewUser === 'true',
           );
+        } else if (provider === 'apple') {
+          // WHY(FR-013, T041): Apple 시트에서 사용자가 취소하거나
+          // dismiss된 경우에 전용 i18n 키를 에러 상태로 설정해
+          // 로그인 화면에서 안내 메시지를 표시하고 버튼을 재활성화한다.
+          if (result.type === 'cancel' || result.type === 'dismiss') {
+            setError('auth.appleCancelled');
+          } else {
+            setError('auth.appleLoginFailed');
+          }
         }
       } catch (err) {
-        const message =
-          err instanceof Error ? err.message : i18n.t('auth.authFailed');
-        setError(message);
+        // WHY(FR-013, T041): Apple의 네트워크/서버 오류는 원본 Error 메시지 대신
+        // 다국어 리소스 키로 치환하여 LoginScreen에서 번역 후 표시되도록 한다.
+        if (provider === 'apple') {
+          setError('auth.appleLoginFailed');
+        } else {
+          const message =
+            err instanceof Error ? err.message : i18n.t('auth.authFailed');
+          setError(message);
+        }
       } finally {
         setLoading(false);
       }

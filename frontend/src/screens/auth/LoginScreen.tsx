@@ -113,28 +113,43 @@ export const LoginScreen: React.FC<LoginScreenProps> = (props) => {
 
       {error && (
         <Text testID="login-error-message" style={styles.error}>
-          {error}
+          {/* WHY(T041): Apple 등에서 i18n 키 형태로 에러를 전달받으면
+              t()로 번역하고, 이미 번역된 문자열/err.message는 동일 문자열이
+              반환되어 그대로 표시된다. */}
+          {error.startsWith('auth.') ? t(error) : error}
         </Text>
       )}
 
       <View style={styles.buttonContainer}>
         {PROVIDERS.map(
-          ({ key, label, backgroundColor, textColor, borderColor }) => (
-            <OAuthProviderButton
-              key={key}
-              provider={key}
-              label={t(label)}
-              iconSource={OAUTH_ICONS[key]}
-              disabled={isLoading}
-              onPress={() => onLogin?.(key)}
-              style={[
-                styles.button,
-                { backgroundColor },
-                borderColor ? { borderWidth: 1, borderColor } : undefined,
-              ]}
-              textStyle={[styles.buttonText, { color: textColor }]}
-            />
-          ),
+          ({ key, label, backgroundColor, textColor, borderColor }) => {
+            const button = (
+              <OAuthProviderButton
+                provider={key}
+                label={t(label)}
+                iconSource={OAUTH_ICONS[key]}
+                disabled={isLoading}
+                onPress={() => onLogin?.(key)}
+                style={[
+                  styles.button,
+                  { backgroundColor },
+                  borderColor ? { borderWidth: 1, borderColor } : undefined,
+                ]}
+                textStyle={[styles.buttonText, { color: textColor }]}
+              />
+            );
+            // WHY(FR-001/T024): Apple 버튼은 Maestro E2E·단위 테스트에서
+            // `oauth-button-apple` 식별자로 탭되어야 한다. 기존 `login-button-apple`은
+            // 다른 컴포넌트·테스트와 호환을 위해 유지하고, 래퍼로 신규 testID를 덧붙인다.
+            if (key === 'apple') {
+              return (
+                <View key={key} testID="oauth-button-apple">
+                  {button}
+                </View>
+              );
+            }
+            return <View key={key}>{button}</View>;
+          },
         )}
       </View>
     </LinearGradient>

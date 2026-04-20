@@ -11,11 +11,13 @@ import { LogoutUsecase } from './application/logout.usecase';
 import { AuthRepository } from './infrastructure/auth.repository';
 import { TokenService } from './infrastructure/token.service';
 import { OAuthProviderService } from './infrastructure/oauth-provider.service';
+import { AppleClientSecretService } from './infrastructure/apple/apple-client-secret.service';
+import { AppleJwksService } from './infrastructure/apple/apple-jwks.service';
+import { AppleIdTokenVerifier } from './infrastructure/apple/apple-id-token-verifier.service';
 import { JwtStrategy } from './infrastructure/jwt.strategy';
 import { GoogleStrategy } from './infrastructure/strategies/google.strategy';
 import { NaverStrategy } from './infrastructure/strategies/naver.strategy';
 import { KakaoStrategy } from './infrastructure/strategies/kakao.strategy';
-import { AppleStrategy } from './infrastructure/strategies/apple.strategy';
 import { UserAuth } from './domain/user-auth.entity';
 import { UserAuthOauth } from './domain/user-auth-oauth.entity';
 import { UserSession } from './domain/user-session.entity';
@@ -48,11 +50,11 @@ function buildOAuthProviders(): Provider[] {
     logger.warn('KAKAO_CLIENT_ID not set — Kakao OAuth disabled');
   }
 
-  if (process.env.APPLE_CLIENT_ID) {
-    providers.push(AppleStrategy);
-  } else {
+  if (!process.env.APPLE_CLIENT_ID) {
     logger.warn('APPLE_CLIENT_ID not set — Apple OAuth disabled');
   }
+  // WHY: Apple은 Passport 전략 대신 AppleClientSecretService + AppleIdTokenVerifier를 사용한다.
+  // 이 서비스들은 아래 providers 배열에 직접 추가되므로 여기서는 조건부 등록이 불필요하다.
 
   return providers;
 }
@@ -88,6 +90,9 @@ function buildOAuthProviders(): Provider[] {
     AuthRepository,
     TokenService,
     OAuthProviderService,
+    AppleClientSecretService,
+    AppleJwksService,
+    AppleIdTokenVerifier,
     JwtStrategy,
     UserRepository,
     UserDeviceRepository,
