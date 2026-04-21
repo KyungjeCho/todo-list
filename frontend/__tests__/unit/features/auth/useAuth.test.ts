@@ -1,9 +1,9 @@
 import { renderHook, act } from '@testing-library/react-native';
 
 jest.mock('expo-localization', () => ({
-  getLocales: jest.fn().mockReturnValue([
-    { languageCode: 'es', languageTag: 'es-AR' },
-  ]),
+  getLocales: jest
+    .fn()
+    .mockReturnValue([{ languageCode: 'es', languageTag: 'es-AR' }]),
   getCalendars: jest
     .fn()
     .mockReturnValue([{ timeZone: 'America/Buenos_Aires' }]),
@@ -160,6 +160,38 @@ describe('useAuth — Apple 로그인 실패 복구', () => {
     });
 
     expect(result.current.error).toBe('auth.appleCancelled');
+  });
+
+  // WHY(P2): Apple 서버 장애(server_error / temporarily_unavailable)는 일시적
+  // 문제라는 점을 사용자가 인지해 재시도 가치를 판단할 수 있도록 전용 i18n 키로 분리.
+  it('서버가 #error=server_error로 복귀하면 "auth.appleServerError"로 매핑', async () => {
+    (WebBrowser.openAuthSessionAsync as jest.Mock).mockResolvedValue({
+      type: 'success',
+      url: 'todolist://auth/callback#error=server_error',
+    });
+
+    const { result } = renderHook(() => useAuth());
+
+    await act(async () => {
+      await result.current.login('apple');
+    });
+
+    expect(result.current.error).toBe('auth.appleServerError');
+  });
+
+  it('서버가 #error=temporarily_unavailable로 복귀하면 "auth.appleServerError"로 매핑', async () => {
+    (WebBrowser.openAuthSessionAsync as jest.Mock).mockResolvedValue({
+      type: 'success',
+      url: 'todolist://auth/callback#error=temporarily_unavailable',
+    });
+
+    const { result } = renderHook(() => useAuth());
+
+    await act(async () => {
+      await result.current.login('apple');
+    });
+
+    expect(result.current.error).toBe('auth.appleServerError');
   });
 
   it('서버가 #error=기타로 복귀하면 "auth.appleLoginFailed"로 매핑', async () => {

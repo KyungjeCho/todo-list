@@ -172,6 +172,14 @@ export class AuthController {
    * `user` 필드에 이름 JSON을 포함한다. GET 콜백은 Apple 스펙상 지원되지 않으므로
    * 별도 POST 핸들러로 분리하고, 기존 GET 핸들러의 Apple 가드는 T039에서 처리.
    */
+  // WHY(P2): Apple 콜백은 HMAC state로 보호되지만 TTL 내 replay 공격을 완전히
+  // 막지는 못한다(서버측 nonce 저장소 부재). 정상 사용자 영향 없이 초당 2건,
+  // 분당 20건으로 제한하여 재생/스크래핑 남용을 차단한다. /auth/token/refresh와
+  // 동일 정책 계열.
+  @Throttle({
+    short: { ttl: 1000, limit: 2 },
+    medium: { ttl: 60000, limit: 20 },
+  })
   @Post('oauth/apple/callback')
   async oauthAppleCallback(
     @Body() body: AppleFormPostCallbackDto,
