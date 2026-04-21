@@ -49,14 +49,25 @@ export class UserDeviceRepository {
     // WHY: FCM 은 동일 기기의 토큰이 회전(onTokenRefresh)하거나 앱 재설치 시
     // 옛 토큰을 즉시 무효화한다. 같은 (userId, deviceType) 의 다른 활성 행은
     // 전부 죽은 토큰이므로, 스케줄러가 헛쏘지 않도록 즉시 soft-delete 한다.
-    await this.deviceRepo
+    // WHY(R-004, 012-apple-fcm-integration): iPhone+iPad 등 같은 deviceType 을
+    // 공유하는 다기기 공존을 허용하기 위해, deviceName 이 제공된 경우에만 범위를
+    // (userId, deviceType, deviceName) 로 좁힌다. 미제공(Android 기존 경로)이면
+    // 기존 (userId, deviceType) 범위를 그대로 유지해 회귀를 방지한다.
+    const staleQuery = this.deviceRepo
       .createQueryBuilder()
       .softDelete()
       .where('user_id = :userId', { userId: data.userId })
       .andWhere('device_type = :deviceType', { deviceType: data.deviceType })
       .andWhere('fcm_token != :fcmToken', { fcmToken: data.fcmToken })
-      .andWhere('deleted_at IS NULL')
-      .execute();
+      .andWhere('deleted_at IS NULL');
+
+    if (data.deviceName !== undefined && data.deviceName !== null) {
+      staleQuery.andWhere('device_name = :deviceName', {
+        deviceName: data.deviceName,
+      });
+    }
+
+    await staleQuery.execute();
   }
 
   async deleteByFcmToken(fcmToken: string): Promise<void> {

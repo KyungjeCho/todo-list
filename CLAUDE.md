@@ -1,6 +1,6 @@
 # todo-list Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-04-20
+Auto-generated from all feature plans. Last updated: 2026-04-21
 
 ## Active Technologies
 - Supabase (PostgreSQL) — 디스크 수준 AES-256 암호화, 추가 앱 레벨 암호화 없음 (001-todo-mobile-service)
@@ -22,6 +22,7 @@ Auto-generated from all feature plans. Last updated: 2026-04-20
 - Supabase (PostgreSQL) — 스키마 변경 없음 (010-codebase-refactoring)
 - TypeScript 5.9 (Frontend), TypeScript 5.7 (Backend) — strict, `any` 금지 (011-apple-oauth-login)
 - Supabase (PostgreSQL) via TypeORM — `todolist_user_auth_oauth` 재사용, 스키마 변경 없음 (011-apple-oauth-login)
+- Supabase(PostgreSQL) via TypeORM — 기존 `todolist_user_device` 재사용, **스키마 변경 없음** (012-apple-fcm-integration)
 
 - TypeScript 5.x (Frontend & Backend) (001-todo-mobile-service)
 - React Native (Expo) — iOS/Android 크로스 플랫폼
@@ -89,9 +90,9 @@ cd frontend && npm test && npm run lint
 - `hotfix/*`: 긴급 수정
 
 ## Recent Changes
+- 012-apple-fcm-integration: Added TypeScript 5.9 (Frontend), TypeScript 5.7 (Backend) — strict, `any` 금지
 - 011-apple-oauth-login: Added TypeScript 5.9 (Frontend), TypeScript 5.7 (Backend) — strict, `any` 금지
 - 010-codebase-refactoring: Added TypeScript 5.9 (Frontend), TypeScript 5.7 (Backend) + React Native (Expo ~55), NestJS v11, Zustand, TypeORM
-- 009-security-dep-input-fix: Added TypeScript 5.9 (Frontend), TypeScript 5.7 (Backend)
 
 <!-- MANUAL ADDITIONS START -->
 
@@ -103,5 +104,14 @@ cd frontend && npm test && npm run lint
 - 로깅 규칙(SC-006): `APPLE_PRIVATE_KEY`, `code`, `id_token`, `Authorization` 헤더, Apple 응답 본문 전체는 절대 로깅 금지. Apple 에러 응답 본문은 선두 300자만 기록.
 - i18n 에러 키: `auth.appleLoginFailed`, `auth.appleCancelled`, `auth.appleServerError` (ko/en/ja/es 4개 locale).
 - 프론트 testID: Apple 버튼은 `oauth-button-apple` (Maestro E2E 전용), 기존 `login-button-apple`도 유지.
+
+## Apple FCM (012-apple-fcm-integration)
+
+- iOS 푸시 엔터타이틀먼트: `frontend/app.json` 의 `expo.ios.entitlements.aps-environment` 로 주입한다(`development`/`production`). 변경 후 `npx expo prebuild --platform ios` 로 `frontend/ios/frontend/frontend.entitlements` 를 재생성.
+- 다기기 공존 규칙(R-004): `UserDeviceRepository.upsertDevice` 의 soft-delete WHERE 절은 `deviceName` 이 제공되면 `(userId, deviceType, deviceName)` 범위로 좁히고, 미제공이면 기존 `(userId, deviceType)` 범위를 유지한다. 스키마 변경 없이 iPhone+iPad 공존 허용.
+- 로그 민감값 규칙: FCM 토큰은 프리픽스 8자(`...substring(0, 8)`)만 기록. APNs Key ID, Team ID, 전체 토큰, payload 본문은 절대 로깅 금지.
+- 알림 탭 딥링크: `frontend/src/features/notification/notificationTapRouter.ts` 가 `getInitialNotification`(terminated) + `onNotificationOpenedApp`(background) 을 구독하여 `data.type` 값으로 PLAN/REVIEW 화면을 전환. `NavigationContainer` 의 `navigationRef` 를 통해 라우팅.
+- 권한 재평가: `usePushNotification` 는 `AppState` `background → active` 전환 시 토큰 미보유 상태에서만 권한 재평가·등록을 **1회** 재시도(무한 루프 방지).
+- Maestro E2E: `.maestro/notification/ios_permission_register.yml` — `oauth-button-apple` testID 로 Apple 로그인 후 `push-status-registered` 마커(zero-size View) 가 나타나는지 확인.
 
 <!-- MANUAL ADDITIONS END -->

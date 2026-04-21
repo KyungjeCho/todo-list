@@ -1,0 +1,40 @@
+# T007 [US1] Maestro E2E: iOS 알림 권한 수락 → FCM 토큰 등록 관찰
+# WHY: iOS 실기기에서 첫 로그인 시 시스템 권한 다이얼로그 수락 →
+#      usePushNotification 훅이 getToken + onRegisterDevice 성공 →
+#      MainWrapper 의 push-status-registered 마커가 나타나는 것을 관찰.
+# 실제 알림 수신은 시뮬레이터가 간헐적 실패를 내므로 본 E2E 범위 외
+# (quickstart.md D 섹션 수동 스모크로 커버).
+# 전제: .maestro/config.yaml 의 appId 는 com.todolist.app — 재확인 필요 시 config 수정.
+
+appId: com.todolist.app
+
+tags:
+  - notification
+  - ios
+  - smoke
+
+---
+
+# 로그인 화면 진입 확인 (config.yaml 의 onFlowStart 에서 launchApp stopApp: true)
+- assertVisible:
+    id: "login-button-apple"
+
+# WHY: 본 스모크는 로그인 완료 이후 권한 다이얼로그 → 메인 전이를 관찰.
+# CI 환경의 OAuth 의존을 피하기 위해 Apple 버튼 탭(E2E 전용 testID)만 수행하고,
+# 실제 탭 후 이어지는 인증은 provider 가 허용된 기기에서만 성공한다.
+- tapOn:
+    id: "oauth-button-apple"
+
+# iOS 시스템 알림 권한 다이얼로그 — 영어/한국어 locale 둘 다 fallback
+- tapOn:
+    text: "Allow"
+    optional: true
+- tapOn:
+    text: "허용"
+    optional: true
+
+# 메인 진입 + 토큰 등록 관찰 (T013 이 push-status-registered 마커를 렌더)
+- extendedWaitUntil:
+    visible:
+      id: "push-status-registered"
+    timeout: 15000

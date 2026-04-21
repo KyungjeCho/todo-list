@@ -1,7 +1,7 @@
 export type RootStackParamList = {
   Auth: undefined;
   Onboarding: undefined;
-  Main: undefined;
+  Main: { mode?: 'PLAN' | 'REVIEW' } | undefined;
   Settings: undefined;
   VoiceInput: { todoDate: string };
   TimezoneSelect: { current: string };

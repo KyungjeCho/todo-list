@@ -11,6 +11,7 @@ import {
   NotoSans_700Bold,
 } from '@expo-google-fonts/noto-sans';
 import { AuthNavigator } from './src/app/navigation/AuthNavigator';
+import { navigationRef } from './src/app/navigation/navigationRef';
 import { useAuthStore } from './src/store/authStore';
 import { useSoundStore } from './src/store/soundStore';
 import { soundService } from './src/features/sound/soundService';
@@ -41,7 +42,7 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <StatusBar barStyle="dark-content" />
-      <NavigationContainer>
+      <NavigationContainer ref={navigationRef}>
         <AuthNavigator />
       </NavigationContainer>
     </GestureHandlerRootView>

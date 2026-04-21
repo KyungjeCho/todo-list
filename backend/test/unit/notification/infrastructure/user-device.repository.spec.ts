@@ -168,4 +168,83 @@ describe('UserDeviceRepository.upsertDevice', () => {
 
     expect(mockStaleQueryBuilder.execute).toHaveBeenCalled();
   });
+
+  // T019 (US3): deviceName 조건부 soft-delete 규칙 (다기기 공존 — R-004)
+  describe('deviceName 기반 soft-delete 범위 제어 (US3)', () => {
+    it('(a) deviceName 제공 시 WHERE 절에 device_name 조건이 추가되어 같은 deviceName 의 다른 토큰만 정리된다', async () => {
+      mockDeviceRepo.findOne.mockResolvedValue(null);
+      mockDeviceRepo.create.mockReturnValue({
+        userId: 'user-1',
+        fcmToken: 'token-new',
+        deviceName: 'iPhone 15',
+      });
+      mockDeviceRepo.save.mockResolvedValue({});
+
+      await repository.upsertDevice({
+        userId: 'user-1',
+        fcmToken: 'token-new',
+        deviceType: 'IOS',
+        deviceName: 'iPhone 15',
+      });
+
+      const deviceNameCall = mockStaleQueryBuilder.andWhere.mock.calls.find(
+        (call) =>
+          typeof call[0] === 'string' && call[0].includes('device_name'),
+      );
+      expect(deviceNameCall).toBeDefined();
+      expect(deviceNameCall![1]).toEqual(
+        expect.objectContaining({ deviceName: 'iPhone 15' }),
+      );
+    });
+
+    it('(b) deviceName 미제공 시 WHERE 절에 device_name 조건이 포함되지 않아 Android 회귀 방지', async () => {
+      mockDeviceRepo.findOne.mockResolvedValue(null);
+      mockDeviceRepo.create.mockReturnValue({
+        userId: 'user-1',
+        fcmToken: 'token-new',
+      });
+      mockDeviceRepo.save.mockResolvedValue({});
+
+      await repository.upsertDevice({
+        userId: 'user-1',
+        fcmToken: 'token-new',
+        deviceType: 'ANDROID',
+      });
+
+      const deviceNameCall = mockStaleQueryBuilder.andWhere.mock.calls.find(
+        (call) =>
+          typeof call[0] === 'string' && call[0].includes('device_name'),
+      );
+      expect(deviceNameCall).toBeUndefined();
+    });
+
+    it('(c) 동일 fcmToken 재등록 시 soft-deleted 행이 복원되며 deviceName 도 갱신된다', async () => {
+      // WHY: 앱 재설치 후 같은 토큰이 내려오는 경우(FCM 측 재발급이 아닌 동일값)도 커버.
+      const softDeleted = {
+        id: 'dev-1',
+        userId: 'user-1',
+        fcmToken: 'token-x',
+        deviceType: 'IOS',
+        deviceName: 'iPhone 15',
+        deletedAt: new Date('2026-04-13T10:00:00Z'),
+      };
+      mockDeviceRepo.findOne.mockResolvedValue(softDeleted);
+      mockDeviceRepo.save.mockResolvedValue(softDeleted);
+
+      await repository.upsertDevice({
+        userId: 'user-1',
+        fcmToken: 'token-x',
+        deviceType: 'IOS',
+        deviceName: 'iPhone 15 Pro',
+      });
+
+      expect(mockDeviceRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'dev-1',
+          deletedAt: null,
+          deviceName: 'iPhone 15 Pro',
+        }),
+      );
+    });
+  });
 });
