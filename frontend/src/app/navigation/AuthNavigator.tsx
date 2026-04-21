@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { View } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import i18n from '../../i18n';
 import type {
@@ -22,6 +23,8 @@ import type {
 import { memoApi } from '../../services/api/memoApi';
 import { useTodoStore } from '../../store/todoStore';
 import { usePushNotification } from '../../features/notification/usePushNotification';
+import { subscribeNotificationTapRouter } from '../../features/notification/notificationTapRouter';
+import { navigationRef } from './navigationRef';
 import { useAppFocusRefresh } from '../../features/todo/useAppFocusRefresh';
 import { getCurrentDate } from '../../features/todo/getCurrentDate';
 import { LoginScreen } from '../../screens/auth/LoginScreen';
@@ -115,19 +118,26 @@ const defaultStats = {
   progressRate: 0,
 };
 
-const MainWrapper: React.FC = () => {
+interface MainWrapperProps {
+  initialMode?: 'PLAN' | 'REVIEW';
+}
+
+const MainWrapper: React.FC<MainWrapperProps> = ({ initialMode }) => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { selectedDate, setSelectedDate } = useTodoStore();
 
+  const [isPushRegistered, setIsPushRegistered] = useState(false);
+
   // WHY: 로그인 후 토큰 갱신(onTokenRefresh)·앱 재실행 시 서버에 FCM 토큰 재등록
   usePushNotification({
     onRegisterDevice: (params) => userApi.registerDevice(params),
+    onTokenRegistered: () => setIsPushRegistered(true),
   });
 
   const [data, setData] = useState<TodoListResponse | null>(null);
   const [modeOverride, setModeOverride] = useState<'PLAN' | 'REVIEW' | null>(
-    'PLAN',
+    initialMode ?? 'PLAN',
   );
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
@@ -326,6 +336,13 @@ const MainWrapper: React.FC = () => {
     fetchTodos(selectedDate, true);
   }, [selectedDate, fetchTodos]);
 
+  // WHY: 알림 탭으로 initialMode 가 주입/갱신되면 현재 날짜의 모드를 해당 값으로 맞춘다.
+  useEffect(() => {
+    if (initialMode) {
+      setModeOverride(initialMode);
+    }
+  }, [initialMode]);
+
   // WHY: VoiceInputScreen에서 batch create 후 돌아올 때 todo 목록 갱신
   useFocusEffect(
     useCallback(() => {
@@ -338,36 +355,54 @@ const MainWrapper: React.FC = () => {
   const currentMode = modeOverride ?? data?.mode ?? 'PLAN';
 
   return (
-    <MainScreen
-      mode={currentMode}
-      todos={data?.todos ?? []}
-      stats={data?.stats ?? defaultStats}
-      date={selectedDate}
-      onModeToggle={handleModeToggle}
-      onAddTodo={handleAddTodo}
-      onToggleComplete={handleToggleComplete}
-      onEdit={handleEdit}
-      onDeactivate={handleDeactivate}
-      onDelete={handleDelete}
-      onAddMemo={handleAddMemo}
-      onUpdateMemo={handleUpdateMemo}
-      onDeleteMemo={handleDeleteMemo}
-      onCompleteDay={handleCompleteDay}
-      onNavigateSettings={() => navigation.navigate('Settings')}
-      isLoading={isLoading}
-      isAdding={isAdding}
-      isCompleting={isCompleting}
-      isDayCompleted={isDayCompleted}
-      completeDayResult={completeDayResult}
-      completeDayError={completeDayError}
-      error={error}
-      onRetry={() => fetchTodos(selectedDate, true)}
-    />
+    <>
+      <MainScreen
+        mode={currentMode}
+        todos={data?.todos ?? []}
+        stats={data?.stats ?? defaultStats}
+        date={selectedDate}
+        onModeToggle={handleModeToggle}
+        onAddTodo={handleAddTodo}
+        onToggleComplete={handleToggleComplete}
+        onEdit={handleEdit}
+        onDeactivate={handleDeactivate}
+        onDelete={handleDelete}
+        onAddMemo={handleAddMemo}
+        onUpdateMemo={handleUpdateMemo}
+        onDeleteMemo={handleDeleteMemo}
+        onCompleteDay={handleCompleteDay}
+        onNavigateSettings={() => navigation.navigate('Settings')}
+        isLoading={isLoading}
+        isAdding={isAdding}
+        isCompleting={isCompleting}
+        isDayCompleted={isDayCompleted}
+        completeDayResult={completeDayResult}
+        completeDayError={completeDayError}
+        error={error}
+        onRetry={() => fetchTodos(selectedDate, true)}
+      />
+      {/* WHY(T013): Maestro E2E 가 FCM 토큰 등록 완료를 관찰하기 위한 제로사이즈 마커 */}
+      {isPushRegistered && (
+        <View
+          testID="push-status-registered"
+          style={{ width: 0, height: 0 }}
+          accessible={false}
+          pointerEvents="none"
+        />
+      )}
+    </>
   );
 };
 
-const MainTabScreen: React.FC = () => {
-  return <MainTabNavigator HomeComponent={MainWrapper} />;
+type MainScreenProps = NativeStackScreenProps<RootStackParamList, 'Main'>;
+
+const MainTabScreen: React.FC<MainScreenProps> = ({ route }) => {
+  const initialMode = route.params?.mode;
+  const HomeComponent = useCallback(
+    () => <MainWrapper initialMode={initialMode} />,
+    [initialMode],
+  );
+  return <MainTabNavigator HomeComponent={HomeComponent} />;
 };
 
 export const AuthNavigator: React.FC = () => {
@@ -384,15 +419,30 @@ export const AuthNavigator: React.FC = () => {
   }, [user?.language]);
 
   const route = selectAuthRoute({ isAuthenticated, isLoading, user });
+  const showMain = route === 'main';
+  const showOnboarding = route === 'onboarding';
+
+  // WHY: 알림 탭(종료/백그라운드) 시 Main 라우트의 mode 파라미터를 주입해
+  // PLAN/REVIEW 모드로 진입시킨다. 인증 상태일 때만 구독한다.
+  // WHY(hooks-order): early return 위에서 호출해야 route 전이(loading → main)
+  // 시 훅 호출 개수가 달라져 "Rendered more hooks" 로 크래시하는 문제를 막는다.
+  useEffect(() => {
+    if (!showMain) {
+      return;
+    }
+    const unsubscribe = subscribeNotificationTapRouter((mode) => {
+      if (navigationRef.isReady()) {
+        navigationRef.navigate('Main', { mode });
+      }
+    });
+    return unsubscribe;
+  }, [showMain]);
 
   // WHY: 로딩 단락(FR-003). Stack 진입 전에 LoadingSplash 단독 렌더로
   // Onboarding 으로 찰나 리다이렉트되는 플리커를 원천 차단.
   if (route === 'loading') {
     return <LoadingSplash />;
   }
-
-  const showMain = route === 'main';
-  const showOnboarding = route === 'onboarding';
 
   const getInitialRoute = (): keyof RootStackParamList => {
     if (!isAuthenticated) return 'Auth';

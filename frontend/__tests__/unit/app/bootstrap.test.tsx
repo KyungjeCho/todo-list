@@ -41,6 +41,14 @@ jest.mock('src/app/navigation/AuthNavigator', () => ({
 
 jest.mock('@react-navigation/native', () => ({
   NavigationContainer: ({ children }: { children: React.ReactNode }) => children,
+  createNavigationContainerRef: () => ({
+    current: null,
+    isReady: () => false,
+    navigate: jest.fn(),
+    reset: jest.fn(),
+    goBack: jest.fn(),
+    getRootState: jest.fn(),
+  }),
 }));
 
 jest.mock('src/store/authStore', () => ({
