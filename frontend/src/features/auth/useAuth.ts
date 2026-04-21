@@ -28,6 +28,26 @@ function detectSignupTimezone(): string | undefined {
   return getCalendars()[0]?.timeZone ?? undefined;
 }
 
+/**
+ * Apple OAuth error 코드를 i18n 키로 매핑한다.
+ * WHY: Apple은 form_post 콜백의 `error` 파라미터로 OAuth 2.0 표준 에러 코드를 돌려준다.
+ *   - user_cancelled_authorize → 사용자 취소 (Apple 고유)
+ *   - server_error / temporarily_unavailable → Apple 서버 장애 (일시적, 재시도 안내)
+ *   - 그 외(invalid_request/invalid_client/invalid_grant/...) → 로그인 실패 일반
+ * 서버 장애를 별도 메시지로 구분하여 사용자가 재시도 가치를 판단할 수 있게 한다.
+ */
+function mapAppleError(providerError: string): string {
+  if (providerError === 'user_cancelled_authorize')
+    return 'auth.appleCancelled';
+  if (
+    providerError === 'server_error' ||
+    providerError === 'temporarily_unavailable'
+  ) {
+    return 'auth.appleServerError';
+  }
+  return 'auth.appleLoginFailed';
+}
+
 /** WHY: FCM 토큰 획득 실패가 로그인을 막으면 안 됨. 알림은 부가 기능 */
 async function getOptionalFcmToken(): Promise<string | null> {
   try {
@@ -94,11 +114,7 @@ export function useAuth() {
           const providerError = fragmentParams.get('error');
           if (providerError) {
             if (provider === 'apple') {
-              setError(
-                providerError === 'user_cancelled_authorize'
-                  ? 'auth.appleCancelled'
-                  : 'auth.appleLoginFailed',
-              );
+              setError(mapAppleError(providerError));
             } else {
               setError(i18n.t('auth.authFailed'));
             }
