@@ -27,20 +27,24 @@ describe('OAuthProviderService — Apple branch', () => {
         ),
     }) as unknown as typeof fetch;
 
+    // WHY(lint): mock 메서드 참조를 matcher에 직접 넘기면
+    // unbound-method에 걸리므로, jest.fn()을 독립 변수로 추출해 사용한다.
+    const getSecretMock = jest.fn().mockResolvedValue('jwt-client-secret');
+    const verifyMock = jest.fn().mockResolvedValue({
+      sub: 'apple-sub-123',
+      email: 'user@privaterelay.appleid.com',
+      emailVerified: true,
+      isPrivateEmail: true,
+      iss: 'https://appleid.apple.com',
+      aud: 'com.example.todolist.service',
+      exp: 0,
+      iat: 0,
+    });
     const appleClientSecret = {
-      get: jest.fn().mockResolvedValue('jwt-client-secret'),
+      get: getSecretMock,
     } as unknown as AppleClientSecretService;
     const appleVerifier = {
-      verify: jest.fn().mockResolvedValue({
-        sub: 'apple-sub-123',
-        email: 'user@privaterelay.appleid.com',
-        emailVerified: true,
-        isPrivateEmail: true,
-        iss: 'https://appleid.apple.com',
-        aud: 'com.example.todolist.service',
-        exp: 0,
-        iat: 0,
-      }),
+      verify: verifyMock,
     } as unknown as AppleIdTokenVerifier;
 
     const service = new OAuthProviderService(
@@ -64,8 +68,8 @@ describe('OAuthProviderService — Apple branch', () => {
       providerUserEmail: 'user@privaterelay.appleid.com',
       providerUserName: '',
     });
-    expect(appleClientSecret.get).toHaveBeenCalledTimes(1);
-    expect(appleVerifier.verify).toHaveBeenCalledWith('signed.apple.jwt');
+    expect(getSecretMock).toHaveBeenCalledTimes(1);
+    expect(verifyMock).toHaveBeenCalledWith('signed.apple.jwt');
     // fetch called exactly once: Apple token endpoint only (no userinfo)
     expect(global.fetch).toHaveBeenCalledTimes(1);
     const tokenCallUrl = (global.fetch as jest.Mock).mock.calls[0][0];

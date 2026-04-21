@@ -116,7 +116,12 @@ export function useAuth() {
           // WHY(FR-013, T041): Apple 시트에서 사용자가 취소하거나
           // dismiss된 경우에 전용 i18n 키를 에러 상태로 설정해
           // 로그인 화면에서 안내 메시지를 표시하고 버튼을 재활성화한다.
-          if (result.type === 'cancel' || result.type === 'dismiss') {
+          // WHY(lint): result.type은 WebBrowserResultType enum이므로
+          // 문자열 리터럴 비교는 no-unsafe-enum-comparison에 걸린다.
+          if (
+            result.type === WebBrowser.WebBrowserResultType.CANCEL ||
+            result.type === WebBrowser.WebBrowserResultType.DISMISS
+          ) {
             setError('auth.appleCancelled');
           } else {
             setError('auth.appleLoginFailed');
