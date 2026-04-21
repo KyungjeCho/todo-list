@@ -111,8 +111,26 @@ export class OAuthLoginUsecase {
       '';
 
     const scope = PROVIDER_SCOPES[input.provider] || '';
-    const redirectUrl = `${baseUrl}?client_id=${clientId}&redirect_uri=${encodeURIComponent(callbackUrl)}&scope=${encodeURIComponent(scope)}&state=${state}&response_type=code`;
 
-    return await Promise.resolve({ redirectUrl });
+    // WHY(P2b): signState는 base64 문자열을 반환하며 base64 알파벳에는 `+`와 `/`가
+    // 포함된다. 쿼리 문자열에서 `+`는 공백으로 디코딩되기 때문에 문자열 보간으로
+    // 직접 붙이면 비ASCII deviceName 등으로 인해 `+`가 출현하는 즉시 콜백에서
+    // INVALID_STATE가 발생한다. URLSearchParams로 모든 파라미터를 인코딩한다.
+    const params = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: callbackUrl,
+      scope,
+      state,
+      response_type: 'code',
+    });
+    // WHY: Apple은 scope=name email 요청 시 첫 로그인 이름을 form body의 별도 user 필드로만 전달한다.
+    // response_mode=form_post로 POST 콜백을 받아야 이름 수집이 가능하며, 쿼리 노출도 피한다.
+    if (input.provider === 'apple') {
+      params.set('response_mode', 'form_post');
+    }
+
+    return await Promise.resolve({
+      redirectUrl: `${baseUrl}?${params.toString()}`,
+    });
   }
 }

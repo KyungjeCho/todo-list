@@ -20,6 +20,9 @@
     "continueWithNaver": "Continue with Naver",
     "continueWithKakao": "Continue with Kakao",
     "continueWithApple": "Continue with Apple",
+    "appleLoginFailed": "Apple sign-in failed. Please try again.",
+    "appleCancelled": "Apple sign-in cancelled.",
+    "appleServerError": "Apple sign-in is temporarily unavailable. Please try again later.",
     "subtitle": "Plan your day and reflect",
     "authFailed": "Authentication failed",
     "profileFetchFailed": "Failed to fetch profile"

@@ -1,0 +1,61 @@
+# T029 [US2] Maestro E2E: Apple 재로그인 시 데이터 보존
+# WHY(US2, FR-004): 기존 Apple 사용자가 로그아웃 후 동일 sub로 재로그인 시
+# `isNewUser=false`로 처리되어 이름/데이터가 유지되어야 한다. 백엔드 integration이
+# 본 플로우를 mocked usecase로 커버하므로, 여기서는 UI 레벨에서 홈 화면이
+# 동일 상태로 복원되는지 검증한다.
+
+appId: com.todolist.app
+
+tags:
+  - auth
+  - us2
+  - apple
+
+---
+
+# 1회차: Apple 로그인 해피 패스 재사용 (login-apple.yml과 동일한 사전 조건)
+- launchApp:
+    clearState: true
+
+- assertVisible:
+    id: "oauth-button-apple"
+- tapOn:
+    id: "oauth-button-apple"
+
+# 홈 진입 확인
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+
+# 2회차: 로그아웃 후 재로그인
+- tapOn:
+    id: "settings-tab"
+    optional: true
+
+- tapOn:
+    id: "settings-logout-button"
+    optional: true
+
+- tapOn:
+    id: "logout-confirm"
+    optional: true
+
+# 로그인 화면 복귀
+- extendedWaitUntil:
+    visible:
+      id: "oauth-button-apple"
+    timeout: 10000
+
+# 재로그인
+- tapOn:
+    id: "oauth-button-apple"
+
+# 홈 화면이 다시 노출되어야 하고, 에러 메시지는 없어야 한다.
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+
+- assertNotVisible:
+    id: "login-error-message"

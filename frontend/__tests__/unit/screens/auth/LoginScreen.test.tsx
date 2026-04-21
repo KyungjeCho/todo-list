@@ -109,4 +109,32 @@ describe('LoginScreen', () => {
       expect(screen.queryByTestId('login-error-message')).toBeNull();
     });
   });
+
+  // WHY: Apple OAuth(FR-001)는 Maestro E2E와 단위 테스트에서
+  // `oauth-button-apple` 안정적 식별자를 요구한다. 기존 `login-button-apple`은
+  // 회귀 방지를 위해 그대로 두고, Apple 전용 래퍼로 신규 testID를 추가한다.
+  describe('Apple 로그인 버튼 (US1)', () => {
+    it('Apple 버튼이 testID="oauth-button-apple" 래퍼를 가진다', () => {
+      render(<LoginScreen />);
+
+      expect(screen.getByTestId('oauth-button-apple')).toBeTruthy();
+    });
+
+    it('Apple 래퍼 내부에 i18n 라벨 "Apple로 계속하기"가 렌더링된다', () => {
+      render(<LoginScreen />);
+
+      const wrapper = screen.getByTestId('oauth-button-apple');
+      expect(wrapper).toBeTruthy();
+      expect(screen.getByLabelText('Apple로 계속하기')).toBeTruthy();
+    });
+
+    it('Apple 버튼 탭 시 onLogin 콜백이 "apple"로 호출된다', () => {
+      const mockOnLogin = jest.fn();
+      render(<LoginScreen onLogin={mockOnLogin} />);
+
+      fireEvent.press(screen.getByTestId('login-button-apple'));
+
+      expect(mockOnLogin).toHaveBeenCalledWith('apple');
+    });
+  });
 });

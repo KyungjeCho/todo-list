@@ -11,6 +11,7 @@ import {
   UseFilters,
   BadRequestException,
   HttpCode,
+  Logger,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import type { Response, Request } from 'express';
@@ -19,14 +20,21 @@ import { OAuthLoginUsecase } from './application/oauth-login.usecase';
 import { OAuthCallbackUsecase } from './application/oauth-callback.usecase';
 import { TokenRefreshUsecase } from './application/token-refresh.usecase';
 import { LogoutUsecase } from './application/logout.usecase';
-import { TokenRefreshDto, LogoutDto } from './application/dto';
+import {
+  TokenRefreshDto,
+  LogoutDto,
+  AppleFormPostCallbackDto,
+} from './application/dto';
 import { JwtAuthGuard } from './infrastructure/jwt-auth.guard';
 import { OAuthProviderService } from './infrastructure/oauth-provider.service';
+import { parseAppleUserField } from './infrastructure/apple/apple-user-field.parser';
 import { HttpExceptionFilter } from '../common/filters/http-exception.filter';
 
 @Controller('auth')
 @UseFilters(new HttpExceptionFilter())
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
+
   constructor(
     private readonly oauthLoginUsecase: OAuthLoginUsecase,
     private readonly oauthCallbackUsecase: OAuthCallbackUsecase,
@@ -89,6 +97,13 @@ export class AuthController {
     @Req() req: Request,
     @Res() res: Response,
   ): Promise<void> {
+    // WHY(FR-002, T039): Apple은 반드시 `response_mode=form_post` POST 콜백만 지원한다.
+    // GET 경로로 들어오면 Apple이 절대 호출하지 않은 흐름이므로 거부하여
+    // 잘못 구성된 트래픽을 조기에 차단하고 운영 로그에 명확한 에러 코드를 남긴다.
+    if (provider === 'apple') {
+      throw new BadRequestException('APPLE_MUST_USE_FORM_POST');
+    }
+
     if (!code) {
       throw new BadRequestException('MISSING_AUTHORIZATION_CODE');
     }
@@ -147,6 +162,111 @@ export class AuthController {
       isNewUser: String(result.isNewUser),
     });
     // WHY: query string 대신 fragment(#)로 전달하여 서버/프록시 로그에 토큰 노출 방지
+    res.redirect(302, `${clientRedirectUri}#${params.toString()}`);
+  }
+
+  /**
+   * Apple OAuth form_post 콜백을 처리한다.
+   * WHY(FR-001, FR-005): Apple은 `response_mode=form_post` 지정 시 인증 결과를
+   * POST `application/x-www-form-urlencoded`로 전달하며, 첫 로그인 1회에 한해
+   * `user` 필드에 이름 JSON을 포함한다. GET 콜백은 Apple 스펙상 지원되지 않으므로
+   * 별도 POST 핸들러로 분리하고, 기존 GET 핸들러의 Apple 가드는 T039에서 처리.
+   */
+  @Post('oauth/apple/callback')
+  async oauthAppleCallback(
+    @Body() body: AppleFormPostCallbackDto,
+    @Req() req: Request,
+    @Res() res: Response,
+  ): Promise<void> {
+    const stateSecret =
+      this.configService.getOrThrow<string>('oauth.stateSecret');
+    const verified = OAuthLoginUsecase.verifyState(body.state, stateSecret);
+    if (!verified) {
+      throw new BadRequestException('INVALID_STATE');
+    }
+
+    const stateData = verified;
+    if (
+      typeof stateData !== 'object' ||
+      stateData === null ||
+      (stateData.deviceType !== undefined &&
+        typeof stateData.deviceType !== 'string')
+    ) {
+      throw new BadRequestException('INVALID_STATE_FORMAT');
+    }
+
+    const deviceType = stateData.deviceType;
+    if (deviceType && deviceType !== 'IOS' && deviceType !== 'ANDROID') {
+      throw new BadRequestException('INVALID_DEVICE_TYPE');
+    }
+
+    // WHY(P1): Apple 취소/권한 거부/서버 오류는 form_post의 `error` 필드로 전달된다.
+    // 토큰 교환을 시도하지 말고 state가 지정한 클라이언트 딥링크 fragment에 error를
+    // 실어 302로 반환하여 WebBrowser 세션을 즉시 닫고 프론트엔드 useAuth가
+    // i18n 키로 매핑할 수 있도록 한다. error_description은 로그·응답에 원문 그대로
+    // 싣지 않는다 (프로바이더 측 문구가 영어로 고정되어 있어 i18n을 깨기 때문).
+    if (body.error) {
+      this.logger.log(
+        JSON.stringify({
+          provider: 'apple',
+          event: 'login_error',
+          error: body.error,
+        }),
+      );
+      const clientRedirectUri = this.validateRedirectUri(
+        stateData.redirectUri as string | undefined,
+      );
+      const params = new URLSearchParams({ error: body.error });
+      res.redirect(302, `${clientRedirectUri}#${params.toString()}`);
+      return;
+    }
+
+    if (!body.code) {
+      throw new BadRequestException('MISSING_AUTHORIZATION_CODE');
+    }
+
+    const userProfile = await this.oauthProviderService.exchangeCodeForProfile(
+      'apple',
+      body.code,
+      body.state,
+    );
+
+    // WHY(FR-006): Apple `user` 필드는 최초 로그인 1회에만 제공된다.
+    // 파싱 실패·누락 시 빈 문자열을 반환해 OAuthCallbackUsecase의 email local-part 폴백으로 위임.
+    const parsedName = parseAppleUserField(body.user);
+
+    const result = await this.oauthCallbackUsecase.execute({
+      provider: userProfile.provider,
+      providerUserId: userProfile.providerUserId,
+      providerUserEmail: userProfile.providerUserEmail,
+      providerUserName: parsedName || userProfile.providerUserName,
+      fcmToken: (stateData.fcmToken as string) || undefined,
+      deviceType: (deviceType as 'IOS' | 'ANDROID') || 'IOS',
+      deviceName: stateData.deviceName as string | undefined,
+      userAgent: req.headers['user-agent'] ?? undefined,
+      ipAddress: req.ip ?? undefined,
+      timezone: stateData.timezone as string | undefined,
+      language: stateData.language as string | undefined,
+    });
+
+    // WHY(FR-015, T031): 운영 관측성 — Apple 콜백 결과를 구조화 로그로 남긴다.
+    // 민감 정보(code, id_token, email, sub 전체)는 절대 포함하지 않고,
+    // `event`(login_new/login_returning)와 프로바이더만 기록한다.
+    this.logger.log(
+      JSON.stringify({
+        provider: 'apple',
+        event: result.isNewUser ? 'login_new' : 'login_returning',
+      }),
+    );
+
+    const clientRedirectUri = this.validateRedirectUri(
+      stateData.redirectUri as string | undefined,
+    );
+    const params = new URLSearchParams({
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+      isNewUser: String(result.isNewUser),
+    });
     res.redirect(302, `${clientRedirectUri}#${params.toString()}`);
   }
 

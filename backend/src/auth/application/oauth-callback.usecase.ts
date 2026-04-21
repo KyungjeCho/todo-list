@@ -48,6 +48,11 @@ export class OAuthCallbackUsecase {
     let isNewUser: boolean;
 
     if (existingOauth) {
+      // WHY(US2, FR-004): 재로그인 분기 — `(provider, providerUserId=sub)`만으로
+      // 기존 사용자 식별. Apple은 2회차 이후 `user` 필드와 이메일을 생략하므로
+      // 여기서 `input.providerUserName/Email`이 빈 문자열이어도 절대 덮어쓰지 않는다.
+      // `user.user_name` 불변 보장은 아래에서 `userRepository.create`를 호출하지
+      // 않는 것으로 충족되며, 회귀가 발생하면 integration 테스트(T027/T028)에서 감지.
       userAuthId = existingOauth.userAuthId;
       const user = await this.userRepository.findByUserAuthId(userAuthId);
       if (!user) {

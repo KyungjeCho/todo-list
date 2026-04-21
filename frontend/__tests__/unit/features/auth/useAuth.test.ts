@@ -93,3 +93,103 @@ describe('useAuth — OAuth URL에 timezone/language 전달', () => {
     expect(url).toContain('language=es');
   });
 });
+
+// T037 [US3] — Apple 로그인 에러/취소 메시지 매핑
+describe('useAuth — Apple 로그인 실패 복구', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('사용자가 Apple 시트에서 취소하면 i18n 키 "auth.appleCancelled"가 error에 설정된다', async () => {
+    (WebBrowser.openAuthSessionAsync as jest.Mock).mockResolvedValue({
+      type: 'cancel',
+    });
+
+    const { result } = renderHook(() => useAuth());
+
+    await act(async () => {
+      await result.current.login('apple');
+    });
+
+    // WHY(FR-013, T037): 취소 플로우에서 사용자에게 로그인 화면 에러 배너로 표시되도록
+    // `auth.appleCancelled` 번역 키를 error 상태로 매핑한다.
+    expect(result.current.error).toBe('auth.appleCancelled');
+  });
+
+  it('WebBrowser 결과 type="dismiss"도 취소로 간주되어 "auth.appleCancelled" 로 매핑', async () => {
+    (WebBrowser.openAuthSessionAsync as jest.Mock).mockResolvedValue({
+      type: 'dismiss',
+    });
+
+    const { result } = renderHook(() => useAuth());
+
+    await act(async () => {
+      await result.current.login('apple');
+    });
+
+    expect(result.current.error).toBe('auth.appleCancelled');
+  });
+
+  it('WebBrowser가 예외를 던지면 "auth.appleLoginFailed"로 매핑', async () => {
+    (WebBrowser.openAuthSessionAsync as jest.Mock).mockRejectedValue(
+      new Error('Network request failed'),
+    );
+
+    const { result } = renderHook(() => useAuth());
+
+    await act(async () => {
+      await result.current.login('apple');
+    });
+
+    expect(result.current.error).toBe('auth.appleLoginFailed');
+  });
+
+  // WHY(P1): 서버가 Apple 취소 흐름을 fragment #error=user_cancelled_authorize로
+  // 복귀시키면 WebBrowser 결과 type='success'이면서 URL 안에 error 파라미터가 존재한다.
+  // 토큰 교환을 시도하지 말고 i18n 키로 매핑해 로그인 화면 배너를 띄워야 한다.
+  it('서버가 #error=user_cancelled_authorize로 복귀하면 "auth.appleCancelled"로 매핑', async () => {
+    (WebBrowser.openAuthSessionAsync as jest.Mock).mockResolvedValue({
+      type: 'success',
+      url: 'todolist://auth/callback#error=user_cancelled_authorize',
+    });
+
+    const { result } = renderHook(() => useAuth());
+
+    await act(async () => {
+      await result.current.login('apple');
+    });
+
+    expect(result.current.error).toBe('auth.appleCancelled');
+  });
+
+  it('서버가 #error=기타로 복귀하면 "auth.appleLoginFailed"로 매핑', async () => {
+    (WebBrowser.openAuthSessionAsync as jest.Mock).mockResolvedValue({
+      type: 'success',
+      url: 'todolist://auth/callback#error=invalid_request',
+    });
+
+    const { result } = renderHook(() => useAuth());
+
+    await act(async () => {
+      await result.current.login('apple');
+    });
+
+    expect(result.current.error).toBe('auth.appleLoginFailed');
+  });
+
+  it('Apple이 아닌 provider에서는 기존 에러 메시지 경로 유지', async () => {
+    (WebBrowser.openAuthSessionAsync as jest.Mock).mockRejectedValue(
+      new Error('network-fail'),
+    );
+
+    const { result } = renderHook(() => useAuth());
+
+    await act(async () => {
+      await result.current.login('google');
+    });
+
+    // Google은 Apple 전용 키가 아닌 err.message 또는 auth.authFailed로 폴백
+    expect(result.current.error).not.toBe('auth.appleLoginFailed');
+    expect(result.current.error).not.toBe('auth.appleCancelled');
+  });
+});
