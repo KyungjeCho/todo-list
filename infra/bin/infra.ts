@@ -13,6 +13,7 @@ new TodolistBackendStack(app, `TodolistBackend-${env}`, {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION ?? 'ap-northeast-2',
   },
+  envName: env,
   tags: {
     Project: 'todolist',
     Environment: env,

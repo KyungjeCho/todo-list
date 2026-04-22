@@ -247,7 +247,7 @@ aws lambda update-alias \
 - [ ] **2. 인프라 부트스트랩(1회성)** — AWS CDK(TypeScript)
   - CDK 프로젝트 `infra/` 스캐폴딩 (`cdk init app --language typescript`)
   - OIDC Provider + Deploy Role (ECR push + Lambda update + SSM read 권한만)
-  - ECR Repository(`todolist-backend`, image scan on push 활성)
+  - ECR Repository(`todolist-backend-{env}`) — env별 격리, image scan on push, **IMMUTABLE 태그**, **RemovalPolicy=RETAIN**, lifecycle 최신 20개 보존
   - Lambda 2개(`todolist-api`, `todolist-cron`) + alias(`dev`, `live`) — arm64
   - **Lambda Function URL** 활성화 (api Lambda) — `AuthType=NONE`, CORS는 Function URL 측에서 설정(앱 helmet/CORS와 중복 금지)
   - EventBridge Scheduler 3개(섹션 5.1) → cron alias
