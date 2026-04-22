@@ -254,10 +254,11 @@ aws lambda update-alias \
     - MaxSessionDuration: 1시간
   - **TodolistBackend-{env}** 의 리소스:
     - ECR Repository(`todolist-backend-{env}`) — env별 격리, image scan on push, **IMMUTABLE 태그**, **RemovalPolicy=RETAIN**, lifecycle 최신 20개 보존
+    - **SSM 명명 규약 모듈** (`infra/lib/ssm-parameters.ts`) — `/todolist/{env}/*` 경로의 7종 시크릿(database_url, jwt_secret, jwt_refresh_secret, oauth_state_secret, apple_private_key, fcm_service_account_json, gemini_api_key) 이름을 typed constants 로 정의. **값 자체는 CDK 가 만들지 않음** — CloudFormation 의 SecureString 미지원 + git 시크릿 유출 위험 회피 목적. 운영자가 `aws ssm put-parameter --type SecureString` 로 수동 등록(RUNBOOK_DEPLOY 참조).
+    - **`stack.grantSsmRead(grantee)` 헬퍼** — Lambda 실행 역할에 `ssm:GetParameter*` (Resource=`/todolist/{env}/*`) + `kms:Decrypt` (Resource=`alias/aws/ssm`) 권한을 단일 진입점에서 부여. env 간 시크릿 노출 차단.
   - Lambda 2개(`todolist-api`, `todolist-cron`) + alias(`dev`, `live`) — arm64
   - **Lambda Function URL** 활성화 (api Lambda) — `AuthType=NONE`, CORS는 Function URL 측에서 설정(앱 helmet/CORS와 중복 금지)
   - EventBridge Scheduler 3개(섹션 5.1) → cron alias
-  - SSM 파라미터 자리(`/todolist/{dev,prod}/*`)
   - CloudWatch Alarm (섹션 6.2)
 - [ ] **3. Backend 런타임 코드 추가**
   - `backend/src/scheduler.ts` 엔트리 파일 (섹션 5.2)

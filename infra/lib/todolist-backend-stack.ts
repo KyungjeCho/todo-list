@@ -1,6 +1,8 @@
 import * as cdk from 'aws-cdk-lib/core';
 import * as ecr from 'aws-cdk-lib/aws-ecr';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
+import { ssmParameterPathArn } from './ssm-parameters';
 
 /**
  * Stack props 확장 — env 식별자를 리소스 이름에 일관되게 주입한다.
@@ -21,16 +23,52 @@ export interface TodolistBackendStackProps extends cdk.StackProps {
  */
 export class TodolistBackendStack extends cdk.Stack {
   public readonly backendRepository: ecr.Repository;
+  private readonly envName: string;
 
   constructor(scope: Construct, id: string, props: TodolistBackendStackProps) {
     super(scope, id, props);
 
+    this.envName = props.envName;
     this.backendRepository = this.createBackendRepository(props.envName);
 
     new cdk.CfnOutput(this, 'BackendRepositoryUri', {
       value: this.backendRepository.repositoryUri,
       description: 'Lambda 컨테이너 이미지 ECR URI (CI 에서 docker push 대상)',
     });
+  }
+
+  /**
+   * Lambda 실행 역할 등 grantee 에 SSM Parameter Store 읽기 권한을 부여한다.
+   *
+   * WHY: SSM SecureString 시크릿은 운영자가 수동 등록하지만, 런타임에서 읽기
+   * 권한은 IaC 가 일관되게 부여해야 한다. 권한 범위는 `/todolist/{env}/*` 로
+   * 한정해 다른 환경/프로젝트의 시크릿 노출을 차단한다.
+   *
+   * - SecureString 복호화에는 KMS `alias/aws/ssm` 의 Decrypt 권한이 별도로 필요.
+   * - 호출 예: `stack.grantSsmRead(apiLambda.role!)`.
+   */
+  public grantSsmRead(grantee: iam.IGrantable): void {
+    grantee.grantPrincipal.addToPrincipalPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'ssm:DescribeParameters',
+          'ssm:GetParameter',
+          'ssm:GetParameterHistory',
+          'ssm:GetParameters',
+        ],
+        resources: [ssmParameterPathArn(this.region, this.account, this.envName)],
+      }),
+    );
+    grantee.grantPrincipal.addToPrincipalPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['kms:Decrypt'],
+        resources: [
+          `arn:aws:kms:${this.region}:${this.account}:alias/aws/ssm`,
+        ],
+      }),
+    );
   }
 
   /**

@@ -1,5 +1,6 @@
 import * as cdk from 'aws-cdk-lib/core';
-import { Template } from 'aws-cdk-lib/assertions';
+import { Template, Match } from 'aws-cdk-lib/assertions';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { TodolistBackendStack } from '../lib/todolist-backend-stack';
 
 const synth = (envName: string): Template => {
@@ -7,6 +8,19 @@ const synth = (envName: string): Template => {
   const stack = new TodolistBackendStack(app, `TodolistBackend-${envName}`, {
     envName,
   });
+  return Template.fromStack(stack);
+};
+
+const synthWithGrant = (envName: string): Template => {
+  const app = new cdk.App();
+  const stack = new TodolistBackendStack(app, `TodolistBackend-${envName}`, {
+    envName,
+    env: { account: '123456789012', region: 'ap-northeast-2' },
+  });
+  const role = new iam.Role(stack, 'DummyLambdaRole', {
+    assumedBy: new iam.ServicePrincipal('lambda.amazonaws.com'),
+  });
+  stack.grantSsmRead(role);
   return Template.fromStack(stack);
 };
 
@@ -69,6 +83,62 @@ describe('TodolistBackendStack — ECR Repository', () => {
       RepositoryName: 'todolist-backend-prod',
       ImageTagMutability: 'IMMUTABLE',
       ImageScanningConfiguration: { ScanOnPush: true },
+    });
+  });
+});
+
+describe('TodolistBackendStack — grantSsmRead', () => {
+  // WHY: Lambda 실행 역할에 SSM 읽기 권한을 주입하는 단일 진입점.
+  // 권한 부여 로직을 Stack 내부에 캡슐화해 호출부(Construct)는 grantee 만 넘기면 된다.
+  it('grantee 에 ssm:GetParameter* 권한을 `/todolist/{env}/*` 경로로 한정 부여', () => {
+    const template = synthWithGrant('dev');
+    template.hasResourceProperties('AWS::IAM::Policy', {
+      PolicyDocument: Match.objectLike({
+        Statement: Match.arrayWith([
+          Match.objectLike({
+            Action: [
+              'ssm:DescribeParameters',
+              'ssm:GetParameter',
+              'ssm:GetParameterHistory',
+              'ssm:GetParameters',
+            ],
+            Effect: 'Allow',
+            Resource:
+              'arn:aws:ssm:ap-northeast-2:123456789012:parameter/todolist/dev/*',
+          }),
+        ]),
+      }),
+    });
+  });
+
+  // WHY: SecureString 은 AWS-managed KMS key (`alias/aws/ssm`) 로 암호화돼 있어
+  // GetParameter(WithDecryption=true) 호출 시 kms:Decrypt 권한이 별도로 필요하다.
+  it('SecureString 복호화를 위해 kms:Decrypt 권한도 부여', () => {
+    const template = synthWithGrant('dev');
+    template.hasResourceProperties('AWS::IAM::Policy', {
+      PolicyDocument: Match.objectLike({
+        Statement: Match.arrayWith([
+          Match.objectLike({
+            Action: 'kms:Decrypt',
+            Effect: 'Allow',
+            Resource: 'arn:aws:kms:ap-northeast-2:123456789012:alias/aws/ssm',
+          }),
+        ]),
+      }),
+    });
+  });
+
+  it('env 가 prod 면 Resource 경로도 prod 로 격리', () => {
+    const template = synthWithGrant('prod');
+    template.hasResourceProperties('AWS::IAM::Policy', {
+      PolicyDocument: Match.objectLike({
+        Statement: Match.arrayWith([
+          Match.objectLike({
+            Resource:
+              'arn:aws:ssm:ap-northeast-2:123456789012:parameter/todolist/prod/*',
+          }),
+        ]),
+      }),
     });
   });
 });
