@@ -256,8 +256,9 @@ aws lambda update-alias \
     - ECR Repository(`todolist-backend-{env}`) — env별 격리, image scan on push, **IMMUTABLE 태그**, **RemovalPolicy=RETAIN**, lifecycle 최신 20개 보존
     - **SSM 명명 규약 모듈** (`infra/lib/ssm-parameters.ts`) — `/todolist/{env}/*` 경로의 7종 시크릿(database_url, jwt_secret, jwt_refresh_secret, oauth_state_secret, apple_private_key, fcm_service_account_json, gemini_api_key) 이름을 typed constants 로 정의. **값 자체는 CDK 가 만들지 않음** — CloudFormation 의 SecureString 미지원 + git 시크릿 유출 위험 회피 목적. 운영자가 `aws ssm put-parameter --type SecureString` 로 수동 등록(RUNBOOK_DEPLOY 참조).
     - **`stack.grantSsmRead(grantee)` 헬퍼** — Lambda 실행 역할에 `ssm:GetParameter*` (Resource=`/todolist/{env}/*`) + `kms:Decrypt` (Resource=`alias/aws/ssm`) 권한을 단일 진입점에서 부여. env 간 시크릿 노출 차단.
-  - Lambda 2개(`todolist-api`, `todolist-cron`) + alias(`dev`, `live`) — arm64
-  - **Lambda Function URL** 활성화 (api Lambda) — `AuthType=NONE`, CORS는 Function URL 측에서 설정(앱 helmet/CORS와 중복 금지)
+    - **Lambda 2개** — `todolist-api-{env}` (30s/512MB) + `todolist-cron-{env}` (300s/1024MB), 둘 다 arm64 + `PackageType=Image`. ECR 의 **`placeholder` 태그** 를 가리키며, 실제 운영 이미지는 CI 의 `aws lambda update-function-code` 로만 갱신. **`cdk deploy` 는 인프라 변경 시에만 수동 트리거** — 일상 배포로 image 가 placeholder 로 되돌아가는 사고 방지. 첫 배포 전 운영자가 placeholder 이미지 1회 push 필요(RUNBOOK).
+    - **SSM 파라미터 이름을 env var 로 주입** (`DATABASE_URL_PARAM`, `JWT_SECRET_PARAM` 등 7종) — backend ssm-loader 가 콜드스타트 시 GetParameter 호출. 시크릿 값 자체는 CloudFormation 템플릿/CW 로그에 노출되지 않음.
+    - **api Lambda Function URL** — `AuthType=NONE` (인증은 NestJS JWT 가드 담당), CORS 는 Function URL 측에서만 (`allowedOrigins=*` placeholder, NestJS helmet/CORS 와 헤더 중복 방지). 추후 web 어드민 등장 시 origin 좁힘. `BackendApiFunctionUrl` 출력은 OAuth 4종 콘솔 등록 + 모바일 앱 BASE_URL 에 사용.
   - EventBridge Scheduler 3개(섹션 5.1) → cron alias
   - CloudWatch Alarm (섹션 6.2)
 - [ ] **3. Backend 런타임 코드 추가**
