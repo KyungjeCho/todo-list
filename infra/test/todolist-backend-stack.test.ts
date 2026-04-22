@@ -209,6 +209,117 @@ describe('TodolistBackendStack — Lambda Function URL (api 전용)', () => {
   });
 });
 
+describe('TodolistBackendStack — EventBridge Scheduler (cron 3종)', () => {
+  // WHY: 3개 잡(일일 회고/이월 정리/FCM 토큰 만료)을 한 그룹에 묶어 CW 메트릭/콘솔
+  // 가시성을 그룹 단위로 본다. env 별 격리(`todolist-dev` vs `todolist-prod`).
+  it('Schedule Group 1개 — `todolist-{env}` 이름', () => {
+    const template = synth('dev');
+    template.resourceCountIs('AWS::Scheduler::ScheduleGroup', 1);
+    template.hasResourceProperties('AWS::Scheduler::ScheduleGroup', {
+      Name: 'todolist-dev',
+    });
+  });
+
+  it('Schedule 3개 생성 — daily-review-notify / carry-over-cleanup / fcm-token-prune', () => {
+    const template = synth('dev');
+    template.resourceCountIs('AWS::Scheduler::Schedule', 3);
+  });
+
+  // WHY: KST 기준 운영 시간(밤 10시 회고, 새벽 0시 5분 이월, 새벽 3시 FCM 정리).
+  // EventBridge Scheduler 는 timezone 네이티브 지원 — UTC 변환 실수 방지.
+  it('일일 회고 알림: cron(0 22 * * ? *) Asia/Seoul + job=daily-review-notify', () => {
+    const template = synth('dev');
+    template.hasResourceProperties('AWS::Scheduler::Schedule', {
+      Name: 'todolist-daily-review-notify-dev',
+      ScheduleExpression: 'cron(0 22 * * ? *)',
+      ScheduleExpressionTimezone: 'Asia/Seoul',
+      FlexibleTimeWindow: { Mode: 'OFF' },
+      Target: Match.objectLike({
+        Input: JSON.stringify({ job: 'daily-review-notify' }),
+      }),
+    });
+  });
+
+  it('이월 정리: cron(5 0 * * ? *) Asia/Seoul + job=carry-over-cleanup', () => {
+    const template = synth('dev');
+    template.hasResourceProperties('AWS::Scheduler::Schedule', {
+      Name: 'todolist-carry-over-cleanup-dev',
+      ScheduleExpression: 'cron(5 0 * * ? *)',
+      ScheduleExpressionTimezone: 'Asia/Seoul',
+      Target: Match.objectLike({
+        Input: JSON.stringify({ job: 'carry-over-cleanup' }),
+      }),
+    });
+  });
+
+  it('FCM 토큰 정리: cron(0 3 * * ? *) Asia/Seoul + job=fcm-token-prune', () => {
+    const template = synth('dev');
+    template.hasResourceProperties('AWS::Scheduler::Schedule', {
+      Name: 'todolist-fcm-token-prune-dev',
+      ScheduleExpression: 'cron(0 3 * * ? *)',
+      ScheduleExpressionTimezone: 'Asia/Seoul',
+      Target: Match.objectLike({
+        Input: JSON.stringify({ job: 'fcm-token-prune' }),
+      }),
+    });
+  });
+
+  // WHY: Scheduler 가 Lambda 를 호출하려면 별도 IAM Role 필요 (Scheduler 서비스
+  // principal). 3개 Schedule 이 동일 Role 공유 — Lambda 1개만 InvokeFunction 권한.
+  it('Scheduler 전용 Role — scheduler.amazonaws.com 가 assume', () => {
+    const template = synth('dev');
+    template.hasResourceProperties('AWS::IAM::Role', {
+      AssumeRolePolicyDocument: Match.objectLike({
+        Statement: Match.arrayWith([
+          Match.objectLike({
+            Action: 'sts:AssumeRole',
+            Effect: 'Allow',
+            Principal: { Service: 'scheduler.amazonaws.com' },
+          }),
+        ]),
+      }),
+    });
+  });
+
+  it('Scheduler Role 은 cron Lambda InvokeFunction 권한만 보유', () => {
+    const template = synth('dev');
+    template.hasResourceProperties('AWS::IAM::Policy', {
+      PolicyDocument: Match.objectLike({
+        Statement: Match.arrayWith([
+          Match.objectLike({
+            Action: 'lambda:InvokeFunction',
+            Effect: 'Allow',
+            Resource: Match.anyValue(),
+          }),
+        ]),
+      }),
+    });
+  });
+
+  // WHY: cron 잡 중복 실행 방지 (§5.3). 동시 실행 1로 제한해 같은 잡이 두 번
+  // 동시에 돌면서 DB 갱신 충돌·중복 알림 발송하는 사고 차단.
+  it('cron Lambda 는 ReservedConcurrentExecutions=1', () => {
+    const template = synth('dev');
+    template.hasResourceProperties('AWS::Lambda::Function', {
+      FunctionName: 'todolist-cron-dev',
+      ReservedConcurrentExecutions: 1,
+    });
+  });
+
+  // WHY: api Lambda 는 동시성 제한하면 트래픽 폭증 시 throttle 됨.
+  // cron 만 제한하고 api 는 Lambda account-wide 한도 (1000) 사용.
+  it('api Lambda 는 ReservedConcurrentExecutions 미설정', () => {
+    const template = synth('dev');
+    const apis = template.findResources('AWS::Lambda::Function', {
+      Properties: { FunctionName: 'todolist-api-dev' },
+    });
+    const apiProps = Object.values(apis)[0].Properties as {
+      ReservedConcurrentExecutions?: number;
+    };
+    expect(apiProps.ReservedConcurrentExecutions).toBeUndefined();
+  });
+});
+
 describe('TodolistBackendStack — grantSsmRead', () => {
   // WHY: Lambda 실행 역할에 SSM 읽기 권한을 주입하는 단일 진입점.
   // 권한 부여 로직을 Stack 내부에 캡슐화해 호출부(Construct)는 grantee 만 넘기면 된다.

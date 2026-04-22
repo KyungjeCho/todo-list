@@ -259,7 +259,8 @@ aws lambda update-alias \
     - **Lambda 2개** — `todolist-api-{env}` (30s/512MB) + `todolist-cron-{env}` (300s/1024MB), 둘 다 arm64 + `PackageType=Image`. ECR 의 **`placeholder` 태그** 를 가리키며, 실제 운영 이미지는 CI 의 `aws lambda update-function-code` 로만 갱신. **`cdk deploy` 는 인프라 변경 시에만 수동 트리거** — 일상 배포로 image 가 placeholder 로 되돌아가는 사고 방지. 첫 배포 전 운영자가 placeholder 이미지 1회 push 필요(RUNBOOK).
     - **SSM 파라미터 이름을 env var 로 주입** (`DATABASE_URL_PARAM`, `JWT_SECRET_PARAM` 등 7종) — backend ssm-loader 가 콜드스타트 시 GetParameter 호출. 시크릿 값 자체는 CloudFormation 템플릿/CW 로그에 노출되지 않음.
     - **api Lambda Function URL** — `AuthType=NONE` (인증은 NestJS JWT 가드 담당), CORS 는 Function URL 측에서만 (`allowedOrigins=*` placeholder, NestJS helmet/CORS 와 헤더 중복 방지). 추후 web 어드민 등장 시 origin 좁힘. `BackendApiFunctionUrl` 출력은 OAuth 4종 콘솔 등록 + 모바일 앱 BASE_URL 에 사용.
-  - EventBridge Scheduler 3개(섹션 5.1) → cron alias
+    - **EventBridge Scheduler 3종** (§5.1) — Schedule Group `todolist-{env}` 1개 + Schedule 3개(daily-review-notify / carry-over-cleanup / fcm-token-prune). 모두 `Asia/Seoul` timezone(UTC 변환 실수 차단), `FlexibleTimeWindow=OFF`, target input 으로 `{ "job": "..." }` JSON 고정. cron Lambda 1개를 공유하되 input 의 `job` 으로 핸들러 분기. Scheduler 전용 IAM Role(`scheduler.amazonaws.com` 가 assume) 이 cron Lambda `InvokeFunction` 권한 보유.
+    - **cron Lambda 동시성 제한** — `ReservedConcurrentExecutions=1` (§5.3). 같은 잡이 두 번 동시에 돌면서 DB/외부 API 중복 호출되는 사고 차단. api 는 미설정(트래픽 폭증 시 throttle 회피).
   - CloudWatch Alarm (섹션 6.2)
 - [ ] **3. Backend 런타임 코드 추가**
   - `backend/src/scheduler.ts` 엔트리 파일 (섹션 5.2)

@@ -2,8 +2,29 @@ import * as cdk from 'aws-cdk-lib/core';
 import * as ecr from 'aws-cdk-lib/aws-ecr';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as scheduler from 'aws-cdk-lib/aws-scheduler';
 import { Construct } from 'constructs';
 import { ssmParameterNames, ssmParameterPathArn } from './ssm-parameters';
+
+/**
+ * Cron 잡 정의 — `backend/src/scheduler.ts` 의 라우터(`event.job`)와 1:1 대응.
+ *
+ * WHY: cron 표현식/타임존을 한 곳에서 관리하고, 잡 추가 시 이 배열만 수정하면
+ * Schedule 리소스가 자동 합성된다. 모든 잡은 같은 cron Lambda 를 호출하되 input
+ * payload 의 `job` 필드로 분기. (docs/INFRA_SPEC.md §5.1, §5.2)
+ */
+const CRON_JOBS: ReadonlyArray<{
+  name: string;
+  job: string;
+  schedule: string;
+}> = [
+  { name: 'daily-review-notify', job: 'daily-review-notify', schedule: 'cron(0 22 * * ? *)' },
+  { name: 'carry-over-cleanup', job: 'carry-over-cleanup', schedule: 'cron(5 0 * * ? *)' },
+  { name: 'fcm-token-prune', job: 'fcm-token-prune', schedule: 'cron(0 3 * * ? *)' },
+];
+
+/** Cron 표현식의 기준 타임존 — 운영팀이 KST 로 사고하므로 UTC 변환 실수 차단. */
+const CRON_TIMEZONE = 'Asia/Seoul';
 
 /**
  * Lambda 컨테이너 이미지의 placeholder 태그.
@@ -63,6 +84,8 @@ export class TodolistBackendStack extends cdk.Stack {
       description:
         'api Lambda 의 Function URL — OAuth redirect/모바일 앱 BASE_URL',
     });
+
+    this.createCronSchedules(props.envName);
   }
 
   /**
@@ -146,6 +169,9 @@ export class TodolistBackendStack extends cdk.Stack {
    *
    * WHY: 일일 알림/통계 등 장시간 실행 가능한 배치 작업. 타임아웃 5분, 메모리는
    * 동시 다건 처리 여유 위해 1024MB. 외부 노출 불필요 → Function URL 없음.
+   *
+   * `reservedConcurrentExecutions: 1` — cron 잡 중복 실행 방지(§5.3). 같은 잡이
+   * 두 번 동시에 돌면서 DB/외부 API 호출이 중복되는 사고 차단.
    */
   private createCronFunction(envName: string): lambda.DockerImageFunction {
     return new lambda.DockerImageFunction(this, 'CronFunction', {
@@ -156,11 +182,47 @@ export class TodolistBackendStack extends cdk.Stack {
       architecture: lambda.Architecture.ARM_64,
       memorySize: 1024,
       timeout: cdk.Duration.seconds(300),
+      reservedConcurrentExecutions: 1,
       environment: {
         NODE_ENV: 'production',
         ...this.buildSsmParamNameEnv(envName),
       },
     });
+  }
+
+  /**
+   * EventBridge Scheduler 3종 + 공유 IAM Role + Schedule Group.
+   *
+   * WHY: 잡들을 한 그룹(`todolist-{env}`)에 모아 콘솔/CW 메트릭에서 그룹 단위
+   * 가시성을 확보. cron Lambda 1개를 공유하되 input payload 의 `job` 필드로
+   * 핸들러 분기. Scheduler 가 Lambda 를 호출하려면 별도 IAM Role 필요
+   * (Scheduler 서비스 principal 가 assume).
+   */
+  private createCronSchedules(envName: string): void {
+    const group = new scheduler.CfnScheduleGroup(this, 'CronScheduleGroup', {
+      name: `todolist-${envName}`,
+    });
+
+    const schedulerRole = new iam.Role(this, 'CronSchedulerRole', {
+      assumedBy: new iam.ServicePrincipal('scheduler.amazonaws.com'),
+      description: 'EventBridge Scheduler 가 cron Lambda 를 호출하기 위한 Role',
+    });
+    this.cronFunction.grantInvoke(schedulerRole);
+
+    for (const { name, job, schedule } of CRON_JOBS) {
+      new scheduler.CfnSchedule(this, `CronSchedule-${name}`, {
+        name: `todolist-${name}-${envName}`,
+        groupName: group.name,
+        scheduleExpression: schedule,
+        scheduleExpressionTimezone: CRON_TIMEZONE,
+        flexibleTimeWindow: { mode: 'OFF' },
+        target: {
+          arn: this.cronFunction.functionArn,
+          roleArn: schedulerRole.roleArn,
+          input: JSON.stringify({ job }),
+        },
+      });
+    }
   }
 
   /**
