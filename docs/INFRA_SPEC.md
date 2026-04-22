@@ -214,12 +214,19 @@ export const handler = async (event: { job: string }) => {
 - 민감값 프리픽스 마스킹 (CLAUDE.md 준수): FCM 토큰은 앞 8자, Apple 응답 본문은 300자.
 
 ### 6.2 메트릭 / 알람
-| 지표 | 임계 | 대응 |
-|---|---|---|
-| `Errors` (1분 합계) | ≥ 5 | Slack/Telegram webhook |
-| `Duration p95` | ≥ 3000ms | 조사 티켓 |
-| `Throttles` | ≥ 1 | Reserved concurrency 상향 검토 |
-| API Gateway `5XX` | ≥ 1%/5min | 롤백 고려 |
+
+CDK 가 합성하는 알람 6종 — 모두 SNS Topic `todolist-alarms-{env}` 로 라우팅. subscription(이메일/Slack/Telegram) 은 운영자가 RUNBOOK 절차로 추가.
+
+| Lambda | 지표 | 임계 | 대응 |
+|---|---|---|---|
+| api | `Errors` (1분 합계) | ≥ 5 | 알림 + 조사 |
+| api | `Duration p95` (5분) | ≥ 3000ms | 조사 티켓 |
+| cron | `Errors` (1분 합계) | ≥ 5 | 알림 + 조사 |
+| cron | `Throttles` (1분 합계) | ≥ 1 | reserved=1 환경에서 throttle = 잡 누락 → 즉시 조사 |
+| cron | `Duration p95` (5분) | ≥ 3000ms | 조사 티켓 |
+| DLQ | `ApproximateNumberOfMessagesVisible` (1분 max) | ≥ 1 | Scheduler→Lambda 호출 실패 누적 → 즉시 알림 |
+
+> Function URL 의 4xx/5xx 는 Lambda `Errors` 와 사실상 같은 신호이므로 별도 알람 없음. CloudFront 로 전환 시 Edge 5xx 알람 추가.
 
 ### 6.3 롤백 절차 (1분 내)
 ```
@@ -244,7 +251,7 @@ aws lambda update-alias \
     - `extra: { max: 1, connectionTimeoutMillis: 5000, statement_timeout: 10000 }` 추가
     - Prod 환경에서 `ssl: { rejectUnauthorized: true }` 강제 (Supabase는 SSL 필수)
   - 마이그레이션 실행은 **배포 파이프라인의 one-shot 잡**에서 수행 (§4 워크플로우 내)
-- [ ] **2. 인프라 부트스트랩(1회성)** — AWS CDK(TypeScript)
+- [x] **2. 인프라 부트스트랩(1회성)** — AWS CDK(TypeScript) (2026-04-22 완료, 50 tests passing)
   - CDK 프로젝트 `infra/` 스캐폴딩 (`cdk init app --language typescript`)
   - **2-Stack 분할**: `TodolistShared` (account-wide 1회) + `TodolistBackend-{env}` (env별)
   - **TodolistShared**: GitHub OIDC Provider + Deploy Role(`todolist-gha-deploy`)
@@ -261,7 +268,9 @@ aws lambda update-alias \
     - **api Lambda Function URL** — `AuthType=NONE` (인증은 NestJS JWT 가드 담당), CORS 는 Function URL 측에서만 (`allowedOrigins=*` placeholder, NestJS helmet/CORS 와 헤더 중복 방지). 추후 web 어드민 등장 시 origin 좁힘. `BackendApiFunctionUrl` 출력은 OAuth 4종 콘솔 등록 + 모바일 앱 BASE_URL 에 사용.
     - **EventBridge Scheduler 3종** (§5.1) — Schedule Group `todolist-{env}` 1개 + Schedule 3개(daily-review-notify / carry-over-cleanup / fcm-token-prune). 모두 `Asia/Seoul` timezone(UTC 변환 실수 차단), `FlexibleTimeWindow=OFF`, target input 으로 `{ "job": "..." }` JSON 고정. cron Lambda 1개를 공유하되 input 의 `job` 으로 핸들러 분기. Scheduler 전용 IAM Role(`scheduler.amazonaws.com` 가 assume) 이 cron Lambda `InvokeFunction` 권한 보유.
     - **cron Lambda 동시성 제한** — `ReservedConcurrentExecutions=1` (§5.3). 같은 잡이 두 번 동시에 돌면서 DB/외부 API 중복 호출되는 사고 차단. api 는 미설정(트래픽 폭증 시 throttle 회피).
-  - CloudWatch Alarm (섹션 6.2)
+    - **SNS Topic** `todolist-alarms-{env}` — 알람 라우팅 단일 진입점. subscription(이메일/Slack/Telegram) 은 운영자가 RUNBOOK 으로 추가/제거(인프라 PR 불필요).
+    - **SQS DLQ** `todolist-dlq-{env}` (보존 14일) — EventBridge Schedule 3개의 `DeadLetterConfig` 에 연결. Scheduler 가 cron Lambda 호출 자체에 실패한 페이로드 보존.
+    - **CloudWatch Alarm 6종** (§6.2 표 참조) — 모두 SNS Topic 으로 라우팅. `treatMissingData=NOT_BREACHING` 으로 idle 구간 false-positive 차단.
 - [ ] **3. Backend 런타임 코드 추가**
   - `backend/src/scheduler.ts` 엔트리 파일 (섹션 5.2)
   - `backend/src/common/config/ssm-loader.ts` — 콜드스타트 시 1회 SSM 로드

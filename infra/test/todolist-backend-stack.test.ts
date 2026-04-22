@@ -320,6 +320,165 @@ describe('TodolistBackendStack — EventBridge Scheduler (cron 3종)', () => {
   });
 });
 
+describe('TodolistBackendStack — DLQ + 알람 SNS Topic', () => {
+  // WHY: 알람 액션을 SNS Topic 1개로 모아 subscription(이메일/webhook) 을
+  // 운영자가 RUNBOOK 으로 추가/제거. CDK 는 채널 자체는 정의하지 않음 — 채널
+  // 변경이 잦아도 인프라 변경 PR 이 필요 없게 한다.
+  it('SNS Topic `todolist-alarms-{env}` 1개', () => {
+    const template = synth('dev');
+    template.resourceCountIs('AWS::SNS::Topic', 1);
+    template.hasResourceProperties('AWS::SNS::Topic', {
+      TopicName: 'todolist-alarms-dev',
+    });
+  });
+
+  // WHY: cron 잡 실패 시 메시지 보존 → 디버깅 14일 유예.
+  it('SQS DLQ `todolist-dlq-{env}` — MessageRetentionPeriod=14d', () => {
+    const template = synth('dev');
+    template.resourceCountIs('AWS::SQS::Queue', 1);
+    template.hasResourceProperties('AWS::SQS::Queue', {
+      QueueName: 'todolist-dlq-dev',
+      MessageRetentionPeriod: 1209600,
+    });
+  });
+
+  // WHY: EventBridge Scheduler 가 cron Lambda 호출 자체에 실패한 경우(throttle,
+  // permission, network) 의 메시지를 DLQ 로 보존. Lambda 내부 예외와는 별개 경로.
+  it('EventBridge Schedule 3개 모두 DeadLetterConfig 로 DLQ 연결', () => {
+    const template = synth('dev');
+    const schedules = template.findResources('AWS::Scheduler::Schedule');
+    const entries = Object.values(schedules);
+    expect(entries.length).toBe(3);
+    for (const entry of entries) {
+      const target = (entry.Properties as { Target: { DeadLetterConfig?: unknown } })
+        .Target;
+      expect(target.DeadLetterConfig).toBeDefined();
+    }
+  });
+});
+
+describe('TodolistBackendStack — CloudWatch 알람', () => {
+  // WHY: §6.2 임계 — 분당 5개 이상 에러는 단순 일회성이 아닌 장애 신호.
+  // Dimensions.Value 는 Lambda logical-id 의 Ref intrinsic 로 합성됨.
+  it('api Lambda Errors ≥ 5/1min', () => {
+    const template = synth('dev');
+    template.hasResourceProperties('AWS::CloudWatch::Alarm', {
+      AlarmName: 'todolist-api-dev-errors',
+      Namespace: 'AWS/Lambda',
+      MetricName: 'Errors',
+      Statistic: 'Sum',
+      Period: 60,
+      EvaluationPeriods: 1,
+      Threshold: 5,
+      ComparisonOperator: 'GreaterThanOrEqualToThreshold',
+      Dimensions: Match.arrayWith([
+        Match.objectLike({
+          Name: 'FunctionName',
+          Value: { Ref: Match.stringLikeRegexp('^ApiFunction') },
+        }),
+      ]),
+    });
+  });
+
+  // WHY: p95 가 3초 넘으면 사용자 체감 지연. 모바일 retry/타임아웃 비용도 증가.
+  it('api Lambda Duration p95 ≥ 3000ms', () => {
+    const template = synth('dev');
+    template.hasResourceProperties('AWS::CloudWatch::Alarm', {
+      AlarmName: 'todolist-api-dev-duration-p95',
+      Namespace: 'AWS/Lambda',
+      MetricName: 'Duration',
+      ExtendedStatistic: 'p95',
+      Threshold: 3000,
+      ComparisonOperator: 'GreaterThanOrEqualToThreshold',
+      Dimensions: Match.arrayWith([
+        Match.objectLike({
+          Name: 'FunctionName',
+          Value: { Ref: Match.stringLikeRegexp('^ApiFunction') },
+        }),
+      ]),
+    });
+  });
+
+  it('cron Lambda Errors ≥ 5/1min', () => {
+    const template = synth('dev');
+    template.hasResourceProperties('AWS::CloudWatch::Alarm', {
+      AlarmName: 'todolist-cron-dev-errors',
+      MetricName: 'Errors',
+      Threshold: 5,
+      Dimensions: Match.arrayWith([
+        Match.objectLike({
+          Name: 'FunctionName',
+          Value: { Ref: Match.stringLikeRegexp('^CronFunction') },
+        }),
+      ]),
+    });
+  });
+
+  // WHY: cron 은 reserved=1 이라 throttle 발생 = 잡 자체가 누락. 즉시 신호.
+  it('cron Lambda Throttles ≥ 1', () => {
+    const template = synth('dev');
+    template.hasResourceProperties('AWS::CloudWatch::Alarm', {
+      AlarmName: 'todolist-cron-dev-throttles',
+      MetricName: 'Throttles',
+      Threshold: 1,
+      Dimensions: Match.arrayWith([
+        Match.objectLike({
+          Name: 'FunctionName',
+          Value: { Ref: Match.stringLikeRegexp('^CronFunction') },
+        }),
+      ]),
+    });
+  });
+
+  it('cron Lambda Duration p95 ≥ 3000ms', () => {
+    const template = synth('dev');
+    template.hasResourceProperties('AWS::CloudWatch::Alarm', {
+      AlarmName: 'todolist-cron-dev-duration-p95',
+      MetricName: 'Duration',
+      ExtendedStatistic: 'p95',
+      Threshold: 3000,
+      Dimensions: Match.arrayWith([
+        Match.objectLike({
+          Name: 'FunctionName',
+          Value: { Ref: Match.stringLikeRegexp('^CronFunction') },
+        }),
+      ]),
+    });
+  });
+
+  // WHY: DLQ 에 메시지가 쌓였다는 것 자체가 호출 실패 누적 신호. 수치 무관 즉시 알림.
+  it('DLQ 메시지 누적 ≥ 1 알람', () => {
+    const template = synth('dev');
+    template.hasResourceProperties('AWS::CloudWatch::Alarm', {
+      AlarmName: 'todolist-dlq-dev-messages',
+      Namespace: 'AWS/SQS',
+      MetricName: 'ApproximateNumberOfMessagesVisible',
+      Threshold: 1,
+      Dimensions: Match.arrayWith([
+        Match.objectLike({
+          Name: 'QueueName',
+          Value: Match.objectLike({
+            'Fn::GetAtt': Match.arrayWith([Match.stringLikeRegexp('^DeadLetterQueue')]),
+          }),
+        }),
+      ]),
+    });
+  });
+
+  // WHY: 6개 알람 모두 동일 SNS Topic 으로 라우팅 → subscription 1번 추가로 전체 커버.
+  it('모든 알람이 SNS Topic 으로 AlarmAction 설정 (6개)', () => {
+    const template = synth('dev');
+    const alarms = template.findResources('AWS::CloudWatch::Alarm');
+    const entries = Object.values(alarms);
+    expect(entries.length).toBe(6);
+    for (const entry of entries) {
+      const props = entry.Properties as { AlarmActions?: unknown[] };
+      expect(props.AlarmActions).toBeDefined();
+      expect(props.AlarmActions!.length).toBe(1);
+    }
+  });
+});
+
 describe('TodolistBackendStack — grantSsmRead', () => {
   // WHY: Lambda 실행 역할에 SSM 읽기 권한을 주입하는 단일 진입점.
   // 권한 부여 로직을 Stack 내부에 캡슐화해 호출부(Construct)는 grantee 만 넘기면 된다.

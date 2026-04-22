@@ -1,8 +1,12 @@
 import * as cdk from 'aws-cdk-lib/core';
+import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as cwActions from 'aws-cdk-lib/aws-cloudwatch-actions';
 import * as ecr from 'aws-cdk-lib/aws-ecr';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as scheduler from 'aws-cdk-lib/aws-scheduler';
+import * as sns from 'aws-cdk-lib/aws-sns';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Construct } from 'constructs';
 import { ssmParameterNames, ssmParameterPathArn } from './ssm-parameters';
 
@@ -59,6 +63,8 @@ export class TodolistBackendStack extends cdk.Stack {
   public readonly apiFunction: lambda.DockerImageFunction;
   public readonly cronFunction: lambda.DockerImageFunction;
   public readonly apiFunctionUrl: lambda.FunctionUrl;
+  public readonly alarmTopic: sns.Topic;
+  public readonly deadLetterQueue: sqs.Queue;
   private readonly envName: string;
 
   constructor(scope: Construct, id: string, props: TodolistBackendStackProps) {
@@ -85,7 +91,11 @@ export class TodolistBackendStack extends cdk.Stack {
         'api Lambda 의 Function URL — OAuth redirect/모바일 앱 BASE_URL',
     });
 
+    this.alarmTopic = this.createAlarmTopic(props.envName);
+    this.deadLetterQueue = this.createDeadLetterQueue(props.envName);
+
     this.createCronSchedules(props.envName);
+    this.createAlarms(props.envName);
   }
 
   /**
@@ -209,6 +219,9 @@ export class TodolistBackendStack extends cdk.Stack {
     });
     this.cronFunction.grantInvoke(schedulerRole);
 
+    // WHY: Scheduler 가 DLQ 에 메시지를 쓰려면 별도 권한 필요. Role 에 부여.
+    this.deadLetterQueue.grantSendMessages(schedulerRole);
+
     for (const { name, job, schedule } of CRON_JOBS) {
       new scheduler.CfnSchedule(this, `CronSchedule-${name}`, {
         name: `todolist-${name}-${envName}`,
@@ -220,8 +233,129 @@ export class TodolistBackendStack extends cdk.Stack {
           arn: this.cronFunction.functionArn,
           roleArn: schedulerRole.roleArn,
           input: JSON.stringify({ job }),
+          deadLetterConfig: {
+            arn: this.deadLetterQueue.queueArn,
+          },
         },
       });
+    }
+  }
+
+  /**
+   * 알람 액션을 모으는 SNS Topic.
+   *
+   * WHY: 6개 알람이 동일 Topic 으로 라우팅되어 subscription(이메일/Slack/Telegram)
+   * 1번 추가로 전체 커버. 채널 변경이 잦아도 인프라 PR 불필요 — 운영자가
+   * RUNBOOK 절차로 SNS subscription 추가/제거.
+   */
+  private createAlarmTopic(envName: string): sns.Topic {
+    return new sns.Topic(this, 'AlarmTopic', {
+      topicName: `todolist-alarms-${envName}`,
+      displayName: `Todolist Alarms (${envName})`,
+    });
+  }
+
+  /**
+   * EventBridge Scheduler 호출 실패 메시지를 보존하는 SQS DLQ.
+   *
+   * WHY: Scheduler 가 cron Lambda 호출 자체에 실패한 경우(throttle, IAM,
+   * network) 의 페이로드를 보존해 디버깅. 14일 보존(SQS 최대치) — 주말/연휴에
+   * 발생해도 탐지 가능.
+   */
+  private createDeadLetterQueue(envName: string): sqs.Queue {
+    return new sqs.Queue(this, 'DeadLetterQueue', {
+      queueName: `todolist-dlq-${envName}`,
+      retentionPeriod: cdk.Duration.days(14),
+    });
+  }
+
+  /**
+   * §6.2 정의 알람 6종 — 모두 `alarmTopic` 으로 라우팅.
+   *
+   * WHY: 운영 신호의 최소 집합. Lambda Errors/Duration/Throttles + DLQ 누적.
+   * api 는 사용자 영향이라 Errors/Duration, cron 은 잡 누락 방지로 Throttles
+   * 추가. TreatMissingData 는 NOT_BREACHING(데이터 없으면 OK) — 긴 idle 구간
+   * 잘못된 알람 방지.
+   */
+  private createAlarms(envName: string): void {
+    const action = new cwActions.SnsAction(this.alarmTopic);
+    const apiName = `todolist-api-${envName}`;
+    const cronName = `todolist-cron-${envName}`;
+
+    const errorAlarm = (
+      id: string,
+      fn: lambda.IFunction,
+      fnName: string,
+    ): cloudwatch.Alarm =>
+      new cloudwatch.Alarm(this, id, {
+        alarmName: `${fnName}-errors`,
+        metric: fn.metricErrors({
+          period: cdk.Duration.minutes(1),
+          statistic: cloudwatch.Stats.SUM,
+        }),
+        threshold: 5,
+        evaluationPeriods: 1,
+        comparisonOperator:
+          cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        alarmDescription: '분당 에러 5건 이상 — 장애 신호',
+      });
+
+    const durationAlarm = (
+      id: string,
+      fn: lambda.IFunction,
+      fnName: string,
+    ): cloudwatch.Alarm =>
+      new cloudwatch.Alarm(this, id, {
+        alarmName: `${fnName}-duration-p95`,
+        metric: fn.metricDuration({
+          period: cdk.Duration.minutes(5),
+          statistic: cloudwatch.Stats.percentile(95),
+        }),
+        threshold: 3000,
+        evaluationPeriods: 1,
+        comparisonOperator:
+          cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        alarmDescription: 'p95 지연 3초 초과 — 사용자 체감 영향',
+      });
+
+    const alarms: cloudwatch.Alarm[] = [
+      errorAlarm('ApiErrorsAlarm', this.apiFunction, apiName),
+      durationAlarm('ApiDurationP95Alarm', this.apiFunction, apiName),
+      errorAlarm('CronErrorsAlarm', this.cronFunction, cronName),
+      new cloudwatch.Alarm(this, 'CronThrottlesAlarm', {
+        alarmName: `${cronName}-throttles`,
+        metric: this.cronFunction.metricThrottles({
+          period: cdk.Duration.minutes(1),
+          statistic: cloudwatch.Stats.SUM,
+        }),
+        threshold: 1,
+        evaluationPeriods: 1,
+        comparisonOperator:
+          cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        alarmDescription:
+          'cron throttle = 잡 누락 (reservedConcurrency=1 환경)',
+      }),
+      durationAlarm('CronDurationP95Alarm', this.cronFunction, cronName),
+      new cloudwatch.Alarm(this, 'DlqMessagesAlarm', {
+        alarmName: `todolist-dlq-${envName}-messages`,
+        metric: this.deadLetterQueue.metricApproximateNumberOfMessagesVisible({
+          period: cdk.Duration.minutes(1),
+          statistic: cloudwatch.Stats.MAXIMUM,
+        }),
+        threshold: 1,
+        evaluationPeriods: 1,
+        comparisonOperator:
+          cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+        treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+        alarmDescription: 'DLQ 누적 = Scheduler→Lambda 호출 실패 누적',
+      }),
+    ];
+
+    for (const alarm of alarms) {
+      alarm.addAlarmAction(action);
     }
   }
 
