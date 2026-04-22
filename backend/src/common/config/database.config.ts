@@ -18,13 +18,24 @@ function requireInProduction(key: string, fallback: string): string {
 function buildSslConfig():
   | false
   | { rejectUnauthorized: boolean; ca?: string } {
+  // WHY: Supabase 등 관리형 Postgres는 TLS 필수. env 토글 누락으로 prod 연결이
+  // 실패하는 사고를 막기 위해 production 에서는 무조건 SSL 활성 + 검증을 강제한다.
+  // (INFRA_SPEC.md §2.1, §8-③)
+  if (process.env.NODE_ENV === 'production') {
+    const caPath = process.env.DATABASE_SSL_CA;
+    return {
+      rejectUnauthorized: true,
+      ...(caPath ? { ca: readFileSync(caPath, 'utf8') } : {}),
+    };
+  }
+
   if (process.env.DATABASE_SSL !== 'true') {
     return false;
   }
 
   const caPath = process.env.DATABASE_SSL_CA;
   return {
-    rejectUnauthorized: process.env.NODE_ENV === 'production',
+    rejectUnauthorized: false,
     ...(caPath ? { ca: readFileSync(caPath, 'utf8') } : {}),
   };
 }
@@ -42,8 +53,19 @@ export const databaseConfig = registerAs(
     synchronize: false,
     logging: process.env.NODE_ENV !== 'production',
     migrations: [join(__dirname, '..', 'migrations', '*{.ts,.js}')],
-    migrationsRun: true,
+    // WHY: Lambda 콜드스타트마다 부팅이 일어나면 여러 인스턴스가 동시에 마이그레이션을
+    // 실행해 중복/경쟁 조건이 발생한다. 마이그레이션은 배포 파이프라인의 one-shot
+    // 잡(`npm run migration:run`)에서만 수행한다. (INFRA_SPEC.md §7-1, §8-⑦)
+    migrationsRun: false,
     subscribers: [AuditSubscriber],
     ssl: buildSslConfig(),
+    // WHY: Lambda(서버리스) + Supabase pooler(transaction mode, 6543) 환경.
+    // Lambda 인스턴스당 단일 커넥션으로 고정해 Free 60 conn 한도 폭주를 방지하고,
+    // 짧은 statement_timeout 으로 hung query 가 Lambda 타임아웃까지 끌고 가는 것을 막는다.
+    extra: {
+      max: 1,
+      connectionTimeoutMillis: 5000,
+      statement_timeout: 10000,
+    },
   }),
 );
