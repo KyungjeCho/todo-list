@@ -246,8 +246,14 @@ aws lambda update-alias \
   - 마이그레이션 실행은 **배포 파이프라인의 one-shot 잡**에서 수행 (§4 워크플로우 내)
 - [ ] **2. 인프라 부트스트랩(1회성)** — AWS CDK(TypeScript)
   - CDK 프로젝트 `infra/` 스캐폴딩 (`cdk init app --language typescript`)
-  - OIDC Provider + Deploy Role (ECR push + Lambda update + SSM read 권한만)
-  - ECR Repository(`todolist-backend-{env}`) — env별 격리, image scan on push, **IMMUTABLE 태그**, **RemovalPolicy=RETAIN**, lifecycle 최신 20개 보존
+  - **2-Stack 분할**: `TodolistShared` (account-wide 1회) + `TodolistBackend-{env}` (env별)
+  - **TodolistShared**: GitHub OIDC Provider + Deploy Role(`todolist-gha-deploy`)
+    - 신뢰 정책: `repo:KyungjeCho/todo-list:ref:refs/heads/main` + `refs/tags/v*` 만 허용
+    - 권한(현재): ECR push (`todolist-backend-*` 한정) + `ecr:GetAuthorizationToken`
+    - 권한(후속): Lambda update / SSM read 는 해당 Construct 추가 시 확장
+    - MaxSessionDuration: 1시간
+  - **TodolistBackend-{env}** 의 리소스:
+    - ECR Repository(`todolist-backend-{env}`) — env별 격리, image scan on push, **IMMUTABLE 태그**, **RemovalPolicy=RETAIN**, lifecycle 최신 20개 보존
   - Lambda 2개(`todolist-api`, `todolist-cron`) + alias(`dev`, `live`) — arm64
   - **Lambda Function URL** 활성화 (api Lambda) — `AuthType=NONE`, CORS는 Function URL 측에서 설정(앱 helmet/CORS와 중복 금지)
   - EventBridge Scheduler 3개(섹션 5.1) → cron alias
