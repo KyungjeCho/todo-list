@@ -285,12 +285,13 @@ aws lambda update-alias \
   - `backend/src/lambda.ts` — `bootstrap()` 시작부에 `await loadSecretsFromSsm()` 추가(HTTP Lambda 도 동일 시크릿 필요).
   - `backend/Dockerfile` — `CMD ["dist/src/lambda.handler"]` 로 수정(NestJS 빌드 출력이 `dist/src/` 하위). cron 은 CDK `ImageConfig.Command` 로 `dist/src/scheduler.handler` override.
   - `backend/package.json` — `@aws-sdk/client-ssm` 의존성 추가.
-- [ ] **4. GH 설정** (§3.3 참조)
-  - Repository Secret: `AWS_DEPLOY_ROLE_ARN` (Shared Stack 배포 후 출력값)
-  - Environments 2개 생성:
+- [x] **4. GH 설정** (§3.3 참조) — _2026-04-23 완료_
+  - Repository Secret: `AWS_DEPLOY_ROLE_ARN` = `arn:aws:iam::<ACCOUNT_ID>:role/todolist-gha-deploy` (TodolistShared 배포 결과)
+  - Environments 2개:
     - `dev` — protection rule 없음. main push 시 자동 배포
-    - `prod` — required reviewer ≥ 1인 + deployment branch = tags matching `v*`
-  - 각 Environment 에 Variables 4종 (env-suffix 포함 값): `AWS_REGION`, `ECR_REPO`, `LAMBDA_API_NAME`, `LAMBDA_CRON_NAME`
+    - `prod` — required reviewer(KyungjeCho, id=36848308) + deployment branch policy = tags matching `v*`
+  - 각 Environment 에 Variables 4종 등록: `AWS_REGION`=`ap-northeast-2`, `ECR_REPO`=`todolist-backend-{env}`, `LAMBDA_API_NAME`=`todolist-api-{env}`, `LAMBDA_CRON_NAME`=`todolist-cron-{env}`
+  - **Public 전환 부산물**: 리포 visibility 를 Public 으로 변경(Private+Free 플랜에서 Environment protection 불가 제약 회피). Secret scanning + push protection 활성화.
 - [ ] **5. 워크플로우**
   - `.github/workflows/backend-build.yml` (Docker buildx arm64 → ECR)
   - `.github/workflows/backend-deploy.yml` (마이그레이션 one-shot → Lambda update → alias 전환 → smoke)
