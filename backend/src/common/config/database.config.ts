@@ -40,15 +40,23 @@ function buildSslConfig():
   };
 }
 
-export const databaseConfig = registerAs(
-  'database',
-  (): TypeOrmModuleOptions => ({
+export const databaseConfig = registerAs('database', (): TypeOrmModuleOptions => {
+  // WHY: Lambda 런타임에서 SSM 로더가 `DATABASE_URL` 단일 문자열을 주입한다.
+  // 로컬 개발은 개별 env (HOST/PORT/USER/PASSWORD/NAME) 를 쓰는 docker-compose
+  // 환경. 둘 다 지원해 배포 환경별로 다른 config 파일을 유지하지 않는다.
+  const url = process.env.DATABASE_URL;
+
+  return {
     type: 'postgres',
-    host: process.env.DATABASE_HOST || 'localhost',
-    port: parseInt(process.env.DATABASE_PORT || '5432', 10),
-    username: requireInProduction('DATABASE_USERNAME', 'postgres'),
-    password: requireInProduction('DATABASE_PASSWORD', 'postgres'),
-    database: process.env.DATABASE_NAME || 'todolist',
+    ...(url
+      ? { url }
+      : {
+          host: process.env.DATABASE_HOST || 'localhost',
+          port: parseInt(process.env.DATABASE_PORT || '5432', 10),
+          username: requireInProduction('DATABASE_USERNAME', 'postgres'),
+          password: requireInProduction('DATABASE_PASSWORD', 'postgres'),
+          database: process.env.DATABASE_NAME || 'todolist',
+        }),
     autoLoadEntities: true,
     synchronize: false,
     logging: process.env.NODE_ENV !== 'production',
@@ -67,5 +75,5 @@ export const databaseConfig = registerAs(
       connectionTimeoutMillis: 5000,
       statement_timeout: 10000,
     },
-  }),
-);
+  };
+});

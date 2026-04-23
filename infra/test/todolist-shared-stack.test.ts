@@ -105,6 +105,67 @@ describe('TodolistSharedStack', () => {
         }),
       });
     });
+
+    // WHY: backend-deploy.yml 이 update-function-code → publish-version →
+    // update-alias 순으로 호출하고, migration Lambda 를 invoke. 필요한 9개
+    // 액션이 단일 Statement 에 모여있는지 검증.
+    it('Lambda 배포/호출 권한 9종 (api/cron/migrate Lambda 배포 파이프라인)', () => {
+      const template = synth();
+      template.hasResourceProperties('AWS::IAM::Policy', {
+        PolicyDocument: Match.objectLike({
+          Statement: Match.arrayWith([
+            Match.objectLike({
+              Action: Match.arrayWith([
+                'lambda:UpdateFunctionCode',
+                'lambda:PublishVersion',
+                'lambda:UpdateAlias',
+                'lambda:CreateAlias',
+                'lambda:GetAlias',
+                'lambda:GetFunction',
+                'lambda:GetFunctionConfiguration',
+                'lambda:GetFunctionUrlConfig',
+                'lambda:InvokeFunction',
+              ]),
+            }),
+          ]),
+        }),
+      });
+    });
+
+    // WHY: 다른 env/프로젝트의 Lambda 에 배포/호출하는 사고 차단. 리소스를
+    // todolist-{api,cron,migrate}-* 3개로 명시 한정.
+    it('Lambda 권한 리소스는 todolist-{api,cron,migrate}-* 3개에만 한정', () => {
+      const template = synth();
+      template.hasResourceProperties('AWS::IAM::Policy', {
+        PolicyDocument: Match.objectLike({
+          Statement: Match.arrayWith([
+            Match.objectLike({
+              Action: Match.arrayWith(['lambda:UpdateFunctionCode']),
+              Resource: Match.arrayWith([
+                {
+                  'Fn::Join': [
+                    '',
+                    Match.arrayWith([':function:todolist-api-*']),
+                  ],
+                },
+                {
+                  'Fn::Join': [
+                    '',
+                    Match.arrayWith([':function:todolist-cron-*']),
+                  ],
+                },
+                {
+                  'Fn::Join': [
+                    '',
+                    Match.arrayWith([':function:todolist-migrate-*']),
+                  ],
+                },
+              ]),
+            }),
+          ]),
+        }),
+      });
+    });
   });
 
   describe('CfnOutput', () => {

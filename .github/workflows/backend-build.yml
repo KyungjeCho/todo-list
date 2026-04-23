@@ -1,0 +1,77 @@
+name: backend-build
+
+# Backend Docker image build + push to ECR.
+# Trigger 와 env 매핑:
+#   push main            → dev
+#   push tag v*          → prod
+#   workflow_dispatch    → inputs.target_env (기본 dev)
+#
+# 이미지 태그 = git SHA. 동일 SHA 를 deploy 워크플로우가 참조해 Lambda 갱신.
+# (docs/INFRA_SPEC.md §4.1, §4.3)
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: '빌드 대상 환경'
+        type: choice
+        options: [dev, prod]
+        default: dev
+
+permissions:
+  id-token: write  # OIDC Assume
+  contents: read
+
+concurrency:
+  # 같은 ref 의 연속 push 는 이전 빌드 취소 안 함 (이미지 tag=SHA 고유하므로 병렬 허용 안전)
+  # 단 동일 SHA 가 여러 번 트리거되는 경우(재실행 등) 는 하나만 돌도록 그룹 분리
+  group: backend-build-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build & Push
+    runs-on: ubuntu-latest
+    # 환경 선택: tag v* → prod, manual → inputs, else → dev
+    # env 단위 Variable(ECR_REPO, AWS_REGION) 자동 바인딩
+    environment:
+      name: ${{ github.ref_type == 'tag' && 'prod' || (github.event_name == 'workflow_dispatch' && inputs.target_env || 'dev') }}
+    outputs:
+      image_tag: ${{ github.sha }}
+      image_uri: ${{ steps.push.outputs.image_uri }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Login to ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build & push (linux/arm64)
+        id: push
+        env:
+          REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          REPO: ${{ vars.ECR_REPO }}
+          TAG: ${{ github.sha }}
+        run: |
+          IMAGE_URI="${REGISTRY}/${REPO}:${TAG}"
+          docker buildx build \
+            --platform linux/arm64 \
+            --provenance=false \
+            --tag "${IMAGE_URI}" \
+            --push \
+            ./backend
+          echo "image_uri=${IMAGE_URI}" >> "$GITHUB_OUTPUT"
+          echo "::notice title=Build complete::${IMAGE_URI}"

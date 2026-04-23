@@ -62,6 +62,7 @@ export class TodolistBackendStack extends cdk.Stack {
   public readonly backendRepository: ecr.Repository;
   public readonly apiFunction: lambda.DockerImageFunction;
   public readonly cronFunction: lambda.DockerImageFunction;
+  public readonly migrateFunction: lambda.DockerImageFunction;
   public readonly apiFunctionUrl: lambda.FunctionUrl;
   public readonly alarmTopic: sns.Topic;
   public readonly deadLetterQueue: sqs.Queue;
@@ -80,8 +81,10 @@ export class TodolistBackendStack extends cdk.Stack {
 
     this.apiFunction = this.createApiFunction(props.envName);
     this.cronFunction = this.createCronFunction(props.envName);
+    this.migrateFunction = this.createMigrateFunction(props.envName);
     this.grantSsmRead(this.apiFunction);
     this.grantSsmRead(this.cronFunction);
+    this.grantSsmRead(this.migrateFunction);
 
     this.apiFunctionUrl = this.createApiFunctionUrl();
 
@@ -199,6 +202,39 @@ export class TodolistBackendStack extends cdk.Stack {
       architecture: lambda.Architecture.ARM_64,
       memorySize: 1024,
       timeout: cdk.Duration.seconds(300),
+      reservedConcurrentExecutions: 1,
+      environment: {
+        NODE_ENV: 'production',
+        ...this.buildSsmParamNameEnv(envName),
+      },
+    });
+  }
+
+  /**
+   * Migration Lambda — deploy 파이프라인 선행 단계에서 one-shot 호출.
+   *
+   * WHY: Lambda 콜드스타트에서 여러 인스턴스가 TypeORM migration 을 동시 실행하면
+   * 경쟁 조건으로 스키마가 깨진다. api/cron 은 `migrationsRun: false` 로 막고,
+   * 배포 시 이 전용 Lambda 를 `reservedConcurrentExecutions=1` 로 단독 호출.
+   * 성공 후에만 api/cron 이미지 교체가 이어진다. (§7-1, §8-⑦)
+   *
+   * api/cron 과 같은 ECR 이미지를 공유하되 CMD 로 `dist/src/migrate.handler`
+   * override. 외부 노출 불필요 → Function URL 없음. EventBridge 스케줄 없음.
+   */
+  private createMigrateFunction(envName: string): lambda.DockerImageFunction {
+    return new lambda.DockerImageFunction(this, 'MigrateFunction', {
+      functionName: `todolist-migrate-${envName}`,
+      code: lambda.DockerImageCode.fromEcr(this.backendRepository, {
+        tagOrDigest: PLACEHOLDER_IMAGE_TAG,
+        cmd: ['dist/src/migrate.handler'],
+      }),
+      architecture: lambda.Architecture.ARM_64,
+      // migration 은 메타데이터 갱신 위주 — 메모리 과다 불필요.
+      memorySize: 512,
+      // DDL 이 오래 걸리는 케이스(인덱스 생성 등) 대비 5분. Lambda 최대 15분 중 보수적 값.
+      timeout: cdk.Duration.seconds(300),
+      // WHY: 배포 파이프라인이 한 번에 하나만 호출하지만, 동시에 여러 배포가 트리거되면
+      // 마이그레이션이 병렬 실행되어 스키마 충돌 발생. reserved=1 로 강제 직렬화.
       reservedConcurrentExecutions: 1,
       environment: {
         NODE_ENV: 'production',

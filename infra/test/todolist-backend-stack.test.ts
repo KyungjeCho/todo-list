@@ -87,17 +87,21 @@ describe('TodolistBackendStack — ECR Repository', () => {
   });
 });
 
-describe('TodolistBackendStack — Lambda 함수 (api/cron)', () => {
-  // WHY: api 와 cron 은 동일 이미지를 다른 핸들러로 호출하지만, 운영 특성(콜드스타트
-  // 빈도, 타임아웃, 메모리)이 달라 별도 함수로 분리한다.
-  it('api/cron 2개 함수 — `todolist-{api,cron}-{env}` 이름', () => {
+describe('TodolistBackendStack — Lambda 함수 (api/cron/migrate)', () => {
+  // WHY: api 와 cron/migrate 은 동일 이미지를 다른 핸들러로 호출하지만, 운영 특성
+  // (콜드스타트 빈도, 타임아웃, 메모리)이 달라 별도 함수로 분리한다. migrate 은
+  // deploy 파이프라인 one-shot 호출용.
+  it('api/cron/migrate 3개 함수 — `todolist-{api,cron,migrate}-{env}` 이름', () => {
     const template = synth('dev');
-    template.resourceCountIs('AWS::Lambda::Function', 2);
+    template.resourceCountIs('AWS::Lambda::Function', 3);
     template.hasResourceProperties('AWS::Lambda::Function', {
       FunctionName: 'todolist-api-dev',
     });
     template.hasResourceProperties('AWS::Lambda::Function', {
       FunctionName: 'todolist-cron-dev',
+    });
+    template.hasResourceProperties('AWS::Lambda::Function', {
+      FunctionName: 'todolist-migrate-dev',
     });
   });
 
@@ -148,6 +152,28 @@ describe('TodolistBackendStack — Lambda 함수 (api/cron)', () => {
       FunctionName: 'todolist-cron-dev',
       Timeout: 300,
       MemorySize: 1024,
+    });
+  });
+
+  // WHY: migrate Lambda 는 deploy 파이프라인이 invoke 하는 전용 엔트리. CMD override
+  // 가 빠지면 api 핸들러가 실행돼 HTTP 서버가 띄워지고 마이그레이션이 안 됨.
+  it('migrate Lambda 의 ImageConfig.Command = ["dist/src/migrate.handler"]', () => {
+    const template = synth('dev');
+    template.hasResourceProperties('AWS::Lambda::Function', {
+      FunctionName: 'todolist-migrate-dev',
+      ImageConfig: { Command: ['dist/src/migrate.handler'] },
+    });
+  });
+
+  // WHY: migrate 은 DDL 이 오래 걸릴 수 있어 300s. 메모리는 light (512MB).
+  // reserved=1 로 배포 중복 트리거 시에도 마이그레이션 병렬 실행 방지 (스키마 충돌 차단).
+  it('migrate 은 300s/512MB + reservedConcurrentExecutions=1', () => {
+    const template = synth('dev');
+    template.hasResourceProperties('AWS::Lambda::Function', {
+      FunctionName: 'todolist-migrate-dev',
+      Timeout: 300,
+      MemorySize: 512,
+      ReservedConcurrentExecutions: 1,
     });
   });
 

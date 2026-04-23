@@ -1,0 +1,281 @@
+name: backend-deploy
+
+# Backend Lambda 배포 — 이미 ECR 에 올라간 이미지를 api/cron Lambda 에 반영.
+# backend-build.yml 이 먼저 완료된 상태(동일 SHA 이미지)를 전제로 한다.
+#
+# Trigger 와 env 매핑 (backend-build 와 동일 규칙):
+#   push tag v*          → prod (Environment reviewer 승인 필요)
+#   workflow_dispatch    → inputs.target_env
+#   workflow_run(build)  → main branch 완료 시 자동 dev 배포
+#
+# 배포 플로우 (docs/INFRA_SPEC.md §4.4, §6.3, §7-1):
+#   1. tag push 로 동시 트리거 시 backend-build 완료 대기
+#   2. migrate Lambda invoke — TypeORM runMigrations (one-shot, reserved=1)
+#   3. 이전 live alias 버전 기록 (롤백용)
+#   4. api + cron Lambda 동시에 update-function-code
+#   5. publish-version → update-alias(live)
+#   6. smoke test (api Function URL /health)
+#   7. 실패 시 이전 버전으로 alias 복귀
+#
+# 전제조건(infra): TodolistShared Deploy Role 에 Lambda 권한 확장 + TodolistBackend
+#   Stack 에 migrate Lambda 추가 — 본 feature 브랜치에서 같이 포함.
+
+on:
+  workflow_run:
+    workflows: [backend-build]
+    types: [completed]
+    branches: [main]
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      target_env:
+        description: '배포 대상 환경'
+        type: choice
+        options: [dev, prod]
+        default: dev
+      image_tag:
+        description: '이미지 tag (git SHA, 비우면 trigger ref 의 SHA)'
+        type: string
+        required: false
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  # 같은 환경의 배포는 한 번에 하나만 (이전 진행 중이면 새 것 대기)
+  group: backend-deploy-${{ github.ref_type == 'tag' && 'prod' || (github.event_name == 'workflow_dispatch' && inputs.target_env || 'dev') }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy Lambda
+    # workflow_run 트리거일 땐 build 가 성공한 경우만 실행
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ github.ref_type == 'tag' && 'prod' || (github.event_name == 'workflow_dispatch' && inputs.target_env || 'dev') }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Login to ECR (for image URI construction)
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # WHY: tag push 는 backend-build 와 backend-deploy 를 병렬 트리거한다.
+      # deploy 가 먼저 도달하면 ECR 에 이미지가 아직 없어서 update-function-code 가
+      # ImageNotFound 로 실패한다. 같은 SHA 로 실행된 backend-build 의 completion
+      # 을 최대 20분 polling (이미지 빌드/push 가 10분 안 걸린다는 경험치 기준).
+      # workflow_dispatch / workflow_run 트리거는 이미 완료된 이미지를 전제하므로 skip.
+      - name: Wait for backend-build to finish (tag push only)
+        if: github.event_name == 'push' && github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          SHA="${{ github.sha }}"
+          echo "Polling backend-build run for SHA ${SHA}..."
+          for i in $(seq 1 40); do  # 40 * 30s = 20분
+            RUN_JSON=$(gh run list \
+              --workflow backend-build \
+              --commit "${SHA}" \
+              --limit 1 \
+              --json status,conclusion,databaseId 2>/dev/null || echo "[]")
+            STATUS=$(echo "${RUN_JSON}" | jq -r '.[0].status // "not_found"')
+            CONCLUSION=$(echo "${RUN_JSON}" | jq -r '.[0].conclusion // ""')
+
+            if [[ "${STATUS}" == "completed" ]]; then
+              if [[ "${CONCLUSION}" == "success" ]]; then
+                echo "::notice title=Build ready::backend-build succeeded for ${SHA}"
+                exit 0
+              fi
+              echo "::error title=Build failed::backend-build concluded '${CONCLUSION}' for ${SHA}"
+              exit 1
+            fi
+            echo "[$i/40] backend-build status=${STATUS:-pending} — waiting 30s..."
+            sleep 30
+          done
+          echo "::error title=Build timeout::backend-build did not complete in 20min for ${SHA}"
+          exit 1
+
+      - name: Resolve image tag
+        id: tag
+        env:
+          REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          REPO: ${{ vars.ECR_REPO }}
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
+            TAG="${{ github.event.workflow_run.head_sha }}"
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "${{ inputs.image_tag }}" ]]; then
+            TAG="${{ inputs.image_tag }}"
+          else
+            TAG="${{ github.sha }}"
+          fi
+          IMAGE_URI="${REGISTRY}/${REPO}:${TAG}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "image_uri=${IMAGE_URI}" >> "$GITHUB_OUTPUT"
+          echo "::notice title=Deploying::${IMAGE_URI}"
+
+      - name: Record previous live alias versions (rollback)
+        id: prev
+        run: |
+          prev_ver() {
+            aws lambda get-alias --function-name "$1" --name live \
+              --query FunctionVersion --output text 2>/dev/null || echo "NONE"
+          }
+          API_PREV=$(prev_ver "${{ vars.LAMBDA_API_NAME }}")
+          CRON_PREV=$(prev_ver "${{ vars.LAMBDA_CRON_NAME }}")
+          echo "api=${API_PREV}"   >> "$GITHUB_OUTPUT"
+          echo "cron=${CRON_PREV}" >> "$GITHUB_OUTPUT"
+          echo "::notice title=Previous versions::api=${API_PREV} cron=${CRON_PREV}"
+
+      # WHY: api/cron 이미지 교체보다 먼저 스키마 migration 을 적용한다. 코드가 기대하는
+      # 컬럼이 DB 에 없으면 NotNull/Unknown column 런타임 에러 → 502 폭주. migrate Lambda
+      # 는 reserved=1 로 직렬화되어 동시 배포에서도 스키마 충돌 없음. (§7-1, §8-⑦)
+      - name: Run DB migrations (one-shot via migrate Lambda)
+        id: migrate
+        run: |
+          # migrate Lambda 이름은 api Lambda 에서 prefix 치환으로 파생 — 별도 GH
+          # Variable 추가 없이 env-suffix 정합 유지.
+          MIGRATE_FN="${{ vars.LAMBDA_API_NAME }}"
+          MIGRATE_FN="${MIGRATE_FN/todolist-api-/todolist-migrate-}"
+          echo "Migration Lambda: ${MIGRATE_FN}"
+
+          # migrate Lambda 이미지도 동일 SHA 로 먼저 갱신 (이번 릴리스의 마이그레이션 반영)
+          aws lambda update-function-code \
+            --function-name "${MIGRATE_FN}" \
+            --image-uri "${{ steps.tag.outputs.image_uri }}" > /dev/null
+          aws lambda wait function-updated-v2 --function-name "${MIGRATE_FN}"
+
+          # Sync invoke — payload 없음, 결과를 migrate-result.json 에 저장
+          INVOKE_STATUS=$(aws lambda invoke \
+            --function-name "${MIGRATE_FN}" \
+            --payload '{}' \
+            --cli-binary-format raw-in-base64-out \
+            --log-type Tail \
+            --query StatusCode \
+            --output text \
+            migrate-result.json)
+
+          echo "Invoke HTTP status: ${INVOKE_STATUS}"
+          cat migrate-result.json
+
+          # Lambda 가 throw 하면 payload 에 errorMessage 필드 존재
+          if jq -e '.errorMessage' migrate-result.json > /dev/null 2>&1; then
+            ERR=$(jq -r '.errorMessage' migrate-result.json)
+            echo "::error title=Migration failed::${ERR}"
+            exit 1
+          fi
+
+          APPLIED=$(jq -r '.appliedMigrations | join(", ")' migrate-result.json)
+          DURATION=$(jq -r '.durationMs' migrate-result.json)
+          if [[ -z "${APPLIED}" ]]; then
+            echo "::notice title=Migrations::no-op (스키마 이미 최신)"
+          else
+            echo "::notice title=Migrations applied (${DURATION}ms)::${APPLIED}"
+          fi
+
+      - name: Update api Lambda code
+        run: |
+          aws lambda update-function-code \
+            --function-name "${{ vars.LAMBDA_API_NAME }}" \
+            --image-uri "${{ steps.tag.outputs.image_uri }}" > /dev/null
+          aws lambda wait function-updated-v2 \
+            --function-name "${{ vars.LAMBDA_API_NAME }}"
+
+      - name: Update cron Lambda code
+        run: |
+          aws lambda update-function-code \
+            --function-name "${{ vars.LAMBDA_CRON_NAME }}" \
+            --image-uri "${{ steps.tag.outputs.image_uri }}" > /dev/null
+          aws lambda wait function-updated-v2 \
+            --function-name "${{ vars.LAMBDA_CRON_NAME }}"
+
+      - name: Publish versions & flip live alias
+        id: publish
+        run: |
+          API_VER=$(aws lambda publish-version \
+            --function-name "${{ vars.LAMBDA_API_NAME }}" \
+            --query Version --output text)
+          CRON_VER=$(aws lambda publish-version \
+            --function-name "${{ vars.LAMBDA_CRON_NAME }}" \
+            --query Version --output text)
+
+          # 두 Lambda 를 같은 블록에서 alias 전환 — 버전 불일치 방지 (§4.4 note)
+          aws lambda update-alias \
+            --function-name "${{ vars.LAMBDA_API_NAME }}" \
+            --name live --function-version "${API_VER}" > /dev/null
+          aws lambda update-alias \
+            --function-name "${{ vars.LAMBDA_CRON_NAME }}" \
+            --name live --function-version "${CRON_VER}" > /dev/null
+
+          echo "api_version=${API_VER}"   >> "$GITHUB_OUTPUT"
+          echo "cron_version=${CRON_VER}" >> "$GITHUB_OUTPUT"
+          echo "::notice title=Alias flipped::api=${API_VER} cron=${CRON_VER}"
+
+      - name: Smoke test (/health via Function URL)
+        id: smoke
+        run: |
+          URL=$(aws lambda get-function-url-config \
+            --function-name "${{ vars.LAMBDA_API_NAME }}" \
+            --qualifier live \
+            --query FunctionUrl --output text)
+          HEALTH="${URL%/}/health"
+          echo "Testing: ${HEALTH}"
+          # 콜드스타트 대비 최대 5회 재시도 (간격 5s)
+          for i in 1 2 3 4 5; do
+            if curl -fsS --max-time 10 "${HEALTH}"; then
+              echo ""
+              echo "::notice title=Smoke test passed::${HEALTH}"
+              exit 0
+            fi
+            echo "Attempt $i failed, retrying in 5s..."
+            sleep 5
+          done
+          echo "::error title=Smoke test failed::${HEALTH}"
+          exit 1
+
+      - name: Rollback alias on smoke failure
+        if: failure() && steps.smoke.outcome == 'failure'
+        run: |
+          revert_if_prev() {
+            local fn="$1"; local prev="$2"
+            if [[ "${prev}" != "NONE" ]]; then
+              aws lambda update-alias \
+                --function-name "${fn}" \
+                --name live --function-version "${prev}" > /dev/null
+              echo "::warning title=Rolled back::${fn} → version ${prev}"
+            else
+              echo "::warning title=No previous version::${fn} (first deploy — skip rollback)"
+            fi
+          }
+          revert_if_prev "${{ vars.LAMBDA_API_NAME }}"  "${{ steps.prev.outputs.api }}"
+          revert_if_prev "${{ vars.LAMBDA_CRON_NAME }}" "${{ steps.prev.outputs.cron }}"
+          exit 1
+
+      - name: Record deployed version (artifact for troubleshooting)
+        if: always() && steps.publish.outcome == 'success'
+        run: |
+          cat > deployed-version.txt <<EOF
+          env=${{ vars.ECR_REPO }}
+          image_tag=${{ steps.tag.outputs.tag }}
+          api_version=${{ steps.publish.outputs.api_version }}
+          cron_version=${{ steps.publish.outputs.cron_version }}
+          prev_api=${{ steps.prev.outputs.api }}
+          prev_cron=${{ steps.prev.outputs.cron }}
+          timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          EOF
+
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.publish.outcome == 'success'
+        with:
+          name: deployed-version-${{ github.run_id }}
+          path: deployed-version.txt
+          retention-days: 30

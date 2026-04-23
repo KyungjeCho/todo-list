@@ -93,6 +93,34 @@ export class TodolistSharedStack extends cdk.Stack {
       }),
     );
 
+    // Lambda 배포 — api/cron/migrate 3종 Lambda 에 한정.
+    // WHY: GH Actions 의 backend-deploy.yml 이 update-function-code →
+    //      publish-version → update-alias 순으로 호출. GetFunctionUrlConfig 는
+    //      smoke test 가 Function URL 을 조회하기 위함. InvokeFunction 은
+    //      migration Lambda 를 deploy 파이프라인 선행 단계에서 호출하기 위함.
+    // 리소스 네이밍(`todolist-{api,cron,migrate}-*`) 은 TodolistBackendStack 의
+    // Lambda functionName 과 1:1 정합. 다른 env/프로젝트 Lambda 에 대한 접근 차단.
+    role.addToPolicy(
+      new iam.PolicyStatement({
+        actions: [
+          'lambda:UpdateFunctionCode',
+          'lambda:PublishVersion',
+          'lambda:UpdateAlias',
+          'lambda:CreateAlias',
+          'lambda:GetAlias',
+          'lambda:GetFunction',
+          'lambda:GetFunctionConfiguration',
+          'lambda:GetFunctionUrlConfig',
+          'lambda:InvokeFunction',
+        ],
+        resources: [
+          `arn:aws:lambda:*:${this.account}:function:todolist-api-*`,
+          `arn:aws:lambda:*:${this.account}:function:todolist-cron-*`,
+          `arn:aws:lambda:*:${this.account}:function:todolist-migrate-*`,
+        ],
+      }),
+    );
+
     return role;
   }
 }
