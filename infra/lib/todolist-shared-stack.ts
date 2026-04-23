@@ -63,7 +63,7 @@ export class TodolistSharedStack extends cdk.Stack {
       roleName: 'todolist-gha-deploy',
       assumedBy: principal,
       description:
-        'GitHub Actions OIDC Deploy Role — ECR push / (후속) Lambda update / SSM read',
+        'GitHub Actions OIDC Deploy Role - ECR push / (later) Lambda update / SSM read',
       // WHY: 단기 자격증명 강제. 장기 토큰 노출 위험을 줄이기 위해 1시간 상한.
       maxSessionDuration: cdk.Duration.hours(1),
     });

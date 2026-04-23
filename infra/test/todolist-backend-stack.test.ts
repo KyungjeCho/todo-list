@@ -117,6 +117,25 @@ describe('TodolistBackendStack — Lambda 함수 (api/cron)', () => {
     });
   });
 
+  // WHY: 단일 이미지에 두 핸들러(api/cron) 가 빌드돼 있으므로 Lambda 가 어느
+  // 핸들러를 부트스트랩할지 명시 필요. CMD 미지정 시 Dockerfile 의 기본
+  // (`dist/lambda.handler`)이 적용돼 cron Lambda 가 HTTP 서버를 띄우는 사고 발생.
+  it('api Lambda 의 ImageConfig.Command = ["dist/lambda.handler"]', () => {
+    const template = synth('dev');
+    template.hasResourceProperties('AWS::Lambda::Function', {
+      FunctionName: 'todolist-api-dev',
+      ImageConfig: { Command: ['dist/src/lambda.handler'] },
+    });
+  });
+
+  it('cron Lambda 의 ImageConfig.Command = ["dist/scheduler.handler"]', () => {
+    const template = synth('dev');
+    template.hasResourceProperties('AWS::Lambda::Function', {
+      FunctionName: 'todolist-cron-dev',
+      ImageConfig: { Command: ['dist/src/scheduler.handler'] },
+    });
+  });
+
   // WHY: api 는 사용자 요청 처리(타임아웃 짧게, 비용 ↓), cron 은 배치(긴 작업 허용).
   it('api 는 30s/512MB, cron 은 300s/1024MB 로 분리', () => {
     const template = synth('dev');

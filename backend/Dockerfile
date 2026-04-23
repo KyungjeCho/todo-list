@@ -21,4 +21,4 @@ COPY --from=builder /build/package-lock.json ${LAMBDA_TASK_ROOT}/
 
 RUN npm ci --omit=dev
 
-CMD ["dist/lambda.handler"]
+CMD ["dist/src/lambda.handler"]

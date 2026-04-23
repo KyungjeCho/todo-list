@@ -163,6 +163,9 @@ export class TodolistBackendStack extends cdk.Stack {
       functionName: `todolist-api-${envName}`,
       code: lambda.DockerImageCode.fromEcr(this.backendRepository, {
         tagOrDigest: PLACEHOLDER_IMAGE_TAG,
+        // WHY: 단일 이미지에 두 핸들러(lambda.handler/scheduler.handler) 가 함께
+        // 빌드되므로 어느 진입점을 부트스트랩할지 명시한다.
+        cmd: ['dist/src/lambda.handler'],
       }),
       architecture: lambda.Architecture.ARM_64,
       memorySize: 512,
@@ -188,6 +191,10 @@ export class TodolistBackendStack extends cdk.Stack {
       functionName: `todolist-cron-${envName}`,
       code: lambda.DockerImageCode.fromEcr(this.backendRepository, {
         tagOrDigest: PLACEHOLDER_IMAGE_TAG,
+        // WHY: cron 핸들러는 NestApplicationContext 만 띄우는 별도 엔트리.
+        // CMD 미지정 시 Dockerfile 의 기본(api 핸들러)이 적용돼 cron Lambda 가
+        // HTTP 서버를 띄우는 사고 발생.
+        cmd: ['dist/src/scheduler.handler'],
       }),
       architecture: lambda.Architecture.ARM_64,
       memorySize: 1024,
@@ -215,7 +222,7 @@ export class TodolistBackendStack extends cdk.Stack {
 
     const schedulerRole = new iam.Role(this, 'CronSchedulerRole', {
       assumedBy: new iam.ServicePrincipal('scheduler.amazonaws.com'),
-      description: 'EventBridge Scheduler 가 cron Lambda 를 호출하기 위한 Role',
+      description: 'EventBridge Scheduler role for invoking cron Lambda',
     });
     this.cronFunction.grantInvoke(schedulerRole);
 

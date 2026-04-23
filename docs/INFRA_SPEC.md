@@ -81,14 +81,22 @@
 - 부트스트랩 시 1회 SSM GetParametersByPath로 로드 → `process.env` 주입 → `bootstrap()` 실행.
 - 콜드스타트에서만 수행(캐시). SSM 호출 실패 시 즉시 종료 → Lambda 재시도 또는 alias 롤백.
 
-### 3.3 GH Secrets 목록 (최소)
+### 3.3 GH Secrets / Variables 목록 (최소)
+
+CDK 가 env-suffix 로 리소스를 분리(`todolist-backend-{env}` 등)하므로 **Variable 은 Environment-level 로 분리**해 저장한다. 워크플로우 job 에 `environment: <env>` 만 선언하면 `${{ vars.X }}` 가 해당 env 값으로 자동 치환되어 문자열 조립이나 분기 로직 없이 두 환경을 처리할 수 있다. Secret 은 Role ARN 1개로 dev/prod 공통(단일 Deploy Role), Repository-level 로 저장한다.
+
+#### Repository-level Secret
 | 이름 | 유형 | 용도 |
 |---|---|---|
-| `AWS_DEPLOY_ROLE_ARN` | Secret | OIDC Role ARN |
-| `AWS_REGION` | Variable | `ap-northeast-2` |
-| `ECR_REPO` | Variable | `todolist-backend` |
-| `LAMBDA_API_NAME` | Variable | `todolist-api` |
-| `LAMBDA_CRON_NAME` | Variable | `todolist-cron` |
+| `AWS_DEPLOY_ROLE_ARN` | Secret | OIDC Deploy Role ARN (`arn:aws:iam::<acct>:role/todolist-gha-deploy`, CDK `TodolistShared` 출력) |
+
+#### Environment-level Variables (env 별 동일 키, 값만 상이)
+| 이름 | `dev` 값 | `prod` 값 | 근거 |
+|---|---|---|---|
+| `AWS_REGION` | `ap-northeast-2` | `ap-northeast-2` | 당분간 동일. prod 가 CloudFront+ACM 도입 시 us-east-1 인증서는 별도 변수화 검토 |
+| `ECR_REPO` | `todolist-backend-dev` | `todolist-backend-prod` | `todolist-backend-stack.ts:398` |
+| `LAMBDA_API_NAME` | `todolist-api-dev` | `todolist-api-prod` | `todolist-backend-stack.ts:163` |
+| `LAMBDA_CRON_NAME` | `todolist-cron-dev` | `todolist-cron-prod` | `todolist-backend-stack.ts:191` |
 
 > ❌ 금지: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, DB URL, Apple Private Key 등을 GH Secrets에 직접 저장.
 
@@ -271,14 +279,18 @@ aws lambda update-alias \
     - **SNS Topic** `todolist-alarms-{env}` — 알람 라우팅 단일 진입점. subscription(이메일/Slack/Telegram) 은 운영자가 RUNBOOK 으로 추가/제거(인프라 PR 불필요).
     - **SQS DLQ** `todolist-dlq-{env}` (보존 14일) — EventBridge Schedule 3개의 `DeadLetterConfig` 에 연결. Scheduler 가 cron Lambda 호출 자체에 실패한 페이로드 보존.
     - **CloudWatch Alarm 6종** (§6.2 표 참조) — 모두 SNS Topic 으로 라우팅. `treatMissingData=NOT_BREACHING` 으로 idle 구간 false-positive 차단.
-- [ ] **3. Backend 런타임 코드 추가**
-  - `backend/src/scheduler.ts` 엔트리 파일 (섹션 5.2)
-  - `backend/src/common/config/ssm-loader.ts` — 콜드스타트 시 1회 SSM 로드
-  - `Dockerfile`에 Cron 핸들러(`dist/scheduler.handler`) 빌드 대상 포함 확인
-- [ ] **4. GH 설정**
-  - Variables: `AWS_REGION`, `ECR_REPO`, `LAMBDA_API_NAME`, `LAMBDA_CRON_NAME`
-  - Secrets: `AWS_DEPLOY_ROLE_ARN`
-  - Environments: `dev`(자동), `prod`(required reviewer)
+- [x] **3. Backend 런타임 코드 추가** (2026-04-22 완료, 14 tests passing)
+  - `backend/src/scheduler.ts` — EventBridge Scheduler 가 보내는 `{ job: '...' }` 페이로드를 라우팅. `daily-review-notify` → `NotificationSchedulerUsecase`, `carry-over-cleanup` → `CarryoverSchedulerUsecase`. `fcm-token-prune` 은 backend 미구현으로 라우터 인식 + no-op (인프라 변경 없이 후속 PR 에서 구현 가능). 캐시된 `INestApplicationContext` 로 콜드스타트 비용 분할 상환. (8 tests)
+  - `backend/src/common/config/ssm-loader.ts` — 7종 시크릿(`*_PARAM` env → 실제 키)을 SSM `GetParameters(WithDecryption=true)` 1회 호출로 일괄 로드해 `process.env` 주입. 캐시·실패 시 캐시 미저장(다음 invocation 재시도)·`InvalidParameters` 차단. (6 tests)
+  - `backend/src/lambda.ts` — `bootstrap()` 시작부에 `await loadSecretsFromSsm()` 추가(HTTP Lambda 도 동일 시크릿 필요).
+  - `backend/Dockerfile` — `CMD ["dist/src/lambda.handler"]` 로 수정(NestJS 빌드 출력이 `dist/src/` 하위). cron 은 CDK `ImageConfig.Command` 로 `dist/src/scheduler.handler` override.
+  - `backend/package.json` — `@aws-sdk/client-ssm` 의존성 추가.
+- [ ] **4. GH 설정** (§3.3 참조)
+  - Repository Secret: `AWS_DEPLOY_ROLE_ARN` (Shared Stack 배포 후 출력값)
+  - Environments 2개 생성:
+    - `dev` — protection rule 없음. main push 시 자동 배포
+    - `prod` — required reviewer ≥ 1인 + deployment branch = tags matching `v*`
+  - 각 Environment 에 Variables 4종 (env-suffix 포함 값): `AWS_REGION`, `ECR_REPO`, `LAMBDA_API_NAME`, `LAMBDA_CRON_NAME`
 - [ ] **5. 워크플로우**
   - `.github/workflows/backend-build.yml` (Docker buildx arm64 → ECR)
   - `.github/workflows/backend-deploy.yml` (마이그레이션 one-shot → Lambda update → alias 전환 → smoke)
