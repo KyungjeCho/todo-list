@@ -24,65 +24,36 @@ const synthWithGrant = (envName: string): Template => {
   return Template.fromStack(stack);
 };
 
-describe('TodolistBackendStack — ECR Repository', () => {
-  // WHY: env별로 별도 ECR 을 두어 dev 이미지 오염이 prod 에 전파되지 않도록 격리한다.
-  it('환경별 이름(`todolist-backend-{env}`)으로 1개 생성', () => {
+describe('TodolistBackendStack — ECR Repository (외부 관리 참조)', () => {
+  // WHY: ECR 은 스택 생명주기보다 오래 유지되는 영구 리소스라 CDK 밖에서 관리한다
+  // (chicken-and-egg 해결 — createBackendRepository 주석 참조). 템플릿에
+  // AWS::ECR::Repository 리소스가 없어야 한다.
+  it('CDK 템플릿에 ECR Repository 리소스가 없음 (외부 참조만)', () => {
     const template = synth('dev');
-    template.resourceCountIs('AWS::ECR::Repository', 1);
-    template.hasResourceProperties('AWS::ECR::Repository', {
-      RepositoryName: 'todolist-backend-dev',
-    });
+    template.resourceCountIs('AWS::ECR::Repository', 0);
   });
 
-  it('image scan on push 활성 — 푸시 시점 CVE 자동 검출', () => {
-    const template = synth('dev');
-    template.hasResourceProperties('AWS::ECR::Repository', {
-      ImageScanningConfiguration: { ScanOnPush: true },
-    });
-  });
-
-  // WHY: 동일 SHA 태그로 다른 이미지를 덮어쓰는 사고를 차단한다. 이미지 무결성 보장.
-  it('태그 IMMUTABLE — 동일 SHA 재푸시 차단', () => {
-    const template = synth('dev');
-    template.hasResourceProperties('AWS::ECR::Repository', {
-      ImageTagMutability: 'IMMUTABLE',
-    });
-  });
-
-  // WHY: cdk destroy 가 실수로 실행돼도 이미지를 보존한다. ECR 은 재생성 비용이 높음.
-  it('RemovalPolicy=RETAIN — Stack 삭제 시 이미지 보존', () => {
-    const template = synth('dev');
-    template.hasResource('AWS::ECR::Repository', {
-      DeletionPolicy: 'Retain',
-    });
-  });
-
-  // WHY: 빌드마다 누적되는 이미지로 스토리지 비용이 무한 증가하는 것을 방지한다.
-  it('Lifecycle 정책으로 최신 20개 이미지만 보존', () => {
-    const template = synth('dev');
-    const repos = template.findResources('AWS::ECR::Repository');
-    const repoLogicalId = Object.keys(repos)[0];
-    const lifecyclePolicy = repos[repoLogicalId].Properties
-      .LifecyclePolicy as { LifecyclePolicyText: string } | undefined;
-
-    expect(lifecyclePolicy).toBeDefined();
-    const parsed = JSON.parse(lifecyclePolicy!.LifecyclePolicyText) as {
-      rules: Array<{ selection: { countNumber: number } }>;
-    };
-    expect(parsed.rules[0].selection.countNumber).toBe(20);
-  });
-
-  it('CfnOutput 으로 RepositoryUri 노출 — CI 에서 docker push 대상으로 사용', () => {
+  // WHY: CI 의 docker push 대상 URI 와 운영자 RUNBOOK 참고용으로 계산된 ECR URI
+  // 를 stack output 으로 노출. 외부 관리라도 참조 편의는 유지.
+  it('CfnOutput 으로 RepositoryUri 노출 — CI/RUNBOOK 가 push 대상으로 사용', () => {
     const template = synth('dev');
     template.hasOutput('BackendRepositoryUri', {});
   });
 
-  it('prod 환경도 동일 옵션으로 생성', () => {
+  // WHY: Lambda 가 올바른 env 의 외부 ECR 을 참조하는지 검증. 잘못된 env suffix 로
+  // 타 환경 이미지를 끌어오면 데이터/권한 혼선 발생. fromRepositoryName 은 Docker
+  // registry URL 형식(`<acct>.dkr.ecr.<region>.<url-suffix>/<repo>:<tag>`) 으로
+  // 합성되므로 중간 segment 에 `/todolist-backend-prod:placeholder` 가 나타남.
+  it('Lambda ImageUri 가 todolist-backend-{env} 로 해석됨 (prod)', () => {
     const template = synth('prod');
-    template.hasResourceProperties('AWS::ECR::Repository', {
-      RepositoryName: 'todolist-backend-prod',
-      ImageTagMutability: 'IMMUTABLE',
-      ImageScanningConfiguration: { ScanOnPush: true },
+    template.hasResourceProperties('AWS::Lambda::Function', {
+      Code: {
+        ImageUri: Match.objectLike({
+          'Fn::Join': Match.arrayWith([
+            Match.arrayWith(['/todolist-backend-prod:placeholder']),
+          ]),
+        }),
+      },
     });
   });
 });
@@ -166,14 +137,14 @@ describe('TodolistBackendStack — Lambda 함수 (api/cron/migrate)', () => {
   });
 
   // WHY: migrate 은 DDL 이 오래 걸릴 수 있어 300s. 메모리는 light (512MB).
-  // reserved=1 로 배포 중복 트리거 시에도 마이그레이션 병렬 실행 방지 (스키마 충돌 차단).
-  it('migrate 은 300s/512MB + reservedConcurrentExecutions=1', () => {
+  // NOTE: 원래 `reservedConcurrentExecutions=1` 이 설계였으나 신규 AWS 계정의
+  // Lambda concurrency quota=10 제약으로 현재 비활성화. quota 증액 후 복원 예정.
+  it('migrate 은 300s/512MB', () => {
     const template = synth('dev');
     template.hasResourceProperties('AWS::Lambda::Function', {
       FunctionName: 'todolist-migrate-dev',
       Timeout: 300,
       MemorySize: 512,
-      ReservedConcurrentExecutions: 1,
     });
   });
 
@@ -341,18 +312,25 @@ describe('TodolistBackendStack — EventBridge Scheduler (cron 3종)', () => {
     });
   });
 
-  // WHY: cron 잡 중복 실행 방지 (§5.3). 동시 실행 1로 제한해 같은 잡이 두 번
-  // 동시에 돌면서 DB 갱신 충돌·중복 알림 발송하는 사고 차단.
-  it('cron Lambda 는 ReservedConcurrentExecutions=1', () => {
+  // WHY: 원래 §5.3 에 따라 cron Lambda 에 `reservedConcurrentExecutions=1`
+  // (중복 실행 차단) 적용이 설계였다. 신규 AWS 계정의 Lambda concurrency quota=10
+  // 제약으로 현재 임시 비활성 — reserved=1 로 설정하면 unreserved 가 최소값(10)
+  // 미만으로 떨어져 배포 실패. quota 증액(L-B99A9384 → 1000) 승인 후 복원 예정.
+  it('cron/migrate Lambda 는 ReservedConcurrentExecutions 미설정 (quota 승인 후 복원)', () => {
     const template = synth('dev');
-    template.hasResourceProperties('AWS::Lambda::Function', {
-      FunctionName: 'todolist-cron-dev',
-      ReservedConcurrentExecutions: 1,
-    });
+    for (const name of ['todolist-cron-dev', 'todolist-migrate-dev']) {
+      const fns = template.findResources('AWS::Lambda::Function', {
+        Properties: { FunctionName: name },
+      });
+      const props = Object.values(fns)[0].Properties as {
+        ReservedConcurrentExecutions?: number;
+      };
+      expect(props.ReservedConcurrentExecutions).toBeUndefined();
+    }
   });
 
   // WHY: api Lambda 는 동시성 제한하면 트래픽 폭증 시 throttle 됨.
-  // cron 만 제한하고 api 는 Lambda account-wide 한도 (1000) 사용.
+  // Lambda account-wide 한도(1000) 사용 — reserved 미설정.
   it('api Lambda 는 ReservedConcurrentExecutions 미설정', () => {
     const template = synth('dev');
     const apis = template.findResources('AWS::Lambda::Function', {

@@ -59,7 +59,7 @@ export interface TodolistBackendStackProps extends cdk.StackProps {
  * 인스턴스를 생성한다. (docs/INFRA_SPEC.md §2, §7-2)
  */
 export class TodolistBackendStack extends cdk.Stack {
-  public readonly backendRepository: ecr.Repository;
+  public readonly backendRepository: ecr.IRepository;
   public readonly apiFunction: lambda.DockerImageFunction;
   public readonly cronFunction: lambda.DockerImageFunction;
   public readonly migrateFunction: lambda.DockerImageFunction;
@@ -202,7 +202,10 @@ export class TodolistBackendStack extends cdk.Stack {
       architecture: lambda.Architecture.ARM_64,
       memorySize: 1024,
       timeout: cdk.Duration.seconds(300),
-      reservedConcurrentExecutions: 1,
+      // TODO: AWS Lambda concurrency quota 가 기본 10(신규 계정)이라 reserved=1 을
+      // 설정하면 unreserved 가 최소값(10) 미만으로 떨어져 배포 실패. quota 증액
+      // (L-B99A9384 → 1000) 승인 후 `reservedConcurrentExecutions: 1` 복원 필요.
+      // 스펙 §5.3 의 "cron 중복 실행 차단" 는 그 때 재활성.
       environment: {
         NODE_ENV: 'production',
         ...this.buildSsmParamNameEnv(envName),
@@ -233,9 +236,10 @@ export class TodolistBackendStack extends cdk.Stack {
       memorySize: 512,
       // DDL 이 오래 걸리는 케이스(인덱스 생성 등) 대비 5분. Lambda 최대 15분 중 보수적 값.
       timeout: cdk.Duration.seconds(300),
-      // WHY: 배포 파이프라인이 한 번에 하나만 호출하지만, 동시에 여러 배포가 트리거되면
-      // 마이그레이션이 병렬 실행되어 스키마 충돌 발생. reserved=1 로 강제 직렬화.
-      reservedConcurrentExecutions: 1,
+      // TODO: concurrency quota 승인 후 `reservedConcurrentExecutions: 1` 복원.
+      // 현재는 계정 quota=10 제약으로 설정 불가 (CronFunction 의 TODO 참조).
+      // deploy 파이프라인이 동일 env 에 하나만 배포를 허용하므로 당분간 reserved
+      // 없어도 동시 실행 사고 확률은 낮음.
       environment: {
         NODE_ENV: 'production',
         ...this.buildSsmParamNameEnv(envName),
@@ -423,24 +427,25 @@ export class TodolistBackendStack extends cdk.Stack {
   }
 
   /**
-   * Lambda 컨테이너 이미지 보관용 ECR Repository.
+   * Lambda 컨테이너 이미지 보관용 ECR Repository — 외부 관리 리소스로 참조만.
    *
-   * WHY: env 별 격리(dev 이미지가 prod 에 섞이지 않음), IMMUTABLE 태그로 동일
-   * SHA 재푸시 차단, scan-on-push 로 CVE 자동 검출, RETAIN 으로 destroy 사고
-   * 방지, lifecycle 로 스토리지 비용 누적 차단. (docs/INFRA_SPEC.md §7-2)
+   * WHY: ECR 은 스택 생명주기보다 오래 유지되어야 하는 영구 리소스(이미지 히스토리
+   * 보존, placeholder 부트스트랩). CDK 가 직접 생성하면 chicken-and-egg 문제가
+   * 발생한다 — Lambda 는 생성 시점에 ECR 이미지가 존재해야 하지만, 같은 스택에서
+   * ECR 을 함께 만들면 첫 배포에 이미지가 없어 Lambda 가 실패. 스택 롤백 후에도
+   * RETAIN 으로 ECR 이 남아 재배포 시 "이미 존재" 충돌 + CFN import 제약으로
+   * 편입 불가 → 데드락.
+   *
+   * 해결: ECR 은 CDK 밖에서 관리한다. 첫 배포 전 운영자가 `aws ecr
+   * create-repository` 로 생성 + placeholder 이미지 push 한다 (RUNBOOK_DEPLOY).
+   * lifecycle policy / scan-on-push / IMMUTABLE 등 설정도 부트스트랩 단계에서
+   * AWS CLI 로 적용. (docs/INFRA_SPEC.md §7-2)
    */
-  private createBackendRepository(envName: string): ecr.Repository {
-    return new ecr.Repository(this, 'BackendRepository', {
-      repositoryName: `todolist-backend-${envName}`,
-      imageScanOnPush: true,
-      imageTagMutability: ecr.TagMutability.IMMUTABLE,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
-      lifecycleRules: [
-        {
-          maxImageCount: 20,
-          description: '최신 20개 이미지만 보존 — 스토리지 비용 누적 차단',
-        },
-      ],
-    });
+  private createBackendRepository(envName: string): ecr.IRepository {
+    return ecr.Repository.fromRepositoryName(
+      this,
+      'BackendRepository',
+      `todolist-backend-${envName}`,
+    );
   }
 }
