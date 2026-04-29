@@ -39,12 +39,13 @@ describe('migrate handler', () => {
     ds.isInitialized = false;
     // WHY: 실 TypeORM 처럼 initialize() 후 isInitialized 가 true 가 되도록 모사.
     // 그렇지 않으면 handler 의 finally 블록에서 destroy 가 호출 안 됨.
-    ds.initialize.mockImplementation(async () => {
+    ds.initialize.mockImplementation(() => {
       ds.isInitialized = true;
-      return ds;
+      return Promise.resolve(ds);
     });
-    ds.destroy.mockImplementation(async () => {
+    ds.destroy.mockImplementation(() => {
       ds.isInitialized = false;
+      return Promise.resolve();
     });
   });
 
@@ -55,38 +56,44 @@ describe('migrate handler', () => {
     ]);
 
     const callOrder: string[] = [];
-    mockedLoadSsm.mockImplementation(async () => {
+    mockedLoadSsm.mockImplementation(() => {
       callOrder.push('ssm');
+      return Promise.resolve();
     });
-    ds.initialize.mockImplementation(async () => {
+    ds.initialize.mockImplementation(() => {
       callOrder.push('initialize');
       ds.isInitialized = true;
-      return ds;
+      return Promise.resolve(ds);
     });
-    ds.runMigrations.mockImplementation(async () => {
+    ds.runMigrations.mockImplementation(() => {
       callOrder.push('runMigrations');
-      return [];
+      return Promise.resolve([]);
     });
-    ds.destroy.mockImplementation(async () => {
+    ds.destroy.mockImplementation(() => {
       callOrder.push('destroy');
       ds.isInitialized = false;
+      return Promise.resolve();
     });
 
     await handler({}, {} as never, () => undefined);
-    expect(callOrder).toEqual(['ssm', 'initialize', 'runMigrations', 'destroy']);
+    expect(callOrder).toEqual([
+      'ssm',
+      'initialize',
+      'runMigrations',
+      'destroy',
+    ]);
   });
 
   it('적용된 마이그레이션 이름 배열을 반환', async () => {
-    ds.runMigrations.mockResolvedValue([
-      { name: 'MigA' },
-      { name: 'MigB' },
-    ]);
+    ds.runMigrations.mockResolvedValue([{ name: 'MigA' }, { name: 'MigB' }]);
     const result = await handler({}, {} as never, () => undefined);
     expect(result).toMatchObject({
       ok: true,
       appliedMigrations: ['MigA', 'MigB'],
     });
-    expect((result as { durationMs: number }).durationMs).toBeGreaterThanOrEqual(0);
+    expect(
+      (result as { durationMs: number }).durationMs,
+    ).toBeGreaterThanOrEqual(0);
   });
 
   it('마이그레이션 없을 때 빈 배열 반환 (no-op 정상)', async () => {
@@ -106,9 +113,9 @@ describe('migrate handler', () => {
     ds.runMigrations.mockRejectedValue(new Error('migration boom'));
     ds.isInitialized = false;
     // initialize 후엔 isInitialized true 라고 가정
-    ds.initialize.mockImplementation(async () => {
+    ds.initialize.mockImplementation(() => {
       ds.isInitialized = true;
-      return ds;
+      return Promise.resolve(ds);
     });
 
     await expect(handler({}, {} as never, () => undefined)).rejects.toThrow(

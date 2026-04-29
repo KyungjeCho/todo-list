@@ -36,7 +36,7 @@ describe('TokenRefreshUsecase', () => {
         id: 'session-id-1',
         userAuthId: 'auth-id-1',
         refreshToken: validRefreshToken,
-        expiredAt: new Date('2026-04-27T00:00:00Z'),
+        expiredAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       };
 
       mockAuthRepository.findSessionByRefreshToken.mockResolvedValue(
@@ -66,7 +66,7 @@ describe('TokenRefreshUsecase', () => {
         id: 'session-id-1',
         userAuthId: 'auth-id-1',
         refreshToken: validRefreshToken,
-        expiredAt: new Date('2026-04-27T00:00:00Z'),
+        expiredAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       };
 
       mockAuthRepository.findSessionByRefreshToken.mockResolvedValue(
