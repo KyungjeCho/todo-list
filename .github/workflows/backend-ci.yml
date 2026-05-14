@@ -8,6 +8,12 @@ on:
     branches: [main]
     paths: ['backend/**']
 
+# WHY: 기본 GITHUB_TOKEN 은 `contents: write` 등 넓은 권한을 가진다. CI 는 체크아웃
+# 후 테스트만 돌리므로 최소 권한(read) 으로 좁혀 악성 action/PR 의 토큰 남용 차단.
+# (GH Code Scanning: actions/missing-workflow-permissions)
+permissions:
+  contents: read
+
 defaults:
   run:
     working-directory: backend

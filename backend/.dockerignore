@@ -12,4 +12,3 @@ Dockerfile
 eslint.config.*
 .prettierrc
 jest.config.*
-tsconfig.build.json

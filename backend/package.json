@@ -23,6 +23,7 @@
     "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/data-source.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-ssm": "^3.1034.0",
     "@codegenie/serverless-express": "^4.17.1",
     "@google/generative-ai": "^0.24.1",
     "@nestjs/common": "^11.1.19",
