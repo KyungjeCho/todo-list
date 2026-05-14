@@ -18,26 +18,26 @@ function requireInProduction(key: string, fallback: string): string {
 function buildSslConfig():
   | false
   | { rejectUnauthorized: boolean; ca?: string } {
-  // WHY: Supabase 등 관리형 Postgres는 TLS 필수. env 토글 누락으로 prod 연결이
-  // 실패하는 사고를 막기 위해 production 에서는 무조건 SSL 활성 + 검증을 강제한다.
-  // (INFRA_SPEC.md §2.1, §8-③)
-  if (process.env.NODE_ENV === 'production') {
-    const caPath = process.env.DATABASE_SSL_CA;
-    return {
-      rejectUnauthorized: true,
-      ...(caPath ? { ca: readFileSync(caPath, 'utf8') } : {}),
-    };
-  }
-
-  if (process.env.DATABASE_SSL !== 'true') {
-    return false;
-  }
+  // WHY: Supabase 등 관리형 Postgres 는 TLS 필수. env 토글 누락으로 prod 연결이
+  // 실패하는 사고를 막기 위해 production 에서는 무조건 SSL 활성. (INFRA_SPEC.md §2.1, §8-③)
+  //
+  // 검증 정책:
+  // - DATABASE_SSL_CA 로 CA bundle path 가 제공되면 strict 검증
+  //   (rejectUnauthorized=true + ca 주입). 운영 강화 시 사용.
+  // - CA 미제공이면 rejectUnauthorized=false — TLS 암호화는 유지하되 체인 검증을
+  //   건너뛴다. Supabase pooler/direct 의 인증서는 공개 CA 가 아닌 자체 root 로
+  //   서명되어, CA 가 없는 strict 모드는 'self-signed certificate in certificate
+  //   chain' 으로 거부된다. `?sslmode=require` 와 동등한 동작.
+  const useSsl =
+    process.env.NODE_ENV === 'production' ||
+    process.env.DATABASE_SSL === 'true';
+  if (!useSsl) return false;
 
   const caPath = process.env.DATABASE_SSL_CA;
-  return {
-    rejectUnauthorized: false,
-    ...(caPath ? { ca: readFileSync(caPath, 'utf8') } : {}),
-  };
+  if (caPath) {
+    return { rejectUnauthorized: true, ca: readFileSync(caPath, 'utf8') };
+  }
+  return { rejectUnauthorized: false };
 }
 
 export const databaseConfig = registerAs(

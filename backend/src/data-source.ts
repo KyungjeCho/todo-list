@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import { join } from 'path';
+import { readFileSync } from 'fs';
 import { config as loadEnv } from 'dotenv';
 import { DataSource } from 'typeorm';
 
@@ -19,6 +20,19 @@ loadEnv();
 // 공유하게 한다. (docs/INFRA_SPEC.md §3.2, §7-1)
 const url = process.env.DATABASE_URL;
 
+// WHY: TLS 정책은 database.config.ts(buildSslConfig) 와 동일. Supabase pooler 는
+// 공개 CA 가 아닌 자체 root 로 서명한 인증서를 쓰므로, DATABASE_SSL_CA 가 명시되지
+// 않으면 체인 검증을 풀고(`?sslmode=require` 동등) TLS 암호화만 유지한다.
+function buildSsl(): false | { rejectUnauthorized: boolean; ca?: string } {
+  const useSsl = !!url || process.env.DATABASE_SSL === 'true';
+  if (!useSsl) return false;
+  const caPath = process.env.DATABASE_SSL_CA;
+  if (caPath) {
+    return { rejectUnauthorized: true, ca: readFileSync(caPath, 'utf8') };
+  }
+  return { rejectUnauthorized: false };
+}
+
 export const AppDataSource = new DataSource({
   type: 'postgres',
   ...(url
@@ -32,8 +46,5 @@ export const AppDataSource = new DataSource({
       }),
   entities: [join(__dirname, '**', '*.entity.{ts,js}')],
   migrations: [join(__dirname, 'common', 'migrations', '*{.ts,.js}')],
-  ssl:
-    url || process.env.DATABASE_SSL === 'true'
-      ? { rejectUnauthorized: process.env.NODE_ENV === 'production' }
-      : false,
+  ssl: buildSsl(),
 });
