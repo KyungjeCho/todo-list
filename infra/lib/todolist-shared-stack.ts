@@ -52,9 +52,15 @@ export class TodolistSharedStack extends cdk.Stack {
         'token.actions.githubusercontent.com:aud': GITHUB_OIDC_AUDIENCE,
       },
       StringLike: {
+        // WHY: `environment:` 블록을 사용하는 워크플로우(backend-build/deploy)에서
+        // GitHub 가 OIDC 토큰의 sub 를 `environment:NAME` 으로 덮어쓴다. ref 기반
+        // 패턴만으로는 매칭 실패. ref + environment 둘 다 허용해 fork PR 차단은
+        // 유지하면서 env 별 Variable 분리(§3.3) 와 호환.
         'token.actions.githubusercontent.com:sub': [
           `repo:${GITHUB_REPO}:ref:refs/heads/main`,
           `repo:${GITHUB_REPO}:ref:refs/tags/v*`,
+          `repo:${GITHUB_REPO}:environment:dev`,
+          `repo:${GITHUB_REPO}:environment:prod`,
         ],
       },
     });
