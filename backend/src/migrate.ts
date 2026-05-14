@@ -23,7 +23,6 @@
 import 'reflect-metadata';
 import type { Handler } from 'aws-lambda';
 import { loadSecretsFromSsm } from './common/config/ssm-loader';
-import { AppDataSource } from './data-source';
 
 export interface MigrateResult {
   ok: true;
@@ -35,9 +34,12 @@ export const handler: Handler<unknown, MigrateResult> = async () => {
   // 콜드스타트당 1회 — SSM 에서 DATABASE_URL 을 포함한 시크릿을 process.env 주입.
   await loadSecretsFromSsm();
 
+  // WHY: data-source 는 모듈 평가 시점에 process.env.DATABASE_URL 을 캡처해 DataSource
+  // 를 생성한다. 정적 import 를 쓰면 SSM 로드보다 먼저 실행돼 localhost 폴백으로
+  // 굳어진다. SSM 직후 동적 import 로 평가 시점을 미뤄 올바른 URL 을 잡게 한다.
+  const { AppDataSource } = await import('./data-source.js');
+
   const start = Date.now();
-  // WHY: AppDataSource 가 모듈 로드 시 생성되지만 실제 연결은 initialize() 에서.
-  // 콜드스타트 간 같은 인스턴스가 재호출될 수 있으므로 isInitialized 체크.
   const ds = AppDataSource.isInitialized
     ? AppDataSource
     : await AppDataSource.initialize();
