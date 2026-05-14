@@ -38,8 +38,10 @@ describe('TodolistSharedStack', () => {
     });
 
     // WHY: 신뢰 정책으로 우리 리포(KyungjeCho/todo-list)의 main 브랜치 + v* 태그
-    // 워크플로우만 Role 을 Assume 할 수 있도록 제한. fork PR 의 Assume 차단.
-    it('Assume 조건: KyungjeCho/todo-list main 브랜치 + v* 태그만 허용', () => {
+    // + dev/prod environment 워크플로우만 Role 을 Assume 할 수 있도록 제한.
+    // environment 사용 시 GitHub 가 sub 를 environment:NAME 으로 덮어쓰므로 둘 다
+    // 허용해야 backend-build/deploy 가 동작. fork PR 의 Assume 은 여전히 차단.
+    it('Assume 조건: KyungjeCho/todo-list main/v* + dev/prod environment 만 허용', () => {
       const template = synth();
       template.hasResourceProperties('AWS::IAM::Role', {
         AssumeRolePolicyDocument: Match.objectLike({
@@ -54,6 +56,8 @@ describe('TodolistSharedStack', () => {
                   'token.actions.githubusercontent.com:sub': [
                     'repo:KyungjeCho/todo-list:ref:refs/heads/main',
                     'repo:KyungjeCho/todo-list:ref:refs/tags/v*',
+                    'repo:KyungjeCho/todo-list:environment:dev',
+                    'repo:KyungjeCho/todo-list:environment:prod',
                   ],
                 },
               },
