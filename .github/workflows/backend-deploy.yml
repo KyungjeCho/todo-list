@@ -209,12 +209,21 @@ jobs:
             --query Version --output text)
 
           # 두 Lambda 를 같은 블록에서 alias 전환 — 버전 불일치 방지 (§4.4 note)
-          aws lambda update-alias \
-            --function-name "${{ vars.LAMBDA_API_NAME }}" \
-            --name live --function-version "${API_VER}" > /dev/null
-          aws lambda update-alias \
-            --function-name "${{ vars.LAMBDA_CRON_NAME }}" \
-            --name live --function-version "${CRON_VER}" > /dev/null
+          # WHY: 첫 배포에는 live alias 가 아직 없어 update-alias 가 ResourceNotFound 로
+          # 실패한다. get-alias 로 존재 여부를 보고 create/update 로 분기(upsert).
+          upsert_live_alias() {
+            local fn="$1" ver="$2"
+            if aws lambda get-alias --function-name "$fn" --name live > /dev/null 2>&1; then
+              aws lambda update-alias \
+                --function-name "$fn" --name live --function-version "$ver" > /dev/null
+            else
+              aws lambda create-alias \
+                --function-name "$fn" --name live --function-version "$ver" > /dev/null
+              echo "::notice title=Created live alias::${fn} (first deploy)"
+            fi
+          }
+          upsert_live_alias "${{ vars.LAMBDA_API_NAME }}"  "${API_VER}"
+          upsert_live_alias "${{ vars.LAMBDA_CRON_NAME }}" "${CRON_VER}"
 
           echo "api_version=${API_VER}"   >> "$GITHUB_OUTPUT"
           echo "cron_version=${CRON_VER}" >> "$GITHUB_OUTPUT"
@@ -223,9 +232,12 @@ jobs:
       - name: Smoke test (/health via Function URL)
         id: smoke
         run: |
+          # WHY: CDK 의 Function URL 은 `apiFunction.addFunctionUrl()` 로 함수(unqualified)
+          # 에 바인딩되어 있다. --qualifier live 로 조회하면 alias 용 URL 이 없어
+          # ResourceNotFound. update-function-code 가 $LATEST 를 갱신하므로 unqualified
+          # URL 이 그대로 새 코드를 서빙한다. (alias 는 본 워크플로우의 롤백 마커 용도)
           URL=$(aws lambda get-function-url-config \
             --function-name "${{ vars.LAMBDA_API_NAME }}" \
-            --qualifier live \
             --query FunctionUrl --output text)
           HEALTH="${URL%/}/health"
           echo "Testing: ${HEALTH}"
