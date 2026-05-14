@@ -202,10 +202,10 @@ export class TodolistBackendStack extends cdk.Stack {
       architecture: lambda.Architecture.ARM_64,
       memorySize: 1024,
       timeout: cdk.Duration.seconds(300),
-      // TODO: AWS Lambda concurrency quota 가 기본 10(신규 계정)이라 reserved=1 을
-      // 설정하면 unreserved 가 최소값(10) 미만으로 떨어져 배포 실패. quota 증액
-      // (L-B99A9384 → 1000) 승인 후 `reservedConcurrentExecutions: 1` 복원 필요.
-      // 스펙 §5.3 의 "cron 중복 실행 차단" 는 그 때 재활성.
+      // WHY: cron 잡 중복 실행 방지 (§5.3). EventBridge Scheduler 가 같은 잡을 두 번
+      // 동시 트리거 / 콜드스타트 race 로 한 잡이 두 인스턴스에서 동시에 돌면 DB/외부 API
+      // 호출이 중복돼 사고. account quota=1000 승인 후 복원.
+      reservedConcurrentExecutions: 1,
       environment: {
         NODE_ENV: 'production',
         ...this.buildSsmParamNameEnv(envName),
@@ -236,10 +236,10 @@ export class TodolistBackendStack extends cdk.Stack {
       memorySize: 512,
       // DDL 이 오래 걸리는 케이스(인덱스 생성 등) 대비 5분. Lambda 최대 15분 중 보수적 값.
       timeout: cdk.Duration.seconds(300),
-      // TODO: concurrency quota 승인 후 `reservedConcurrentExecutions: 1` 복원.
-      // 현재는 계정 quota=10 제약으로 설정 불가 (CronFunction 의 TODO 참조).
-      // deploy 파이프라인이 동일 env 에 하나만 배포를 허용하므로 당분간 reserved
-      // 없어도 동시 실행 사고 확률은 낮음.
+      // WHY: migration 의 동시 실행은 스키마 경쟁 조건을 직접 일으킴(§7-1, §8-⑦).
+      // deploy 파이프라인이 sync invoke 한 번만 호출하지만, 콜드스타트 동시 재시도
+      // 시나리오를 봉쇄하기 위해 reserved=1 으로 단일 실행 보장.
+      reservedConcurrentExecutions: 1,
       environment: {
         NODE_ENV: 'production',
         ...this.buildSsmParamNameEnv(envName),

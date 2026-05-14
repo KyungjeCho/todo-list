@@ -137,8 +137,6 @@ describe('TodolistBackendStack — Lambda 함수 (api/cron/migrate)', () => {
   });
 
   // WHY: migrate 은 DDL 이 오래 걸릴 수 있어 300s. 메모리는 light (512MB).
-  // NOTE: 원래 `reservedConcurrentExecutions=1` 이 설계였으나 신규 AWS 계정의
-  // Lambda concurrency quota=10 제약으로 현재 비활성화. quota 증액 후 복원 예정.
   it('migrate 은 300s/512MB', () => {
     const template = synth('dev');
     template.hasResourceProperties('AWS::Lambda::Function', {
@@ -312,20 +310,15 @@ describe('TodolistBackendStack — EventBridge Scheduler (cron 3종)', () => {
     });
   });
 
-  // WHY: 원래 §5.3 에 따라 cron Lambda 에 `reservedConcurrentExecutions=1`
-  // (중복 실행 차단) 적용이 설계였다. 신규 AWS 계정의 Lambda concurrency quota=10
-  // 제약으로 현재 임시 비활성 — reserved=1 로 설정하면 unreserved 가 최소값(10)
-  // 미만으로 떨어져 배포 실패. quota 증액(L-B99A9384 → 1000) 승인 후 복원 예정.
-  it('cron/migrate Lambda 는 ReservedConcurrentExecutions 미설정 (quota 승인 후 복원)', () => {
+  // WHY: §5.3 — cron 잡 중복 실행 / migration 동시 실행은 직접적 데이터 사고로 이어짐.
+  // account quota 1000 승인 이후 reserved=1 로 단일 인스턴스 보장.
+  it('cron/migrate Lambda 는 ReservedConcurrentExecutions=1', () => {
     const template = synth('dev');
     for (const name of ['todolist-cron-dev', 'todolist-migrate-dev']) {
-      const fns = template.findResources('AWS::Lambda::Function', {
-        Properties: { FunctionName: name },
+      template.hasResourceProperties('AWS::Lambda::Function', {
+        FunctionName: name,
+        ReservedConcurrentExecutions: 1,
       });
-      const props = Object.values(fns)[0].Properties as {
-        ReservedConcurrentExecutions?: number;
-      };
-      expect(props.ReservedConcurrentExecutions).toBeUndefined();
     }
   });
 
