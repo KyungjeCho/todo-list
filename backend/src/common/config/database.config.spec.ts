@@ -56,16 +56,18 @@ describe('databaseConfig', () => {
       process.env.DATABASE_PASSWORD = 'p';
     };
 
-    it('production: DATABASE_SSL 미설정이어도 SSL 강제 + rejectUnauthorized=true', () => {
+    it('production + CA 미제공: SSL 활성 + rejectUnauthorized=false (Supabase pooler 호환)', () => {
       setProd();
       delete process.env.DATABASE_SSL;
-      expect(invokeConfig().ssl).toEqual({ rejectUnauthorized: true });
+      delete process.env.DATABASE_SSL_CA;
+      expect(invokeConfig().ssl).toEqual({ rejectUnauthorized: false });
     });
 
-    it('production: DATABASE_SSL=true 도 동일 동작', () => {
+    it('production + DATABASE_SSL=true: 동일 동작', () => {
       setProd();
       process.env.DATABASE_SSL = 'true';
-      expect(invokeConfig().ssl).toEqual({ rejectUnauthorized: true });
+      delete process.env.DATABASE_SSL_CA;
+      expect(invokeConfig().ssl).toEqual({ rejectUnauthorized: false });
     });
 
     it('non-production: DATABASE_SSL 미설정이면 SSL 비활성 (로컬 Docker Postgres)', () => {
