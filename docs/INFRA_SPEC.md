@@ -292,12 +292,18 @@ aws lambda update-alias \
     - `prod` — required reviewer(KyungjeCho, id=36848308) + deployment branch policy = tags matching `v*`
   - 각 Environment 에 Variables 4종 등록: `AWS_REGION`=`ap-northeast-2`, `ECR_REPO`=`todolist-backend-{env}`, `LAMBDA_API_NAME`=`todolist-api-{env}`, `LAMBDA_CRON_NAME`=`todolist-cron-{env}`
   - **Public 전환 부산물**: 리포 visibility 를 Public 으로 변경(Private+Free 플랜에서 Environment protection 불가 제약 회피). Secret scanning + push protection 활성화.
-- [ ] **5. 워크플로우**
-  - `.github/workflows/backend-build.yml` (Docker buildx arm64 → ECR)
-  - `.github/workflows/backend-deploy.yml` (마이그레이션 one-shot → Lambda update → alias 전환 → smoke)
-- [ ] **6. Runbook**
-  - `docs/RUNBOOK_DEPLOY.md` — 수동 배포/롤백 절차
-  - `docs/RUNBOOK_INCIDENT.md` — 장애 대응 (429, 5xx, cron 실패, Supabase pause 복구)
+- [x] **5. 워크플로우** — _2026-04-29 완료_ (PR #263)
+  - `.github/workflows/backend-build.yml` — Docker buildx arm64 → ECR push (tag=SHA). main push 시 dev, `v*` 태그 시 prod environment 자동 매핑.
+  - `.github/workflows/backend-deploy.yml` — `workflow_run` 트리거로 build 완료 직후 연쇄. migrate Lambda image 갱신 + sync invoke → `errorMessage` 검사 → api/cron `update-function-code` → `publish-version` + alias upsert(`live`) → `/health` smoke test(5회 재시도) → 실패 시 alias 롤백.
+- [x] **6. 첫 dev 배포 검증** — _2026-05-14 완료_
+  - SSM SecureString 7종(`/todolist/dev/*`) 수동 등록(`infra/scripts/upload-secrets.sh dev`). DATABASE_URL = Supabase pooler transaction(6543) URI, JWT 3종은 `openssl rand -base64 64`, Apple/FCM/Gemini 는 dev 미사용으로 placeholder.
+  - 진행 중 7개의 양파 버그를 단계적으로 잡음 — `tsc rootDir` 자동 추론으로 빌드 출력 평탄화(PR #267), DataSource 가 SSM 로드 전 env 캡처(PR #267), Supabase pooler 자체 root CA 가 strict TLS 로 거부(PR #268), SSM 의 잘못된 project ref(SSM 재업로드), 첫 배포에 `live` alias 미존재(PR #269), smoke test 가 alias-bound URL 가정(PR #269), `configuration.ts` 의 `DATABASE_USERNAME` 강제(PR #270). 마지막으로 `curl /health` 가 `{"status":"ok","database":"connected"}` 200.
+- [x] **7. Lambda concurrency quota 증액 + reserved 복원** — _2026-05-14 완료_ (PR #271)
+  - AWS Support Case 177694280000918 으로 `L-B99A9384` (Concurrent executions) 를 기본 10 → **1000** 으로 증액 승인 (`get-account-settings` 확인).
+  - 첫 배포 언블록을 위해 임시 제거했던 cron/migrate Lambda 의 `reservedConcurrentExecutions: 1` 을 복원. `cdk deploy TodolistBackend-dev` 로 UPDATE_COMPLETE(16초). Unreserved pool = 998 (≥100 floor 안전).
+- [x] **8. Runbook** — _2026-05-14 완료_
+  - `docs/RUNBOOK_DEPLOY.md` — 평상시 배포 / 수동 재배포 / 시크릿 등록·로테이션 / CDK 인프라 변경 절차.
+  - `docs/RUNBOOK_INCIDENT.md` — smoke 실패 자동 롤백 / migration 실패 진단 / SSM·OIDC·Supabase pause 복구 / CloudWatch 알람 triage.
 
 ---
 
